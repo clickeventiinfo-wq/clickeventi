@@ -1,15 +1,15 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Music, Camera, Martini, PartyPopper, Sparkles,
-  MapPin, Star, ArrowLeft, Search, Check, CalendarDays, Send, Users, Clock, Navigation
+  MapPin, Star, ArrowLeft, Search, Check, CalendarDays, Send, Users, Clock, Navigation, Loader2
 } from "lucide-react";
+import { supabase } from "./supabase";
 
 /* ============================================================
-   CLICK EVENTI — v1.1 (prototipo)
-   Ricerca per località con distanze reali in km,
-   prezzi per fascia di distanza, pacchetti per tipo di evento.
-   Dati dimostrativi. Nella versione online il campo località
-   userà l'autocomplete di Google Maps (Places API).
+   CLICK EVENTI — v2 (collegato al database)
+   I fornitori, i pacchetti, i prezzi e le disponibilità
+   arrivano da Supabase. Le richieste dei clienti vengono
+   salvate nel database.
    ============================================================ */
 
 const EVENT_TYPES = ["Compleanno", "18esimo", "Festa privata", "Laurea", "Evento aziendale", "Matrimonio"];
@@ -176,272 +176,63 @@ function distanceKm(a, b) {
   return Math.round(2 * R * Math.asin(Math.sqrt(h)));
 }
 
-/* fasce di distanza: fee aggiunta al pacchetto in base ai km dal fornitore */
-const FASCE_STD = [
-  { upTo: 30, fee: 0, label: "entro 30 km" },
-  { upTo: 100, fee: 100, label: "entro 100 km" },
-  { upTo: 99999, fee: 150, label: "oltre 100 km" },
-];
-
-function fasciaFor(km, fasce) {
-  return fasce.find((f) => km <= f.upTo) || fasce[fasce.length - 1];
-}
-
-/* scale.on: "ore" | "ospiti" | "persone" | null (prezzo fisso) */
-const PROVIDERS = [
-  {
-    id: 1, name: "Elisa Quaranta", role: "Violinista", cat: "musica", loc: "lecce",
-    rating: 4.9, reviews: 27, bookings: 41,
-    fasce: [
-      { upTo: 30, fee: 0, label: "entro 30 km" },
-      { upTo: 100, fee: 100, label: "entro 100 km" },
-      { upTo: 99999, fee: 150, label: "oltre 100 km" },
-    ],
-    eventTypes: ["Matrimonio", "Evento aziendale", "Festa privata"],
-    busy: [4, 11, 18, 25],
-    bio: "Violinista diplomata al conservatorio. Repertorio classico, pop e colonne sonore, in solo o con quartetto: la colonna sonora elegante del vostro evento.",
-    packages: [
-      { id: "p1", label: "Cerimonia & Aperitivo", event: "Matrimonio", base: 350,
-        includes: ["Cerimonia + aperitivo", "Repertorio concordato", "Sopralluogo incluso"],
-        scale: { on: "ore", included: 2, extra: 120, label: "ora aggiuntiva" } },
-      { id: "p2", label: "Set acustico", event: "Tutti", base: 150,
-        includes: ["1 ora di esibizione", "Playlist su misura"],
-        scale: { on: "ore", included: 1, extra: 120, label: "ora aggiuntiva" } },
-    ],
-    extras: [
-      { id: "amp", label: "Amplificazione professionale", price: 50 },
-      { id: "custom", label: "Brani su richiesta", price: 100 },
-      { id: "quartetto", label: "Quartetto d'archi", price: 400 },
-    ],
-  },
-  {
-    id: 2, name: "DJ Marea", role: "DJ set & consolle", cat: "musica", loc: "roma",
-    rating: 4.7, reviews: 33, bookings: 58, fasce: FASCE_STD,
-    eventTypes: ["18esimo", "Compleanno", "Festa privata", "Matrimonio"],
-    busy: [2, 9, 16, 23, 30],
-    bio: "Dieci anni di piste da ballo tra club e feste private. Un unico interlocutore per la musica della tua serata, dal warm-up all'ultimo ballo.",
-    packages: [
-      { id: "p1", label: "Pacchetto 18esimo", event: "18esimo", base: 380,
-        includes: ["3 ore di DJ set", "Impianto e luci base", "Playlist con il festeggiato"],
-        scale: { on: "ore", included: 3, extra: 100, label: "ora aggiuntiva" } },
-      { id: "p2", label: "DJ set matrimonio", event: "Matrimonio", base: 550,
-        includes: ["4 ore di DJ set", "Impianto completo", "Coordinamento con la location"],
-        scale: { on: "ore", included: 4, extra: 120, label: "ora aggiuntiva" } },
-      { id: "p3", label: "Party base", event: "Tutti", base: 300,
-        includes: ["2 ore di DJ set", "Impianto audio"],
-        scale: { on: "ore", included: 2, extra: 100, label: "ora aggiuntiva" } },
-    ],
-    extras: [
-      { id: "luci", label: "Luci pista extra", price: 90 },
-      { id: "sax", label: "Sax live sul DJ set", price: 200 },
-      { id: "karaoke", label: "Set karaoke", price: 80 },
-    ],
-  },
-  {
-    id: 3, name: "Duo Controcanto", role: "Voce & chitarra", cat: "musica", loc: "gallipoli",
-    rating: 4.8, reviews: 41, bookings: 65, fasce: FASCE_STD,
-    eventTypes: ["Matrimonio", "Festa privata", "Evento aziendale"],
-    busy: [6, 13, 20, 27],
-    bio: "Duo acustico voce e chitarra. Scaletta costruita insieme a voi: dall'aperitivo al taglio della torta, senza mai un momento vuoto.",
-    packages: [
-      { id: "p1", label: "Aperitivo live", event: "Tutti", base: 300,
-        includes: ["90 minuti live", "Impianto incluso"],
-        scale: { on: "ore", included: 2, extra: 130, label: "ora aggiuntiva" } },
-      { id: "p2", label: "Matrimonio completo", event: "Matrimonio", base: 650,
-        includes: ["Cerimonia + ricevimento", "4 ore live", "Scaletta su misura"],
-        scale: { on: "ore", included: 4, extra: 130, label: "ora aggiuntiva" } },
-    ],
-    extras: [
-      { id: "terzo", label: "Terzo elemento (basso/percussioni)", price: 180 },
-      { id: "custom", label: "Brano dedicato arrangiato", price: 120 },
-    ],
-  },
-  {
-    id: 4, name: "Studio Lumen", role: "Fotografia di eventi", cat: "foto", loc: "roma",
-    rating: 4.9, reviews: 58, bookings: 84,
-    fasce: [
-      { upTo: 50, fee: 0, label: "entro 50 km" },
-      { upTo: 150, fee: 120, label: "entro 150 km" },
-      { upTo: 99999, fee: 250, label: "oltre 150 km" },
-    ],
-    eventTypes: ["Matrimonio", "18esimo", "Compleanno", "Evento aziendale", "Laurea"],
-    busy: [5, 12, 19, 26],
-    bio: "Reportage senza pose forzate: raccontiamo la festa così com'è stata. Galleria online entro 30 giorni, album fine art su richiesta.",
-    packages: [
-      { id: "p1", label: "Reportage festa", event: "Tutti", base: 300,
-        includes: ["2 ore di copertura", "Galleria online", "50+ scatti editati"],
-        scale: { on: "ore", included: 2, extra: 130, label: "ora aggiuntiva" } },
-      { id: "p2", label: "Matrimonio completo", event: "Matrimonio", base: 1500,
-        includes: ["Giornata intera", "2 fotografi", "Galleria + selezione stampe"],
-        scale: { on: "ore", included: 8, extra: 150, label: "ora aggiuntiva" } },
-      { id: "p3", label: "Business & convention", event: "Evento aziendale", base: 450,
-        includes: ["Mezza giornata", "Consegna rapida 72h", "Foto per social e stampa"],
-        scale: { on: "ore", included: 4, extra: 120, label: "ora aggiuntiva" } },
-    ],
-    extras: [
-      { id: "album", label: "Album fine art", price: 350 },
-      { id: "secondo", label: "Secondo fotografo", price: 300 },
-      { id: "sday", label: "Consegna same-day (50 scatti)", price: 200 },
-    ],
-  },
-  {
-    id: 5, name: "Frame & Co.", role: "Video di eventi", cat: "foto", loc: "lecce",
-    rating: 4.6, reviews: 19, bookings: 28, fasce: FASCE_STD,
-    eventTypes: ["Matrimonio", "18esimo", "Evento aziendale"],
-    busy: [3, 10, 17, 24, 31],
-    bio: "Video in stile cinematografico girati in due operatori. Aftermovie pronto in una settimana, perfetto per rivivere (e condividere) la festa.",
-    packages: [
-      { id: "p1", label: "Aftermovie evento", event: "Tutti", base: 450,
-        includes: ["3 ore di riprese", "Video 3-5 minuti", "Formato social verticale"],
-        scale: { on: "ore", included: 3, extra: 120, label: "ora aggiuntiva" } },
-      { id: "p2", label: "Film di matrimonio", event: "Matrimonio", base: 1300,
-        includes: ["Giornata intera", "Film 15-20 minuti", "Trailer in 7 giorni"],
-        scale: { on: "ore", included: 8, extra: 140, label: "ora aggiuntiva" } },
-    ],
-    extras: [
-      { id: "drone", label: "Riprese con drone", price: 150 },
-      { id: "interviste", label: "Interviste agli ospiti", price: 120 },
-    ],
-  },
-  {
-    id: 6, name: "Shaker Bros", role: "Barman a domicilio", cat: "barman", loc: "roma",
-    rating: 4.8, reviews: 36, bookings: 72, fasce: FASCE_STD,
-    eventTypes: ["18esimo", "Compleanno", "Festa privata", "Evento aziendale", "Laurea"],
-    busy: [1, 8, 15, 22, 29],
-    bio: "Postazione bar completa a casa tua o in location: banco, attrezzatura, ghiaccio e drink list costruita sull'evento. Voi fate festa, ai cocktail pensiamo noi.",
-    packages: [
-      { id: "p1", label: "Open bar festa", event: "Tutti", base: 350,
-        includes: ["Postazione completa 4 ore", "Fino a 30 ospiti", "Drink list classica"],
-        scale: { on: "ospiti", included: 30, extra: 6, label: "ospite oltre i 30" } },
-      { id: "p2", label: "Corporate cocktail", event: "Evento aziendale", base: 500,
-        includes: ["Postazione premium", "Fino a 40 ospiti", "Drink analcolici inclusi"],
-        scale: { on: "ospiti", included: 40, extra: 7, label: "ospite oltre i 40" } },
-    ],
-    extras: [
-      { id: "flair", label: "Flair show (acrobazie)", price: 150 },
-      { id: "list", label: "Drink list personalizzata", price: 80 },
-      { id: "analc", label: "Corner analcolico kids", price: 90 },
-    ],
-  },
-  {
-    id: 7, name: "Salento Cocktail Lab", role: "Bar catering", cat: "barman", loc: "otranto",
-    rating: 4.7, reviews: 24, bookings: 39, fasce: FASCE_STD,
-    eventTypes: ["Matrimonio", "18esimo", "Festa privata", "Compleanno"],
-    busy: [7, 14, 21, 28],
-    bio: "Cocktail d'autore con prodotti del territorio: amari salentini, agrumi, erbe. La postazione bar che gli ospiti fotografano.",
-    packages: [
-      { id: "p1", label: "Open bar salentino", event: "Tutti", base: 380,
-        includes: ["Postazione 4 ore", "Fino a 30 ospiti", "3 signature drink"],
-        scale: { on: "ospiti", included: 30, extra: 6, label: "ospite oltre i 30" } },
-      { id: "p2", label: "Wedding bar", event: "Matrimonio", base: 700,
-        includes: ["Aperitivo + dopocena", "Fino a 60 ospiti", "Drink degli sposi dedicato"],
-        scale: { on: "ospiti", included: 60, extra: 7, label: "ospite oltre i 60" } },
-    ],
-    extras: [
-      { id: "gin", label: "Gin corner premium", price: 120 },
-      { id: "frozen", label: "Postazione frozen estiva", price: 100 },
-    ],
-  },
-  {
-    id: 8, name: "Magic Party", role: "Animazione & magia", cat: "animazione", loc: "roma",
-    rating: 4.9, reviews: 44, bookings: 91,
-    fasce: [
-      { upTo: 20, fee: 0, label: "entro 20 km" },
-      { upTo: 60, fee: 50, label: "entro 60 km" },
-      { upTo: 99999, fee: 120, label: "oltre 60 km" },
-    ],
-    eventTypes: ["Compleanno", "Festa privata"],
-    busy: [4, 11, 18, 25],
-    bio: "Animatori professionisti e uno spettacolo di magia che incanta anche i grandi. Feste di compleanno chiavi in mano, dai 4 ai 10 anni (e oltre).",
-    packages: [
-      { id: "p1", label: "Festa bimbi", event: "Compleanno", base: 180,
-        includes: ["2 animatori per 3 ore", "Fino a 15 bambini", "Giochi e baby dance"],
-        scale: { on: "ospiti", included: 15, extra: 5, label: "bambino oltre i 15" } },
-      { id: "p2", label: "Show di magia", event: "Tutti", base: 250,
-        includes: ["Spettacolo 50 minuti", "Coinvolgimento del festeggiato"],
-        scale: { on: null } },
-    ],
-    extras: [
-      { id: "trucca", label: "Truccabimbi", price: 80 },
-      { id: "mascotte", label: "Mascotte a sorpresa", price: 90 },
-      { id: "palloncini", label: "Sculture di palloncini", price: 60 },
-    ],
-  },
-  {
-    id: 9, name: "Follie di Festa", role: "Animazione & spettacolo", cat: "animazione", loc: "lecce",
-    rating: 4.6, reviews: 21, bookings: 34, fasce: FASCE_STD,
-    eventTypes: ["Compleanno", "18esimo", "Festa privata", "Laurea"],
-    busy: [2, 9, 16, 23, 30],
-    bio: "Dalla festa dei piccoli al party di laurea: animazione, giochi a squadre, quiz show e performer. L'energia che tiene viva la serata.",
-    packages: [
-      { id: "p1", label: "Party animato", event: "Tutti", base: 220,
-        includes: ["2 animatori per 3 ore", "Fino a 20 ospiti", "Giochi e sfide a squadre"],
-        scale: { on: "ospiti", included: 20, extra: 4, label: "ospite oltre i 20" } },
-      { id: "p2", label: "Quiz show 18esimo", event: "18esimo", base: 280,
-        includes: ["Quiz sul festeggiato", "Presentatore + tecnologia", "60 minuti di show"],
-        scale: { on: null } },
-    ],
-    extras: [
-      { id: "photo", label: "Photobooth con oggetti di scena", price: 150 },
-      { id: "led", label: "Robot LED d'ingresso", price: 200 },
-    ],
-  },
-  {
-    id: 10, name: "Glow Studio", role: "Make-up & hair styling", cat: "beauty", loc: "roma",
-    rating: 4.8, reviews: 31, bookings: 47,
-    fasce: [
-      { upTo: 25, fee: 0, label: "entro 25 km" },
-      { upTo: 80, fee: 40, label: "entro 80 km" },
-      { upTo: 99999, fee: 90, label: "oltre 80 km" },
-    ],
-    eventTypes: ["Matrimonio", "18esimo", "Laurea", "Festa privata"],
-    busy: [6, 13, 20, 27],
-    bio: "Trucco e acconciatura a domicilio per il tuo grande giorno: prova inclusa nei pacchetti sposa, tenuta garantita fino all'ultimo ballo.",
-    packages: [
-      { id: "p1", label: "Sposa completo", event: "Matrimonio", base: 280,
-        includes: ["Prova trucco + acconciatura", "Il giorno dell'evento a domicilio", "Ritocco post-cerimonia"],
-        scale: { on: "persone", included: 1, extra: 70, label: "persona in più (mamme, damigelle)" } },
-      { id: "p2", label: "Glam party", event: "Tutti", base: 90,
-        includes: ["Trucco + piega", "A domicilio"],
-        scale: { on: "persone", included: 1, extra: 70, label: "persona in più" } },
-    ],
-    extras: [
-      { id: "ciglia", label: "Applicazione ciglia", price: 25 },
-      { id: "uomo", label: "Grooming sposo/festeggiato", price: 40 },
-    ],
-  },
-  {
-    id: 11, name: "Aura Beauty", role: "Make-up artist", cat: "beauty", loc: "squinzano",
-    rating: 4.7, reviews: 18, bookings: 26, fasce: FASCE_STD,
-    eventTypes: ["Matrimonio", "18esimo", "Laurea"],
-    busy: [5, 12, 19, 26],
-    bio: "Make-up luminoso e naturale, pensato per le foto e per durare. Specializzata in pelli mediterranee e trucco da cerimonia.",
-    packages: [
-      { id: "p1", label: "Cerimonia", event: "Tutti", base: 110,
-        includes: ["Trucco completo a domicilio", "Prodotti long-lasting"],
-        scale: { on: "persone", included: 1, extra: 65, label: "persona in più" } },
-      { id: "p2", label: "Sposa con prova", event: "Matrimonio", base: 260,
-        includes: ["Prova + giorno evento", "A domicilio", "Kit ritocco in omaggio"],
-        scale: { on: "persone", included: 1, extra: 65, label: "persona in più" } },
-    ],
-    extras: [
-      { id: "hair", label: "Acconciatura (con hair stylist partner)", price: 90 },
-    ],
-  },
-];
+/* ---------- helper ---------- */
 
 const catLabel = (id) => CATEGORIES.find((c) => c.id === id)?.label || "";
-const feeFor = (p, eventLoc) =>
-  eventLoc ? fasciaFor(distanceKm(locById(p.loc), eventLoc), p.fasce).fee : 0;
-const minPrice = (p, eventLoc) => Math.min(...p.packages.map((k) => k.base)) + feeFor(p, eventLoc);
 
-function isAvailable(p, date) {
-  if (!date) return true;
-  return !p.busy.includes(new Date(date).getDate());
+/* trasforma una riga del database nel formato usato dal sito */
+function fromDb(r) {
+  return {
+    id: r.id,
+    name: r.nome,
+    role: r.ruolo,
+    cat: r.categoria,
+    city: r.localita,
+    lat: r.lat,
+    lng: r.lng,
+    bio: r.bio,
+    rating: r.rating,
+    reviews: r.recensioni,
+    bookings: r.prenotazioni,
+    verificato: r.verificato,
+    eventTypes: r.tipi_evento || [],
+    busy: (r.indisponibilita || []).map((d) => d.giorno),
+    fasce: [...(r.fasce || [])].sort((a, b) => a.fino_a_km - b.fino_a_km),
+    packages: (r.pacchetti || []).map((p) => ({
+      id: p.id,
+      label: p.label,
+      event: p.evento,
+      base: p.base,
+      includes: (p.includes || "").split(" \u00b7 ").filter(Boolean),
+      scale: { on: p.scale_on === "fisso" ? null : p.scale_on, included: p.inclusi, extra: p.extra_unita },
+    })),
+    extras: (r.extra || []).map((e) => ({ id: e.id, label: e.label, price: e.prezzo })),
+  };
 }
 
+/* disponibilità: confronto sulle date reali del calendario */
+function isAvailable(p, date) {
+  if (!date) return true;
+  return !p.busy.includes(date);
+}
+
+/* fascia chilometrica: il prezzo si adatta alla zona, senza mostrare i km */
+function feeFor(p, eventLoc) {
+  if (!eventLoc || !p.lat) return 0;
+  const km = distanceKm({ lat: p.lat, lng: p.lng }, eventLoc);
+  const f = p.fasce.find((x) => km <= x.fino_a_km) || p.fasce[p.fasce.length - 1];
+  return f ? f.fee : 0;
+}
+
+const minPrice = (p, eventLoc) =>
+  p.packages.length ? Math.min(...p.packages.map((k) => k.base)) + feeFor(p, eventLoc) : 0;
+
 function defaultPackage(p, eventType) {
-  return p.packages.find((k) => k.event === eventType) || p.packages.find((k) => k.event === "Tutti") || p.packages[0];
+  return (
+    p.packages.find((k) => k.event === eventType) ||
+    p.packages.find((k) => k.event === "Tutti") ||
+    p.packages[0]
+  );
 }
 
 function computeQuote(p, pkg, ore, ospiti, selectedExtras, eventLoc) {
@@ -450,12 +241,13 @@ function computeQuote(p, pkg, ore, ospiti, selectedExtras, eventLoc) {
 
   if (pkg.scale.on === "ore" && ore > pkg.scale.included) {
     const n = ore - pkg.scale.included;
-    rows.push({ label: `${n} × ${pkg.scale.label}`, value: n * pkg.scale.extra });
+    rows.push({ label: `${n} \u00d7 ora aggiuntiva`, value: n * pkg.scale.extra });
     tot += n * pkg.scale.extra;
   }
   if ((pkg.scale.on === "ospiti" || pkg.scale.on === "persone") && ospiti > pkg.scale.included) {
     const n = ospiti - pkg.scale.included;
-    rows.push({ label: `${n} × ${pkg.scale.label}`, value: n * pkg.scale.extra });
+    const unita = pkg.scale.on === "ospiti" ? "ospite in pi\u00f9" : "persona in pi\u00f9";
+    rows.push({ label: `${n} \u00d7 ${unita}`, value: n * pkg.scale.extra });
     tot += n * pkg.scale.extra;
   }
   p.extras.forEach((e) => {
@@ -465,7 +257,6 @@ function computeQuote(p, pkg, ore, ospiti, selectedExtras, eventLoc) {
     }
   });
 
-  /* la distanza adatta il prezzo del pacchetto, senza comparire come voce */
   const fee = feeFor(p, eventLoc);
   if (fee > 0) {
     rows[0] = { label: rows[0].label, value: rows[0].value + fee };
@@ -474,7 +265,6 @@ function computeQuote(p, pkg, ore, ospiti, selectedExtras, eventLoc) {
   return { rows, tot };
 }
 
-/* ---------- stile: pulito e luminoso, un solo accento ---------- */
 const GlobalStyle = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Work+Sans:wght@400;500;600;700&display=swap');
@@ -705,12 +495,14 @@ const GlobalStyle = () => (
       .cv-cats { grid-template-columns: repeat(2, 1fr); }
       .cv-steps { grid-template-columns: 1fr; }
     }
+    .cv-spin { animation: cv-rot 1s linear infinite; }
+    @keyframes cv-rot { to { transform: rotate(360deg); } }
     @media (prefers-reduced-motion: reduce) {
       .cv-card, .cv-cat { transition: none; }
+      .cv-spin { animation: none; }
     }
   `}</style>
 );
-
 /* ---------- campo località con suggerimenti (stile Maps) ---------- */
 function LocationInput({ value, onChange, compact }) {
   const [text, setText] = useState(value ? value.name : "");
@@ -767,7 +559,7 @@ function Header({ goHome }) {
              onKeyDown={(e) => e.key === "Enter" && goHome()}>
           Click<em>Eventi</em>
         </div>
-        <button className="cv-btn" onClick={() => alert("In v1 i professionisti vengono selezionati e caricati dal team Click Eventi. Scrivici!")}>
+        <button className="cv-btn" onClick={() => { window.location.href = "/?pannello"; }}>
           Sei un professionista?
         </button>
       </div>
@@ -778,7 +570,7 @@ function Header({ goHome }) {
 function ProviderCard({ p, onOpen, eventType, eventLoc }) {
   const initials = p.name.split(" ").map((w) => w[0]).slice(0, 2).join("");
   const fits = eventType && p.eventTypes.includes(eventType);
-    return (
+  return (
     <div className="cv-card cv-card-base" onClick={() => onOpen(p)} role="button" tabIndex={0}
          onKeyDown={(e) => e.key === "Enter" && onOpen(p)}>
       {fits && <span className="cv-fit">Ideale per {eventType}</span>}
@@ -789,8 +581,9 @@ function ProviderCard({ p, onOpen, eventType, eventLoc }) {
         <span className="cv-star"><Star size={13} fill="#F0A32B" /> {p.rating}</span>
         <span>({p.reviews})</span>
         <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <MapPin size={12} /> {locById(p.loc).name}
+          <MapPin size={12} /> {p.city}
         </span>
+        {p.verificato && <span style={{ color: "var(--accent)", fontWeight: 600 }}>✓ Verificato</span>}
       </div>
       <div className="cv-bookings"><Check size={13} /> {p.bookings} eventi prenotati su Click Eventi</div>
       <div className="cv-price">da {minPrice(p, eventLoc)} € <small>a pacchetto</small></div>
@@ -798,14 +591,23 @@ function ProviderCard({ p, onOpen, eventType, eventLoc }) {
   );
 }
 
+function Caricamento({ testo = "Caricamento…" }) {
+  return (
+    <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--grigio)" }}>
+      <Loader2 size={26} className="cv-spin" style={{ opacity: .6 }} />
+      <p style={{ marginTop: 10, fontSize: 14 }}>{testo}</p>
+    </div>
+  );
+}
+
 /* ---------- home ---------- */
 
-function HomeView({ onSearch, openProvider }) {
+function HomeView({ onSearch, openProvider, providers, loading }) {
   const [loc, setLoc] = useState(null);
   const [date, setDate] = useState("");
   const [etype, setEtype] = useState("Festa privata");
   const [cat, setCat] = useState("");
-  const featured = [...PROVIDERS].sort((a, b) => b.bookings - a.bookings).slice(0, 6);
+  const featured = [...providers].sort((a, b) => b.bookings - a.bookings).slice(0, 6);
   const doSearch = () => onSearch({ loc: loc || locById("roma"), date, etype, cat });
 
   return (
@@ -869,9 +671,11 @@ function HomeView({ onSearch, openProvider }) {
         <div className="cv-container">
           <span className="cv-eyebrow">I più prenotati</span>
           <h2 className="cv-h2 cv-display">I professionisti del momento</h2>
-          <div className="cv-grid">
-            {featured.map((p) => <ProviderCard key={p.id} p={p} onOpen={openProvider} />)}
-          </div>
+          {loading ? <Caricamento testo="Carico i professionisti…" /> : (
+            <div className="cv-grid">
+              {featured.map((p) => <ProviderCard key={p.id} p={p} onOpen={openProvider} />)}
+            </div>
+          )}
         </div>
       </section>
 
@@ -883,12 +687,12 @@ function HomeView({ onSearch, openProvider }) {
             <div className="cv-step cv-card-base">
               <div className="cv-dot">1</div>
               <h4>Cerca per luogo e data</h4>
-              <p>Vedi solo i professionisti davvero liberi per il tuo giorno, con la distanza da te calcolata in km.</p>
+              <p>Vedi solo i professionisti davvero liberi per il tuo giorno: il calendario lo aggiornano loro.</p>
             </div>
             <div className="cv-step cv-card-base">
               <div className="cv-dot">2</div>
               <h4>Componi il preventivo</h4>
-              <p>Scegli il pacchetto per il tuo evento, aggiungi ore, ospiti ed extra: il prezzo si aggiorna in diretta, distanza inclusa.</p>
+              <p>Scegli il pacchetto per il tuo evento, aggiungi ore, ospiti ed extra: il prezzo si aggiorna in diretta.</p>
             </div>
             <div className="cv-step cv-card-base">
               <div className="cv-dot">3</div>
@@ -904,15 +708,16 @@ function HomeView({ onSearch, openProvider }) {
 
 /* ---------- risultati ---------- */
 
-function ResultsView({ q, setQ, openProvider, goHome }) {
+function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
   const { loc, date, etype, cat } = q;
-  const results = PROVIDERS
+  const results = providers
     .filter((p) => (!cat || p.cat === cat) && isAvailable(p, date))
     .sort((a, b) => {
       const fa = a.eventTypes.includes(etype) ? 1 : 0;
       const fb = b.eventTypes.includes(etype) ? 1 : 0;
       if (fb !== fa) return fb - fa;
-      const ka = distanceKm(locById(a.loc), loc), kb = distanceKm(locById(b.loc), loc);
+      const ka = distanceKm({ lat: a.lat, lng: a.lng }, loc);
+      const kb = distanceKm({ lat: b.lat, lng: b.lng }, loc);
       if (ka !== kb) return ka - kb;
       return b.rating - a.rating;
     });
@@ -947,7 +752,7 @@ function ResultsView({ q, setQ, openProvider, goHome }) {
           </span>
         </div>
 
-        {results.length > 0 ? (
+        {loading ? <Caricamento /> : results.length > 0 ? (
           <div className="cv-grid">
             {results.map((p) => (
               <ProviderCard key={p.id} p={p} onOpen={openProvider} eventType={etype} eventLoc={loc} />
@@ -967,18 +772,48 @@ function ResultsView({ q, setQ, openProvider, goHome }) {
 /* ---------- profilo + preventivo ---------- */
 
 function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
-  const [pkgId, setPkgId] = useState(defaultPackage(p, eventType).id);
-  const [ore, setOre] = useState(defaultPackage(p, eventType).scale.included || 2);
+  const def = defaultPackage(p, eventType);
+  const [pkgId, setPkgId] = useState(def?.id);
+  const [ore, setOre] = useState(def?.scale.included || 2);
   const [ospiti, setOspiti] = useState(30);
   const [persone, setPersone] = useState(1);
   const [extras, setExtras] = useState([]);
   const [sent, setSent] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [errore, setErrore] = useState("");
   const [form, setForm] = useState({ nome: "", contatto: "", note: "" });
 
-  const pkg = p.packages.find((k) => k.id === pkgId);
+  const pkg = p.packages.find((k) => k.id === pkgId) || p.packages[0];
+  if (!pkg) return <div className="cv-panel cv-card-base">Nessun pacchetto disponibile.</div>;
+
   const quote = computeQuote(p, pkg, ore, pkg.scale.on === "persone" ? persone : ospiti, extras, eventLoc);
   const toggle = (id) => setExtras((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
   const selectPkg = (k) => { setPkgId(k.id); if (k.scale.on === "ore") setOre(k.scale.included); };
+
+  const invia = async () => {
+    if (!form.nome.trim() || !form.contatto.trim()) {
+      setErrore("Inserisci nome e un contatto per ricevere la risposta.");
+      return;
+    }
+    setErrore(""); setSaving(true);
+    const { error } = await supabase.from("richieste").insert({
+      fornitore_id: p.id,
+      cliente_nome: form.nome,
+      cliente_contatto: form.contatto,
+      tipo_evento: eventType,
+      data_evento: prefillDate || null,
+      localita: eventLoc?.name || null,
+      pacchetto: pkg.label,
+      ore: pkg.scale.on === "ore" ? ore : null,
+      ospiti: pkg.scale.on === "ospiti" ? ospiti : pkg.scale.on === "persone" ? persone : null,
+      extra_scelti: p.extras.filter((e) => extras.includes(e.id)).map((e) => e.label),
+      totale: quote.tot,
+      note: form.note || null,
+    });
+    setSaving(false);
+    if (error) { setErrore("Non è stato possibile inviare la richiesta. Riprova."); return; }
+    setSent(true);
+  };
 
   if (sent) {
     return (
@@ -989,7 +824,6 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
           Hai richiesto <b>{p.name}</b> — pacchetto "{pkg.label}", totale stimato <b>{quote.tot} €</b>.
           Il team Click Eventi verifica con il professionista e ti ricontatta entro 24 ore.
         </p>
-        <p className="cv-note">Prototipo dimostrativo: nessuna email è stata realmente inviata.</p>
       </div>
     );
   }
@@ -1028,7 +862,7 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
       )}
       {pkg.scale.on === "persone" && (
         <>
-          <label htmlFor="q-persone"><Users size={13} style={{ verticalAlign: "-2px" }} /> Persone da truccare</label>
+          <label htmlFor="q-persone"><Users size={13} style={{ verticalAlign: "-2px" }} /> Persone</label>
           <input id="q-persone" type="number" min={1} max={20} value={persone}
                  onChange={(e) => setPersone(Number(e.target.value) || 1)} />
         </>
@@ -1063,15 +897,17 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
       <input id="q-contatto" value={form.contatto} onChange={(e) => setForm({ ...form, contatto: e.target.value })} placeholder="Per ricontattarti" />
       {prefillDate && (
         <p className="cv-note" style={{ textAlign: "left", marginTop: 10 }}>
-          <CalendarDays size={13} style={{ verticalAlign: "-2px" }} /> Data richiesta: {new Date(prefillDate).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })} · {eventLoc.name}
+          <CalendarDays size={13} style={{ verticalAlign: "-2px" }} /> Data richiesta: {new Date(prefillDate).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })} · {eventLoc?.name}
         </p>
       )}
       <label htmlFor="q-note">Note (facoltative)</label>
       <textarea id="q-note" rows={3} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })}
                 placeholder="Location, orari, atmosfera che immagini…" />
 
-      <button className="cv-submit" onClick={() => setSent(true)}>
-        <Send size={16} /> Invia richiesta · {quote.tot} €
+      {errore && <p style={{ color: "var(--accent)", fontSize: 13, marginTop: 10, fontWeight: 600 }}>{errore}</p>}
+
+      <button className="cv-submit" onClick={invia} disabled={saving}>
+        <Send size={16} /> {saving ? "Invio…" : `Invia richiesta · ${quote.tot} €`}
       </button>
       <p className="cv-note">Gratis e senza impegno. Ti risponde il team Click Eventi entro 24 ore.</p>
     </div>
@@ -1095,7 +931,8 @@ function ProfileView({ p, goBack, q }) {
             <div className="cv-meta" style={{ marginTop: 6 }}>
               <span className="cv-star"><Star size={13} fill="#F0A32B" /> {p.rating}</span>
               <span>({p.reviews} recensioni)</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 4 }}><MapPin size={12} /> {locById(p.loc).name}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 4 }}><MapPin size={12} /> {p.city}</span>
+              {p.verificato && <span style={{ color: "var(--accent)", fontWeight: 600 }}>✓ Verificato</span>}
               <span className="cv-bookings" style={{ marginTop: 0 }}><Check size={13} /> {p.bookings} eventi prenotati</span>
             </div>
             <div style={{ marginTop: 10 }}>
@@ -1128,11 +965,6 @@ function ProfileView({ p, goBack, q }) {
             <p className="cv-note" style={{ textAlign: "left" }}>
               Le foto vengono caricate dal professionista e approvate dal team Click Eventi.
             </p>
-            <h4 className="cv-display" style={{ fontSize: 16, margin: "18px 0 6px" }}>Recensioni recenti</h4>
-            <ul className="cv-list">
-              <li><Check size={15} /> "Puntuali, professionali e super. Evento riuscitissimo!" — Giulia, {p.eventTypes[0]}</li>
-              <li><Check size={15} /> "Preventivo chiaro fin da subito, nessuna sorpresa." — Andrea, {p.eventTypes[p.eventTypes.length - 1]}</li>
-            </ul>
           </div>
 
           <QuoteBuilder p={p} eventType={q.etype} eventLoc={q.loc} prefillDate={q.date} />
@@ -1144,10 +976,25 @@ function ProfileView({ p, goBack, q }) {
 
 /* ---------- app ---------- */
 
-export default function ClickEventiV1() {
+export default function ClickEventiV2() {
   const [view, setView] = useState("home");
   const [q, setQ] = useState({ loc: locById("roma"), date: "", etype: "Festa privata", cat: "" });
   const [provider, setProvider] = useState(null);
+  const [providers, setProviders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errore, setErrore] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from("fornitori")
+        .select("*, pacchetti(*), extra(*), fasce(*), indisponibilita(giorno)")
+        .eq("stato", "approvato");
+      if (error) setErrore("Non riesco a caricare i professionisti. Riprova tra poco.");
+      else setProviders((data || []).map(fromDb));
+      setLoading(false);
+    })();
+  }, []);
 
   const goHome = () => { setView("home"); window.scrollTo(0, 0); };
   const onSearch = (query) => { setQ(query); setView("results"); window.scrollTo(0, 0); };
@@ -1157,13 +1004,18 @@ export default function ClickEventiV1() {
     <div className="cv-root">
       <GlobalStyle />
       <Header goHome={goHome} />
-      {view === "home" && <HomeView onSearch={onSearch} openProvider={openProvider} />}
-      {view === "results" && <ResultsView q={q} setQ={setQ} openProvider={openProvider} goHome={goHome} />}
+      {errore && (
+        <div className="cv-container" style={{ paddingTop: 20 }}>
+          <div className="cv-empty cv-card-base">{errore}</div>
+        </div>
+      )}
+      {view === "home" && <HomeView onSearch={onSearch} openProvider={openProvider} providers={providers} loading={loading} />}
+      {view === "results" && <ResultsView q={q} setQ={setQ} openProvider={openProvider} goHome={goHome} providers={providers} loading={loading} />}
       {view === "profile" && provider && <ProfileView p={provider} goBack={() => setView("results")} q={q} />}
       <footer className="cv-footer">
         <div className="cv-container">
           <span><b className="cv-display" style={{ color: "var(--ink)" }}>Click<em style={{ color: "var(--accent)", fontStyle: "normal" }}>Eventi</em></b> — Il tuo evento, in un click.</span>
-          <span>Prototipo v1.1 · Profili, distanze e prenotazioni sono dati di esempio</span>
+          <span>I professionisti mostrati sono profili di esempio</span>
         </div>
       </footer>
     </div>
