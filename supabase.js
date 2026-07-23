@@ -10,6 +10,6 @@ import { createClient } from "@supabase/supabase-js";
    ============================================================ */
 
 const SUPABASE_URL = "https://pohaerctuqihkaiclewa.supabase.co";
-const SUPABASE_ANON_KEY = "INCOLLA_QUI_LA_CHIAVE_ANON_PUBLIC";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvaGFlcmN0dXFpaGthaWNsZXdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MjA3ODQsImV4cCI6MjEwMDM5Njc4NH0.X3m4fDDasb61aK2LukBpBzUoxkxDOwnzTnJZLMXgz5Q";
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
