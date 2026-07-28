@@ -211,7 +211,7 @@ export default function Iscrizione() {
       <header className="is-head">
         <div className="is-wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <a href="/" className="is-logo" style={{ textDecoration: "none", color: "inherit" }}>Click<em>Eventi</em></a>
-          <a href="/?pannello" style={{ fontSize: 13, fontWeight: 600, color: "var(--grigio)", textDecoration: "none" }}>Hai già un account? Accedi</a>
+          <a href="/?accedi" style={{ fontSize: 13, fontWeight: 600, color: "var(--grigio)", textDecoration: "none" }}>Hai già un account? Accedi</a>
         </div>
       </header>
 
