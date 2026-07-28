@@ -564,7 +564,7 @@ function Header({ goHome }) {
              onKeyDown={(e) => e.key === "Enter" && goHome()}>
           Click<em>Eventi</em>
         </div>
-        <button className="cv-btn" onClick={() => { window.location.href = "/?pannello"; }}>
+        <button className="cv-btn" onClick={() => { window.location.href = "/?iscrizione"; }}>
           Sei un professionista?
         </button>
       </div>
@@ -615,6 +615,11 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
   const featured = [...providers].sort((a, b) => b.bookings - a.bookings).slice(0, 6);
   const doSearch = () => onSearch({ loc: loc || locById("roma"), date, etype, cat });
 
+  /* mostra solo le categorie che hanno almeno un professionista attivo:
+     il sito cresce da solo man mano che si aggiungono fornitori */
+  const attive = CATEGORIES.filter((c) => providers.some((p) => p.cat === c.id));
+  const cats = attive.length ? attive : CATEGORIES;
+
   return (
     <>
       <section className="cv-hero">
@@ -640,7 +645,7 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
             <span className="cv-flabel">Cosa cerchi</span>
             <select value={cat} onChange={(e) => setCat(e.target.value)} aria-label="Categoria">
               <option value="">Tutto</option>
-              {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+              {cats.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
           </div>
           <button className="cv-search-btn" onClick={doSearch}>
@@ -657,7 +662,7 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
           <span className="cv-eyebrow">Categorie</span>
           <h2 className="cv-h2 cv-display">Le categorie immancabili per organizzare il tuo evento</h2>
           <div className="cv-cats">
-            {CATEGORIES.map((c) => {
+            {cats.map((c) => {
               const Icon = c.icon;
               return (
                 <div key={c.id} className="cv-cat cv-card-base" role="button" tabIndex={0}
@@ -729,6 +734,8 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
   const dateLabel = date
     ? new Date(date).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })
     : "";
+  const attive = CATEGORIES.filter((c) => providers.some((p) => p.cat === c.id));
+  const cats = attive.length ? attive : CATEGORIES;
 
   return (
     <section className="cv-section">
@@ -750,7 +757,7 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
           </select>
           <select className="cv-select" value={cat} onChange={(e) => setQ({ ...q, cat: e.target.value })} aria-label="Categoria">
             <option value="">Tutte le categorie</option>
-            {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+            {cats.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
           </select>
           <span style={{ fontSize: 13, color: "var(--grigio)", fontWeight: 600 }}>
             {results.length} disponibil{results.length === 1 ? "e" : "i"}
@@ -765,8 +772,14 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
           </div>
         ) : (
           <div className="cv-empty cv-card-base">
-            Nessun professionista disponibile con questi filtri.<br />
-            Prova un'altra data o allarga la categoria.
+            <b style={{ color: "var(--ink)", display: "block", marginBottom: 6 }}>
+              Stiamo aggiungendo professionisti in questa zona
+            </b>
+            Prova un'altra data o un'altra categoria — oppure scrivici a{" "}
+            <a href="mailto:info@clickeventi.it" style={{ color: "var(--accent)", fontWeight: 600 }}>
+              info@clickeventi.it
+            </a>{" "}
+            e cerchiamo noi la persona giusta per il tuo evento.
           </div>
         )}
       </div>
