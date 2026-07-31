@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Music, Camera, Martini, PartyPopper, Sparkles,
-  Check, ArrowLeft, ArrowRight, Plus, Trash2, PartyPopper as Party, Loader2
+  Check, ArrowLeft, ArrowRight, Plus, Trash2, PartyPopper as Party, Loader2, Mail, Link as LinkIcon
 } from "lucide-react";
 import { supabase } from "./supabase";
 
 /* ============================================================
-   CLICK EVENTI — Iscrizione professionista
-   Modulo unico a step: dati + account, pacchetti, tariffe di zona.
-   Alla fine crea l'account (Supabase Auth) e salva il profilo
-   completo in stato "in attesa" per l'approvazione di Susanna.
+   CLICK EVENTI — Iscrizione professionista (2 fasi)
+   FASE 1: crea account (email + password) → conferma email
+   FASE 2 (rientra loggato): completa profilo, pacchetti, link
+   Salvando da loggato, i permessi (RLS) funzionano correttamente.
    ============================================================ */
 
 const CATEGORIES = [
@@ -27,22 +27,18 @@ const SCALE_OPTS = [
   { id: "persone", label: "A persona", inclLabel: "Persone incluse", extraLabel: "€ / persona in più" },
 ];
 const scaleOpt = (id) => SCALE_OPTS.find((s) => s.id === id);
-
-const pacchettoVuoto = () => ({
-  label: "", event: "Ogni evento", base: "", includes: "",
-  scaleOn: "fisso", included: "", extra: "",
-});
+const pacchettoVuoto = () => ({ label: "", event: "Ogni evento", base: "", includes: "", scaleOn: "fisso", included: "", extra: "" });
 
 const Style = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Work+Sans:wght@400;500;600;700&display=swap');
-    :root{--bg:#fff;--bg2:#FAF9F7;--ink:#23203A;--accent:#8B6EF3;--accent-soft:#F3EFFE;--grigio:#6E6A80;--linea:#ECE9E2;}
+    :root{--bg:#fff;--bg2:#FAF9F7;--ink:#23203A;--accent:#8B6EF3;--accent-soft:#F3EFFE;--grigio:#6E6A80;--linea:#ECE9E2}
     *{box-sizing:border-box;margin:0;padding:0}
     .is-root{font-family:'Work Sans',system-ui,sans-serif;background:var(--bg2);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased}
     .is-display{font-family:'Sora',sans-serif}
     .is-head{background:#fff;border-bottom:1px solid var(--linea);height:60px;display:flex;align-items:center}
     .is-wrap{max-width:640px;margin:0 auto;padding:0 20px}
-    .is-logo{font-family:'Sora',sans-serif;font-weight:700;font-size:20px;cursor:pointer}
+    .is-logo{font-family:'Sora',sans-serif;font-weight:700;font-size:20px;text-decoration:none;color:inherit}
     .is-logo em{font-style:normal;color:var(--accent)}
     .is-card{background:#fff;border:1px solid var(--linea);border-radius:16px;padding:24px;margin:22px 0}
     .is-steps{display:flex;gap:8px;margin:24px 0 4px}
@@ -63,7 +59,7 @@ const Style = () => (
     .is-addpkg{display:inline-flex;align-items:center;gap:7px;background:var(--accent-soft);color:var(--accent);border:none;border-radius:10px;font:600 14px 'Work Sans';padding:11px 16px;cursor:pointer;margin-top:14px}
     .is-fascia{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end;margin-bottom:10px}
     .is-nav{display:flex;justify-content:space-between;gap:10px;margin-top:22px}
-    .is-btn{display:inline-flex;align-items:center;gap:8px;border-radius:11px;font:600 15px 'Work Sans';padding:12px 22px;cursor:pointer;border:1px solid var(--linea);background:#fff;color:var(--ink)}
+    .is-btn{display:inline-flex;align-items:center;gap:8px;border-radius:11px;font:600 15px 'Work Sans';padding:12px 22px;cursor:pointer;border:1px solid var(--linea);background:#fff;color:var(--ink);text-decoration:none}
     .is-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
     .is-btn.primary:hover{background:#7A5CE8}
     .is-btn:disabled{opacity:.5;cursor:default}
@@ -71,39 +67,101 @@ const Style = () => (
     .is-hint{font-size:12px;color:var(--grigio);margin-top:6px}
     .is-ok{text-align:center;padding:40px 20px}
     .is-ok svg{color:var(--accent);margin-bottom:14px}
-    .is-newcat{margin-top:8px}
+    .is-mailbox{width:64px;height:64px;border-radius:16px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
     .is-spin{animation:is-rot 1s linear infinite}@keyframes is-rot{to{transform:rotate(360deg)}}
     @media(max-width:560px){.is-cats{grid-template-columns:repeat(2,1fr)}.is-row{grid-template-columns:1fr}}
   `}</style>
 );
 
-export default function Iscrizione() {
+const Header = () => (
+  <header className="is-head">
+    <div className="is-wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <a href="/" className="is-logo">Click<em>Eventi</em></a>
+      <a href="/?accedi" style={{ fontSize: 13, fontWeight: 600, color: "var(--grigio)", textDecoration: "none" }}>Hai già un account? Accedi</a>
+    </div>
+  </header>
+);
+
+/* ============ FASE 1 — crea account ============ */
+function CreaAccount() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [errore, setErrore] = useState("");
+  const [inviato, setInviato] = useState(false);
+
+  const registra = async () => {
+    if (!email.includes("@")) { setErrore("Inserisci un'email valida."); return; }
+    if (password.length < 6) { setErrore("La password deve avere almeno 6 caratteri."); return; }
+    setErrore(""); setSaving(true);
+    const { error } = await supabase.auth.signUp({
+      email, password,
+      options: { emailRedirectTo: "https://clickeventi.it/?iscrizione" },
+    });
+    setSaving(false);
+    if (error) {
+      setErrore(error.message.includes("registered")
+        ? "Questa email è già registrata. Vai al login per accedere."
+        : "Errore: " + error.message);
+      return;
+    }
+    setInviato(true);
+  };
+
+  if (inviato) {
+    return (
+      <div className="is-card is-ok">
+        <div className="is-mailbox"><Mail size={30} /></div>
+        <h1 className="is-t is-display">Controlla la tua email 📬</h1>
+        <p className="is-sub" style={{ maxWidth: 440, margin: "8px auto 0" }}>
+          Ti abbiamo scritto a <b>{email}</b>. Clicca il link di conferma: tornerai qui
+          già connesso e potrai completare il tuo profilo (foto, pacchetti, link).
+        </p>
+        <p className="is-hint" style={{ marginTop: 16 }}>Non trovi l'email? Controlla nello spam.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="is-card">
+      <div className="is-eyebrow">Passo 1 · Crea il tuo account</div>
+      <h1 className="is-t is-display">Diventa un professionista</h1>
+      <p className="is-sub">Inizia con email e password. Poi confermi l'email e completi il profilo.</p>
+      <label>Email *</label>
+      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="La userai per accedere" />
+      <label>Password *</label>
+      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+             placeholder="Almeno 6 caratteri" onKeyDown={(e) => e.key === "Enter" && registra()} />
+      {errore && <div className="is-err">{errore}</div>}
+      <div className="is-nav">
+        <a href="/" className="is-btn">Annulla</a>
+        <button className="is-btn primary" onClick={registra} disabled={saving}>
+          {saving ? <><Loader2 size={16} className="is-spin" /> Invio…</> : <>Continua <ArrowRight size={16} /></>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============ FASE 2 — completa profilo (loggato) ============ */
+function CompletaProfilo({ user }) {
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [errore, setErrore] = useState("");
   const [fatto, setFatto] = useState(false);
 
-  // step 1 — chi sei + account
-  const [d, setD] = useState({
-    nome: "", ruolo: "", categoria: "", nuovaCat: "",
-    localita: "", telefono: "", email: "", password: "",
-  });
-  // step 2 — pacchetti + extra
+  const [d, setD] = useState({ nome: "", ruolo: "", categoria: "", nuovaCat: "", localita: "", telefono: "", link: "" });
   const [pacchetti, setPacchetti] = useState([pacchettoVuoto()]);
   const [extra, setExtra] = useState([]);
-  // step 3 — fasce km
-  const [fasce, setFasce] = useState([
-    { fino: 30, fee: 0 }, { fino: 100, fee: "" }, { fino: 99999, fee: "" },
-  ]);
+  const [fasce, setFasce] = useState([{ fino: 30, fee: 0 }, { fino: 100, fee: "" }, { fino: 99999, fee: "" }]);
 
   const set = (k) => (e) => setD({ ...d, [k]: e.target.value });
+  const so = (id) => scaleOpt(id);
 
   const validStep1 = () => {
-    if (!d.nome || !d.ruolo || !d.localita || !d.email || !d.password) return "Compila tutti i campi obbligatori.";
+    if (!d.nome || !d.ruolo || !d.localita) return "Compila nome, cosa fai e città.";
     if (!d.categoria) return "Scegli una categoria.";
     if (d.categoria === "altro" && !d.nuovaCat) return "Scrivi il nome della categoria che proponi.";
-    if (d.password.length < 6) return "La password deve avere almeno 6 caratteri.";
-    if (!d.email.includes("@")) return "Inserisci un'email valida.";
     return "";
   };
   const validStep2 = () => {
@@ -111,7 +169,6 @@ export default function Iscrizione() {
     if (!p.label || !p.base) return "Inserisci almeno un pacchetto con nome e prezzo.";
     return "";
   };
-
   const avanti = () => {
     const err = step === 1 ? validStep1() : step === 2 ? validStep2() : "";
     if (err) { setErrore(err); return; }
@@ -122,255 +179,198 @@ export default function Iscrizione() {
   const addPkg = () => setPacchetti([...pacchetti, pacchettoVuoto()]);
   const delPkg = (i) => setPacchetti(pacchetti.filter((_, x) => x !== i));
   const upPkg = (i, k, v) => setPacchetti(pacchetti.map((p, x) => x === i ? { ...p, [k]: v } : p));
-
   const addExtra = () => setExtra([...extra, { label: "", price: "" }]);
   const delExtra = (i) => setExtra(extra.filter((_, x) => x !== i));
   const upExtra = (i, k, v) => setExtra(extra.map((e, x) => x === i ? { ...e, [k]: v } : e));
-
   const upFascia = (i, v) => setFasce(fasce.map((f, x) => x === i ? { ...f, fee: v } : f));
 
   const invia = async () => {
     setErrore(""); setSaving(true);
-    const categoriaFinale = d.categoria === "altro" ? "musica" : d.categoria; // la proposta va in nota
-    // 1) crea account con i metadati del profilo
-    const { data: signUp, error: errAuth } = await supabase.auth.signUp({
-      email: d.email,
-      password: d.password,
-      options: {
-        data: {
-          nome: d.nome, ruolo: d.ruolo, categoria: categoriaFinale, localita: d.localita,
-        },
-        emailRedirectTo: "https://clickeventi.it/?pannello",
-      },
-    });
-    if (errAuth) {
-      setSaving(false);
-      setErrore(errAuth.message.includes("registered") ? "Questa email è già registrata. Prova ad accedere." : "Errore nella creazione dell'account: " + errAuth.message);
-      return;
-    }
+    const categoriaFinale = d.categoria === "altro" ? "musica" : d.categoria;
+    // recupera la riga fornitore creata dal trigger
+    const { data: forn } = await supabase.from("fornitori").select("id").eq("user_id", user.id).maybeSingle();
+    if (!forn?.id) { setSaving(false); setErrore("Profilo non trovato. Ricarica la pagina."); return; }
+    const fid = forn.id;
 
-    // 2) il trigger ha creato la riga fornitore; la recuperiamo e la completiamo
-    const uid = signUp.user?.id;
-    // aspetta un attimo che il trigger scriva
-    await new Promise((r) => setTimeout(r, 800));
-    const { data: forn } = await supabase.from("fornitori").select("id").eq("user_id", uid).maybeSingle();
+    const noteBio = d.categoria === "altro" ? ("Categoria proposta dal fornitore: " + d.nuovaCat) : null;
+    const { error: e1 } = await supabase.from("fornitori").update({
+      nome: d.nome, ruolo: d.ruolo, categoria: categoriaFinale,
+      localita: d.localita, telefono: d.telefono, email: user.email,
+      bio: noteBio, link: d.link || null,
+    }).eq("id", fid);
+    if (e1) { setSaving(false); setErrore("Errore nel salvataggio del profilo: " + e1.message); return; }
 
-    if (forn?.id) {
-      const fid = forn.id;
-      await supabase.from("fornitori").update({
-        telefono: d.telefono,
-        email: d.email,
-        bio: d.categoria === "altro" ? ("Categoria proposta dal fornitore: " + d.nuovaCat) : null,
-      }).eq("id", fid);
+    const pkgRows = pacchetti.filter((p) => p.label && p.base).map((p) => ({
+      fornitore_id: fid, label: p.label, evento: p.event, base: Number(p.base) || 0,
+      includes: p.includes, scale_on: p.scaleOn, inclusi: Number(p.included) || 0, extra_unita: Number(p.extra) || 0,
+    }));
+    if (pkgRows.length) { const { error } = await supabase.from("pacchetti").insert(pkgRows); if (error) { setSaving(false); setErrore("Errore pacchetti: " + error.message); return; } }
 
-      // pacchetti
-      const pkgRows = pacchetti.filter((p) => p.label && p.base).map((p) => ({
-        fornitore_id: fid, label: p.label, evento: p.event, base: Number(p.base) || 0,
-        includes: p.includes, scale_on: p.scaleOn,
-        inclusi: Number(p.included) || 0, extra_unita: Number(p.extra) || 0,
-      }));
-      if (pkgRows.length) await supabase.from("pacchetti").insert(pkgRows);
+    const exRows = extra.filter((e) => e.label && e.price).map((e) => ({ fornitore_id: fid, label: e.label, prezzo: Number(e.price) || 0 }));
+    if (exRows.length) await supabase.from("extra").insert(exRows);
 
-      // extra
-      const exRows = extra.filter((e) => e.label && e.price).map((e) => ({
-        fornitore_id: fid, label: e.label, prezzo: Number(e.price) || 0,
-      }));
-      if (exRows.length) await supabase.from("extra").insert(exRows);
+    const faRows = fasce.map((f) => ({ fornitore_id: fid, fino_a_km: Number(f.fino), fee: Number(f.fee) || 0 }));
+    await supabase.from("fasce").insert(faRows);
 
-      // fasce
-      const faRows = fasce.map((f) => ({
-        fornitore_id: fid, fino_a_km: Number(f.fino), fee: Number(f.fee) || 0,
-      }));
-      await supabase.from("fasce").insert(faRows);
-    }
-
-    setSaving(false);
-    setFatto(true);
+    setSaving(false); setFatto(true);
   };
 
   if (fatto) {
     return (
-      <div className="is-root"><Style />
-        <header className="is-head"><div className="is-wrap"><span className="is-logo">Click<em>Eventi</em></span></div></header>
-        <div className="is-wrap"><div className="is-card is-ok">
-          <Party size={44} />
-          <h1 className="is-t is-display">Ci siamo quasi! 🎉</h1>
-          <p className="is-sub" style={{ maxWidth: 420, margin: "8px auto 0" }}>
-            Ti abbiamo inviato un'email a <b>{d.email}</b>: clicca il link per confermare l'iscrizione.
-            Poi il team Click Eventi verificherà il tuo profilo e lo pubblicherà. Ti avvisiamo appena sei online!
-          </p>
-        </div></div>
+      <div className="is-card is-ok">
+        <Party size={44} />
+        <h1 className="is-t is-display">Profilo inviato! 🎉</h1>
+        <p className="is-sub" style={{ maxWidth: 420, margin: "8px auto 0" }}>
+          Il team Click Eventi verificherà il tuo profilo e lo pubblicherà. Ti avvisiamo appena sei online!
+        </p>
+        <a href="/?accedi" className="is-btn primary" style={{ marginTop: 20, display: "inline-flex" }}>Vai al mio account</a>
       </div>
     );
   }
 
-  const so = (id) => scaleOpt(id);
-
   return (
-    <div className="is-root"><Style />
-      <header className="is-head">
-        <div className="is-wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <a href="/" className="is-logo" style={{ textDecoration: "none", color: "inherit" }}>Click<em>Eventi</em></a>
-          <a href="/?accedi" style={{ fontSize: 13, fontWeight: 600, color: "var(--grigio)", textDecoration: "none" }}>Hai già un account? Accedi</a>
-        </div>
-      </header>
+    <>
+      <div className="is-steps">{[1, 2, 3].map((n) => <div key={n} className={"is-stepdot" + (step >= n ? " on" : "")} />)}</div>
 
-      <div className="is-wrap">
-        <div className="is-steps">
-          {[1, 2, 3].map((n) => <div key={n} className={"is-stepdot" + (step >= n ? " on" : "")} />)}
-        </div>
-
-        {/* STEP 1 */}
-        {step === 1 && (
-          <div className="is-card">
-            <div className="is-eyebrow">Passo 1 di 3</div>
-            <h1 className="is-t is-display">Diventa un professionista</h1>
-            <p className="is-sub">Raccontaci chi sei. Questi dati appariranno sul tuo profilo.</p>
-
-            <label>Nome o nome d'arte *</label>
-            <input value={d.nome} onChange={set("nome")} placeholder="Es. Elisa Quaranta" />
-
-            <label>Cosa fai *</label>
-            <input value={d.ruolo} onChange={set("ruolo")} placeholder="Es. Violinista, DJ, Fotografo…" />
-
-            <label>Categoria *</label>
-            <div className="is-cats">
-              {CATEGORIES.map((c) => {
-                const Icon = c.icon;
-                return (
-                  <div key={c.id} className={"is-cat" + (d.categoria === c.id ? " on" : "")}
-                       onClick={() => setD({ ...d, categoria: c.id })}>
-                    <Icon size={20} strokeWidth={1.9} />{c.label}
-                  </div>
-                );
-              })}
-            </div>
-            <div className={"is-cat is-newcat" + (d.categoria === "altro" ? " on" : "")}
-                 style={{ display: "inline-block", padding: "8px 14px", marginTop: 8 }}
-                 onClick={() => setD({ ...d, categoria: "altro" })}>
-              + Proponi una nuova categoria
-            </div>
-            {d.categoria === "altro" && (
-              <input style={{ marginTop: 8 }} value={d.nuovaCat} onChange={set("nuovaCat")}
-                     placeholder="Es. Scenografie, Noleggio auto…" />
-            )}
-
-            <div className="is-row">
-              <div><label>Città *</label><input value={d.localita} onChange={set("localita")} placeholder="Es. Lecce" /></div>
-              <div><label>Telefono</label><input value={d.telefono} onChange={set("telefono")} placeholder="Per i clienti" /></div>
-            </div>
-
-            <label>Email *</label>
-            <input type="email" value={d.email} onChange={set("email")} placeholder="La userai per accedere" />
-            <label>Password *</label>
-            <input type="password" value={d.password} onChange={set("password")} placeholder="Almeno 6 caratteri" />
-
-            {errore && <div className="is-err">{errore}</div>}
-            <div className="is-nav">
-              <a href="/" className="is-btn">Annulla</a>
-              <button className="is-btn primary" onClick={avanti}>Continua <ArrowRight size={16} /></button>
-            </div>
+      {step === 1 && (
+        <div className="is-card">
+          <div className="is-eyebrow">Passo 2 di 4 · Chi sei</div>
+          <h1 className="is-t is-display">Il tuo profilo</h1>
+          <p className="is-sub">Email confermata ✓ Ora raccontaci chi sei.</p>
+          <label>Nome o nome d'arte *</label>
+          <input value={d.nome} onChange={set("nome")} placeholder="Es. Elisa Quaranta" />
+          <label>Cosa fai *</label>
+          <input value={d.ruolo} onChange={set("ruolo")} placeholder="Es. Violinista, DJ, Fotografo…" />
+          <label>Categoria *</label>
+          <div className="is-cats">
+            {CATEGORIES.map((c) => { const Icon = c.icon; return (
+              <div key={c.id} className={"is-cat" + (d.categoria === c.id ? " on" : "")} onClick={() => setD({ ...d, categoria: c.id })}>
+                <Icon size={20} strokeWidth={1.9} />{c.label}
+              </div>); })}
           </div>
-        )}
+          <div className={"is-cat" + (d.categoria === "altro" ? " on" : "")} style={{ display: "inline-block", padding: "8px 14px", marginTop: 8 }} onClick={() => setD({ ...d, categoria: "altro" })}>
+            + Proponi una nuova categoria
+          </div>
+          {d.categoria === "altro" && <input style={{ marginTop: 8 }} value={d.nuovaCat} onChange={set("nuovaCat")} placeholder="Es. Scenografie, Noleggio auto…" />}
+          <div className="is-row">
+            <div><label>Città *</label><input value={d.localita} onChange={set("localita")} placeholder="Es. Lecce" /></div>
+            <div><label>Telefono</label><input value={d.telefono} onChange={set("telefono")} placeholder="Per i clienti" /></div>
+          </div>
+          <label><LinkIcon size={13} style={{ verticalAlign: "-2px" }} /> Link (Instagram, sito, YouTube…)</label>
+          <input value={d.link} onChange={set("link")} placeholder="https://instagram.com/iltuoprofilo" />
+          <p className="is-hint">Serve al team per verificare che tu sia un professionista reale. Metti il link che ti rappresenta meglio.</p>
+          {errore && <div className="is-err">{errore}</div>}
+          <div className="is-nav">
+            <span />
+            <button className="is-btn primary" onClick={avanti}>Continua <ArrowRight size={16} /></button>
+          </div>
+        </div>
+      )}
 
-        {/* STEP 2 */}
-        {step === 2 && (
-          <div className="is-card">
-            <div className="is-eyebrow">Passo 2 di 3</div>
-            <h1 className="is-t is-display">I tuoi pacchetti</h1>
-            <p className="is-sub">Crea almeno un pacchetto. Potrai aggiungerne o modificarli quando vuoi.</p>
-
-            {pacchetti.map((p, i) => (
-              <div key={i} className="is-pkg">
-                {pacchetti.length > 1 && (
-                  <button className="is-pkg-del" onClick={() => delPkg(i)} aria-label="Elimina"><Trash2 size={16} /></button>
-                )}
-                <label>Nome del pacchetto *</label>
-                <input value={p.label} onChange={(e) => upPkg(i, "label", e.target.value)} placeholder='Es. "Set acustico", "Open bar festa"' />
+      {step === 2 && (
+        <div className="is-card">
+          <div className="is-eyebrow">Passo 3 di 4 · I tuoi pacchetti</div>
+          <h1 className="is-t is-display">I tuoi pacchetti</h1>
+          <p className="is-sub">Crea almeno un pacchetto. Potrai modificarli quando vuoi.</p>
+          {pacchetti.map((p, i) => (
+            <div key={i} className="is-pkg">
+              {pacchetti.length > 1 && <button className="is-pkg-del" onClick={() => delPkg(i)}><Trash2 size={16} /></button>}
+              <label>Nome del pacchetto *</label>
+              <input value={p.label} onChange={(e) => upPkg(i, "label", e.target.value)} placeholder='Es. "Set acustico"' />
+              <div className="is-row">
+                <div><label>Per quale evento</label>
+                  <select value={p.event} onChange={(e) => upPkg(i, "event", e.target.value)}>{EVENT_OPTS.map((t) => <option key={t}>{t}</option>)}</select></div>
+                <div><label>Prezzo base (€) *</label><input type="number" value={p.base} onChange={(e) => upPkg(i, "base", e.target.value)} /></div>
+              </div>
+              <label>Cosa include</label>
+              <input value={p.includes} onChange={(e) => upPkg(i, "includes", e.target.value)} placeholder="Es. 1 ora · Impianto incluso" />
+              <label>Come scala il prezzo</label>
+              <select value={p.scaleOn} onChange={(e) => upPkg(i, "scaleOn", e.target.value)}>{SCALE_OPTS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select>
+              {p.scaleOn !== "fisso" && (
                 <div className="is-row">
-                  <div>
-                    <label>Per quale evento</label>
-                    <select value={p.event} onChange={(e) => upPkg(i, "event", e.target.value)}>
-                      {EVENT_OPTS.map((t) => <option key={t}>{t}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label>Prezzo base (€) *</label>
-                    <input type="number" value={p.base} onChange={(e) => upPkg(i, "base", e.target.value)} />
-                  </div>
+                  <div><label>{so(p.scaleOn).inclLabel}</label><input type="number" value={p.included} onChange={(e) => upPkg(i, "included", e.target.value)} /></div>
+                  <div><label>{so(p.scaleOn).extraLabel}</label><input type="number" value={p.extra} onChange={(e) => upPkg(i, "extra", e.target.value)} /></div>
                 </div>
-                <label>Cosa include</label>
-                <input value={p.includes} onChange={(e) => upPkg(i, "includes", e.target.value)} placeholder="Es. 1 ora di esibizione · Impianto incluso" />
-                <label>Come scala il prezzo</label>
-                <select value={p.scaleOn} onChange={(e) => upPkg(i, "scaleOn", e.target.value)}>
-                  {SCALE_OPTS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-                </select>
-                {p.scaleOn !== "fisso" && (
-                  <div className="is-row">
-                    <div><label>{so(p.scaleOn).inclLabel}</label><input type="number" value={p.included} onChange={(e) => upPkg(i, "included", e.target.value)} /></div>
-                    <div><label>{so(p.scaleOn).extraLabel}</label><input type="number" value={p.extra} onChange={(e) => upPkg(i, "extra", e.target.value)} /></div>
-                  </div>
-                )}
+              )}
+            </div>
+          ))}
+          <button className="is-addpkg" onClick={addPkg}><Plus size={16} /> Aggiungi un altro pacchetto</button>
+          <div style={{ marginTop: 24 }}>
+            <label>Servizi extra (facoltativi)</label>
+            {extra.map((e, i) => (
+              <div key={i} className="is-row" style={{ gridTemplateColumns: "2fr 1fr auto", marginTop: 8, alignItems: "center" }}>
+                <input value={e.label} onChange={(ev) => upExtra(i, "label", ev.target.value)} placeholder="Es. Amplificazione" />
+                <input type="number" value={e.price} onChange={(ev) => upExtra(i, "price", ev.target.value)} placeholder="€" />
+                <button className="is-pkg-del" style={{ position: "static" }} onClick={() => delExtra(i)}><Trash2 size={16} /></button>
               </div>
             ))}
-            <button className="is-addpkg" onClick={addPkg}><Plus size={16} /> Aggiungi un altro pacchetto</button>
+            <button className="is-addpkg" onClick={addExtra}><Plus size={16} /> Aggiungi extra</button>
+          </div>
+          {errore && <div className="is-err">{errore}</div>}
+          <div className="is-nav">
+            <button className="is-btn" onClick={indietro}><ArrowLeft size={16} /> Indietro</button>
+            <button className="is-btn primary" onClick={avanti}>Continua <ArrowRight size={16} /></button>
+          </div>
+        </div>
+      )}
 
-            <div style={{ marginTop: 24 }}>
-              <label>Servizi extra (facoltativi)</label>
-              <p className="is-hint">Voci che il cliente può aggiungere a qualsiasi pacchetto.</p>
-              {extra.map((e, i) => (
-                <div key={i} className="is-row" style={{ gridTemplateColumns: "2fr 1fr auto", marginTop: 8, alignItems: "center" }}>
-                  <input value={e.label} onChange={(ev) => upExtra(i, "label", ev.target.value)} placeholder="Es. Amplificazione" />
-                  <input type="number" value={e.price} onChange={(ev) => upExtra(i, "price", ev.target.value)} placeholder="€" />
-                  <button className="is-pkg-del" style={{ position: "static" }} onClick={() => delExtra(i)}><Trash2 size={16} /></button>
-                </div>
-              ))}
-              <button className="is-addpkg" onClick={addExtra}><Plus size={16} /> Aggiungi extra</button>
-            </div>
+      {step === 3 && (
+        <div className="is-card">
+          <div className="is-eyebrow">Passo 4 di 4 · Tariffe di zona</div>
+          <h1 className="is-t is-display">Le tue tariffe di zona</h1>
+          <p className="is-sub">Quanto aggiungi in base alla distanza. Il cliente vedrà solo il totale, mai i km.</p>
+          <div className="is-fascia"><div><label>Entro 30 km</label><input value="Incluso" disabled /></div><div><label>Costo aggiuntivo</label><input value="0 €" disabled /></div></div>
+          <div className="is-fascia"><div><label>Entro 100 km</label><input value="Fascia media" disabled /></div><div><label>Costo aggiuntivo (€)</label><input type="number" value={fasce[1].fee} onChange={(e) => upFascia(1, e.target.value)} placeholder="Es. 100" /></div></div>
+          <div className="is-fascia"><div><label>Oltre 100 km</label><input value="Fascia lontana" disabled /></div><div><label>Costo aggiuntivo (€)</label><input type="number" value={fasce[2].fee} onChange={(e) => upFascia(2, e.target.value)} placeholder="Es. 150" /></div></div>
+          <p className="is-hint">Non sai che valori mettere? Lascia vuoto: li imposti dopo col team.</p>
+          {errore && <div className="is-err">{errore}</div>}
+          <div className="is-nav">
+            <button className="is-btn" onClick={indietro}><ArrowLeft size={16} /> Indietro</button>
+            <button className="is-btn primary" onClick={invia} disabled={saving}>
+              {saving ? <><Loader2 size={16} className="is-spin" /> Invio…</> : <>Invia profilo <Check size={16} /></>}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
-            {errore && <div className="is-err">{errore}</div>}
-            <div className="is-nav">
-              <button className="is-btn" onClick={indietro}><ArrowLeft size={16} /> Indietro</button>
-              <button className="is-btn primary" onClick={avanti}>Continua <ArrowRight size={16} /></button>
-            </div>
+/* ============ ROUTER INTERNO ============ */
+export default function Iscrizione() {
+  const [stato, setStato] = useState("check"); // check | crea | completa | giafatto
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) { setStato("crea"); return; }
+      setUser(session.user);
+      // ha già un profilo completo? (nome valorizzato = già compilato)
+      const { data: forn } = await supabase.from("fornitori").select("nome").eq("user_id", session.user.id).maybeSingle();
+      if (forn && forn.nome && forn.nome !== "Nuovo professionista") setStato("giafatto");
+      else setStato("completa");
+    })();
+  }, []);
+
+  return (
+    <div className="is-root"><Style /><Header />
+      <div className="is-wrap">
+        {stato === "check" && <div style={{ textAlign: "center", padding: "70px 0", color: "var(--grigio)" }}><Loader2 size={26} className="is-spin" /></div>}
+        {stato === "crea" && <CreaAccount />}
+        {stato === "completa" && user && <CompletaProfilo user={user} />}
+        {stato === "giafatto" && (
+          <div className="is-card is-ok">
+            <Check size={40} style={{ color: "var(--accent)", marginBottom: 12 }} />
+            <h1 className="is-t is-display">Profilo già inviato ✓</h1>
+            <p className="is-sub">Il tuo profilo è in verifica o già online. Gestiscilo dal tuo account.</p>
+            <a href="/?accedi" className="is-btn primary" style={{ marginTop: 18, display: "inline-flex" }}>Vai al mio account</a>
           </div>
         )}
-
-        {/* STEP 3 */}
-        {step === 3 && (
-          <div className="is-card">
-            <div className="is-eyebrow">Passo 3 di 3</div>
-            <h1 className="is-t is-display">Le tue tariffe di zona</h1>
-            <p className="is-sub">Quanto aggiungi al prezzo in base alla distanza dell'evento. Il cliente vedrà solo il totale, mai i km.</p>
-
-            <div className="is-fascia">
-              <div><label>Entro 30 km</label><input value="Incluso" disabled /></div>
-              <div><label>Costo aggiuntivo</label><input value="0 €" disabled /></div>
-            </div>
-            <div className="is-fascia">
-              <div><label>Entro 100 km</label><input value="Fascia media" disabled /></div>
-              <div><label>Costo aggiuntivo (€)</label><input type="number" value={fasce[1].fee} onChange={(e) => upFascia(1, e.target.value)} placeholder="Es. 100" /></div>
-            </div>
-            <div className="is-fascia">
-              <div><label>Oltre 100 km</label><input value="Fascia lontana" disabled /></div>
-              <div><label>Costo aggiuntivo (€)</label><input type="number" value={fasce[2].fee} onChange={(e) => upFascia(2, e.target.value)} placeholder="Es. 150" /></div>
-            </div>
-            <p className="is-hint">Non sai che valori mettere? Lascia pure vuoto: potrai impostarli dopo con l'aiuto del team.</p>
-
-            {errore && <div className="is-err">{errore}</div>}
-            <div className="is-nav">
-              <button className="is-btn" onClick={indietro}><ArrowLeft size={16} /> Indietro</button>
-              <button className="is-btn primary" onClick={invia} disabled={saving}>
-                {saving ? <><Loader2 size={16} className="is-spin" /> Invio…</> : <>Invia iscrizione <Check size={16} /></>}
-              </button>
-            </div>
-          </div>
-        )}
-
-        <p style={{ textAlign: "center", fontSize: 12, color: "var(--grigio)", padding: "10px 0 40px" }}>
-          Iscrivendoti accetti che il team Click Eventi verifichi il tuo profilo prima della pubblicazione.
-        </p>
       </div>
+      <p style={{ textAlign: "center", fontSize: 12, color: "var(--grigio)", padding: "10px 0 40px" }}>
+        Il team Click Eventi verifica ogni profilo prima della pubblicazione.
+      </p>
     </div>
   );
 }

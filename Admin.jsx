@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Check, X, Clock, MapPin, Phone, Mail, Package, Navigation, Star,
-  ShieldCheck, Loader2, LogOut, Inbox, Users, Lightbulb
+  ShieldCheck, Loader2, LogOut, Inbox, Users, Lightbulb, Link as LinkIcon
 } from "lucide-react";
 import { supabase } from "./supabase";
 
@@ -92,6 +92,7 @@ function ForniCard({ f, onApprova, onRifiuta, onVerif, busy }) {
         {f.localita && <span><MapPin size={13} /> {f.localita}</span>}
         {f.email && <span><Mail size={13} /> {f.email}</span>}
         {f.telefono && <span><Phone size={13} /> {f.telefono}</span>}
+        {f.link && <span><LinkIcon size={13} /> <a href={f.link} target="_blank" rel="noreferrer" style={{ color: "var(--accent)", fontWeight: 600 }}>Vedi profilo/social ↗</a></span>}
       </div>
 
       {proposta && (
