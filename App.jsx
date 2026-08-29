@@ -201,6 +201,8 @@ function fromDb(r) {
     reviews: r.recensioni,
     bookings: r.prenotazioni,
     verificato: r.verificato,
+    foto: r.foto || [],
+    videoLink: r.video_link,
     eventTypes: r.tipi_evento || [],
     busy: (r.indisponibilita || []).map((d) => d.giorno),
     fasce: [...(r.fasce || [])].sort((a, b) => a.fino_a_km - b.fino_a_km),
@@ -579,7 +581,11 @@ function ProviderCard({ p, onOpen, eventType, eventLoc }) {
     <div className="cv-card cv-card-base" onClick={() => onOpen(p)} role="button" tabIndex={0}
          onKeyDown={(e) => e.key === "Enter" && onOpen(p)}>
       {fits && <span className="cv-fit">Ideale per {eventType}</span>}
-      <div className="cv-avatar">{initials}</div>
+      {p.foto?.length > 0 ? (
+        <div className="cv-cover"><img src={p.foto[0]} alt={p.name} loading="lazy" /></div>
+      ) : (
+        <div className="cv-avatar">{initials}</div>
+      )}
       <h3>{p.name}</h3>
       <div className="cv-role">{p.role} · {catLabel(p.cat)}</div>
       <div className="cv-meta">
@@ -942,7 +948,13 @@ function ProfileView({ p, goBack, q }) {
         <button className="cv-back" onClick={goBack}><ArrowLeft size={16} /> Torna ai risultati</button>
 
         <div style={{ display: "flex", gap: 16, alignItems: "flex-start", margin: "14px 0 20px", flexWrap: "wrap" }}>
-          <div className="cv-avatar" style={{ width: 72, height: 72, fontSize: 25 }}>{initials}</div>
+          {p.foto?.length > 0 ? (
+            <div style={{ width: 96, height: 96, borderRadius: 18, overflow: "hidden", flexShrink: 0, border: "1px solid var(--linea)" }}>
+              <img src={p.foto[0]} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            </div>
+          ) : (
+            <div className="cv-avatar" style={{ width: 72, height: 72, fontSize: 25 }}>{initials}</div>
+          )}
           <div style={{ flex: 1, minWidth: 240 }}>
             <h2 className="cv-display" style={{ fontSize: 28, fontWeight: 700 }}>{p.name}</h2>
             <div className="cv-role" style={{ fontSize: 15 }}>{p.role} · {catLabel(p.cat)}</div>
@@ -968,21 +980,27 @@ function ProfileView({ p, goBack, q }) {
           <div className="cv-panel cv-card-base">
             <h4 className="cv-display" style={{ fontSize: 19, marginBottom: 10 }}>Chi è</h4>
             <p style={{ fontSize: 14.5, lineHeight: 1.65 }}>{p.bio}</p>
-            <h4 className="cv-display" style={{ fontSize: 16, margin: "18px 0 8px" }}>Foto & video</h4>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-              {[0, 1, 2].map((i) => (
-                <div key={i} style={{
-                  aspectRatio: "1", borderRadius: 10, border: "1px dashed var(--linea)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "var(--grigio)", background: "var(--bg2)",
-                }}>
-                  <Camera size={18} />
+            {p.foto?.length > 0 && (
+              <>
+                <h4 className="cv-display" style={{ fontSize: 16, margin: "18px 0 8px" }}>Foto</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                  {p.foto.map((u, i) => (
+                    <a key={i} href={u} target="_blank" rel="noreferrer"
+                       style={{ display: "block", aspectRatio: "1", borderRadius: 10, overflow: "hidden", border: "1px solid var(--linea)" }}>
+                      <img src={u} alt={`${p.name} ${i + 1}`} loading="lazy"
+                           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    </a>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <p className="cv-note" style={{ textAlign: "left" }}>
-              Le foto vengono caricate dal professionista e approvate dal team Click Eventi.
-            </p>
+              </>
+            )}
+            {p.videoLink && (
+              <p style={{ marginTop: 12, fontSize: 14 }}>
+                <a href={p.videoLink} target="_blank" rel="noreferrer" style={{ color: "var(--accent)", fontWeight: 600 }}>
+                  ▶ Guarda il video
+                </a>
+              </p>
+            )}
           </div>
 
           <QuoteBuilder p={p} eventType={q.etype} eventLoc={q.loc} prefillDate={q.date} />

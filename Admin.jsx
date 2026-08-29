@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Check, X, MapPin, Phone, Mail, Navigation, Search,
   ShieldCheck, Loader2, LogOut, Inbox, Users, Lightbulb,
-  Link as LinkIcon, ArrowLeft, ChevronRight, Calendar
+  Link as LinkIcon, ArrowLeft, ChevronRight, Calendar, Video, ImageOff
 } from "lucide-react";
 import { supabase } from "./supabase";
 
@@ -77,6 +77,10 @@ const Style = () => (
     .ad-chips{display:flex;flex-wrap:wrap;gap:6px}
     .ad-chip{background:var(--bg2);border:1px solid var(--linea);border-radius:999px;font-size:12.5px;padding:4px 10px}
     .ad-vuoto{color:var(--grigio);font-size:13.5px;font-style:italic}
+    .ad-gal{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .ad-gal a{display:block;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--linea)}
+    .ad-gal img{width:100%;height:100%;object-fit:cover;display:block}
+    @media(max-width:560px){.ad-gal{grid-template-columns:repeat(3,1fr)}}
 
     .ad-actions{position:sticky;bottom:0;background:#fff;border:1px solid var(--linea);border-radius:16px;padding:16px;display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:30px}
     .ad-btn{display:inline-flex;align-items:center;gap:7px;font:600 14px 'Work Sans';border-radius:10px;padding:11px 18px;cursor:pointer;border:1px solid var(--linea);background:#fff;color:var(--ink)}
@@ -112,6 +116,7 @@ function Riga({ f, onApri }) {
           {f.nome}
           <span className="ad-cat">{CAT_LABEL[f.categoria] || f.categoria}</span>
           {f.stato === "in_attesa" && !f.link && <span className="ad-flag nolink">senza link</span>}
+          {f.stato === "in_attesa" && !f.foto?.length && <span className="ad-flag nolink">senza foto</span>}
           {f.verificato && <span className="ad-flag ok">✓ Verificato</span>}
         </div>
         <div className="ad-rowsub">
@@ -158,6 +163,23 @@ function Dettaglio({ f, onIndietro, onApprova, onRifiuta, onVerif, busy }) {
             <span>Ha proposto una <b>nuova categoria</b>: "{proposta}". Se la approvi, ricordati di aggiungerla alle categorie del sito.</span>
           </div>
         )}
+
+        <div className="ad-sec">
+          <h5>Foto ({f.foto?.length || 0})</h5>
+          {f.foto?.length ? (
+            <div className="ad-gal">
+              {f.foto.map((u, i) => (
+                <a key={i} href={u} target="_blank" rel="noreferrer"><img src={u} alt={`Foto ${i + 1}`} /></a>
+              ))}
+            </div>
+          ) : <p className="ad-vuoto">Nessuna foto caricata.</p>}
+          {f.video_link && (
+            <p style={{ marginTop: 10, fontSize: 13.5 }}>
+              <Video size={14} style={{ verticalAlign: "-2px" }} />{" "}
+              <a href={f.video_link} target="_blank" rel="noreferrer" style={{ color: "var(--accent)", fontWeight: 600 }}>Guarda il video ↗</a>
+            </p>
+          )}
+        </div>
 
         <div className="ad-sec">
           <h5>Pacchetti ({f.pacchetti?.length || 0})</h5>

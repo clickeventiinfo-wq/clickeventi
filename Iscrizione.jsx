@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Music, Camera, Martini, PartyPopper, Sparkles,
-  Check, ArrowLeft, ArrowRight, Plus, Trash2, PartyPopper as Party, Loader2, Mail, Link as LinkIcon
+  Check, ArrowLeft, ArrowRight, Plus, Trash2, PartyPopper as Party, Loader2, Mail, Link as LinkIcon, ImagePlus, X, Video
 } from "lucide-react";
 import { supabase } from "./supabase";
 
@@ -69,6 +69,13 @@ const Style = () => (
     .is-ok svg{color:var(--accent);margin-bottom:14px}
     .is-mailbox{width:64px;height:64px;border-radius:16px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
     .is-spin{animation:is-rot 1s linear infinite}@keyframes is-rot{to{transform:rotate(360deg)}}
+    .is-gal{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+    .is-foto{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:1px solid var(--linea);background:var(--bg2)}
+    .is-foto img{width:100%;height:100%;object-fit:cover;display:block}
+    .is-foto button{position:absolute;top:6px;right:6px;background:rgba(35,32,58,.75);border:none;color:#fff;border-radius:8px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+    .is-add{aspect-ratio:1;border:1.5px dashed var(--accent);border-radius:12px;background:var(--accent-soft);color:var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;font:600 12.5px 'Work Sans';text-align:center;padding:8px}
+    .is-add:hover{background:#EDE7FE}
+    .is-cover{position:absolute;bottom:6px;left:6px;background:var(--accent);color:#fff;font:700 10.5px 'Work Sans';padding:2px 8px;border-radius:999px}
     @media(max-width:560px){.is-cats{grid-template-columns:repeat(2,1fr)}.is-row{grid-template-columns:1fr}}
   `}</style>
 );
@@ -154,6 +161,9 @@ function CompletaProfilo({ user }) {
   const [pacchetti, setPacchetti] = useState([pacchettoVuoto()]);
   const [extra, setExtra] = useState([]);
   const [fasce, setFasce] = useState([{ fino: 30, fee: 0 }, { fino: 100, fee: "" }, { fino: 99999, fee: "" }]);
+  const [foto, setFoto] = useState([]);          // {url, path}
+  const [videoLink, setVideoLink] = useState("");
+  const [caricando, setCaricando] = useState(false);
 
   const set = (k) => (e) => setD({ ...d, [k]: e.target.value });
   const so = (id) => scaleOpt(id);
@@ -169,8 +179,12 @@ function CompletaProfilo({ user }) {
     if (!p.label || !p.base) return "Inserisci almeno un pacchetto con nome e prezzo.";
     return "";
   };
+  const validStep3 = () => {
+    if (foto.length === 0) return "Carica almeno una foto: serve ai clienti per sceglierti.";
+    return "";
+  };
   const avanti = () => {
-    const err = step === 1 ? validStep1() : step === 2 ? validStep2() : "";
+    const err = step === 1 ? validStep1() : step === 2 ? validStep2() : step === 3 ? validStep3() : "";
     if (err) { setErrore(err); return; }
     setErrore(""); setStep(step + 1);
   };
@@ -183,6 +197,30 @@ function CompletaProfilo({ user }) {
   const delExtra = (i) => setExtra(extra.filter((_, x) => x !== i));
   const upExtra = (i, k, v) => setExtra(extra.map((e, x) => x === i ? { ...e, [k]: v } : e));
   const upFascia = (i, v) => setFasce(fasce.map((f, x) => x === i ? { ...f, fee: v } : f));
+
+  const caricaFoto = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setErrore(""); setCaricando(true);
+    for (const file of files) {
+      if (foto.length >= 6) break;
+      if (file.size > 5 * 1024 * 1024) { setErrore(`"${file.name}" supera 5 MB: scegli un'immagine più leggera.`); continue; }
+      const est = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${est}`;
+      const { error } = await supabase.storage.from("foto").upload(path, file, { upsert: false });
+      if (error) { setErrore("Errore nel caricamento: " + error.message); continue; }
+      const { data } = supabase.storage.from("foto").getPublicUrl(path);
+      setFoto((f) => [...f, { url: data.publicUrl, path }]);
+    }
+    setCaricando(false);
+    e.target.value = "";
+  };
+
+  const rimuoviFoto = async (i) => {
+    const f = foto[i];
+    setFoto((cur) => cur.filter((_, x) => x !== i));
+    if (f?.path) await supabase.storage.from("foto").remove([f.path]);
+  };
 
   const invia = async () => {
     setErrore(""); setSaving(true);
@@ -197,6 +235,7 @@ function CompletaProfilo({ user }) {
       nome: d.nome, ruolo: d.ruolo, categoria: categoriaFinale,
       localita: d.localita, telefono: d.telefono, email: user.email,
       bio: noteBio, link: d.link || null,
+      foto: foto.map((f) => f.url), video_link: videoLink || null,
     }).eq("id", fid);
     if (e1) { setSaving(false); setErrore("Errore nel salvataggio del profilo: " + e1.message); return; }
 
@@ -230,11 +269,11 @@ function CompletaProfilo({ user }) {
 
   return (
     <>
-      <div className="is-steps">{[1, 2, 3].map((n) => <div key={n} className={"is-stepdot" + (step >= n ? " on" : "")} />)}</div>
+      <div className="is-steps">{[1, 2, 3, 4].map((n) => <div key={n} className={"is-stepdot" + (step >= n ? " on" : "")} />)}</div>
 
       {step === 1 && (
         <div className="is-card">
-          <div className="is-eyebrow">Passo 2 di 4 · Chi sei</div>
+          <div className="is-eyebrow">Passo 2 di 5 · Chi sei</div>
           <h1 className="is-t is-display">Il tuo profilo</h1>
           <p className="is-sub">Email confermata ✓ Ora raccontaci chi sei.</p>
           <label>Nome o nome d'arte *</label>
@@ -269,7 +308,7 @@ function CompletaProfilo({ user }) {
 
       {step === 2 && (
         <div className="is-card">
-          <div className="is-eyebrow">Passo 3 di 4 · I tuoi pacchetti</div>
+          <div className="is-eyebrow">Passo 3 di 5 · I tuoi pacchetti</div>
           <h1 className="is-t is-display">I tuoi pacchetti</h1>
           <p className="is-sub">Crea almeno un pacchetto. Potrai modificarli quando vuoi.</p>
           {pacchetti.map((p, i) => (
@@ -316,7 +355,47 @@ function CompletaProfilo({ user }) {
 
       {step === 3 && (
         <div className="is-card">
-          <div className="is-eyebrow">Passo 4 di 4 · Tariffe di zona</div>
+          <div className="is-eyebrow">Passo 4 di 5 · Le tue foto</div>
+          <h1 className="is-t is-display">Mostra il tuo lavoro</h1>
+          <p className="is-sub">Le foto sono la prima cosa che guarda un cliente. Caricane almeno una (fino a 6).</p>
+
+          <div className="is-gal">
+            {foto.map((f, i) => (
+              <div key={i} className="is-foto">
+                <img src={f.url} alt={`Foto ${i + 1}`} />
+                <button onClick={() => rimuoviFoto(i)} aria-label="Rimuovi foto"><X size={14} /></button>
+                {i === 0 && <span className="is-cover">Copertina</span>}
+              </div>
+            ))}
+            {foto.length < 6 && (
+              <label className="is-add">
+                {caricando ? <Loader2 size={22} className="is-spin" /> : <ImagePlus size={22} />}
+                {caricando ? "Carico…" : "Aggiungi foto"}
+                <input type="file" accept="image/*" multiple onChange={caricaFoto}
+                       style={{ display: "none" }} disabled={caricando} />
+              </label>
+            )}
+          </div>
+          <p className="is-hint">
+            La prima foto sarà la copertina del tuo profilo. Massimo 5 MB per immagine (JPG, PNG o WEBP).
+          </p>
+
+          <label style={{ marginTop: 20 }}><Video size={13} style={{ verticalAlign: "-2px" }} /> Link a un video (facoltativo)</label>
+          <input value={videoLink} onChange={(e) => setVideoLink(e.target.value)}
+                 placeholder="https://youtube.com/... oppure un post Instagram" />
+          <p className="is-hint">Un video vale più di mille parole: incolla il link di YouTube, Vimeo o Instagram.</p>
+
+          {errore && <div className="is-err">{errore}</div>}
+          <div className="is-nav">
+            <button className="is-btn" onClick={indietro}><ArrowLeft size={16} /> Indietro</button>
+            <button className="is-btn primary" onClick={avanti} disabled={caricando}>Continua <ArrowRight size={16} /></button>
+          </div>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div className="is-card">
+          <div className="is-eyebrow">Passo 5 di 5 · Tariffe di zona</div>
           <h1 className="is-t is-display">Le tue tariffe di zona</h1>
           <p className="is-sub">Quanto aggiungi in base alla distanza. Il cliente vedrà solo il totale, mai i km.</p>
           <div className="is-fascia"><div><label>Entro 30 km</label><input value="Incluso" disabled /></div><div><label>Costo aggiuntivo</label><input value="0 €" disabled /></div></div>
