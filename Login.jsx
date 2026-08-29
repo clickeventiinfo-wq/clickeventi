@@ -56,9 +56,8 @@ export default function Login() {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        setUtente(session.user);
-        const { data } = await supabase.from("fornitori").select("nome, stato, verificato").eq("user_id", session.user.id).maybeSingle();
-        setProfilo(data);
+        window.location.href = "/?pannello";
+        return;
       }
       setChecking(false);
     })();
@@ -81,6 +80,7 @@ export default function Login() {
     setUtente(data.user);
     const { data: prof } = await supabase.from("fornitori").select("nome, stato, verificato").eq("user_id", data.user.id).maybeSingle();
     setProfilo(prof);
+    window.location.href = "/?pannello";
   };
 
   const esci = async () => {
