@@ -557,6 +557,40 @@ export default function Pannello() {
     <p style={{ marginBottom: 14 }}>Non abbiamo trovato il tuo profilo.</p>
     <a href="/?iscrizione" className="fp-btn ok" style={{ textDecoration: "none" }}>Completa l'iscrizione</a></div></div>;
 
+  /* profilo non ancora compilato: invitiamo a completarlo invece di mostrare
+     un pannello vuoto (succede a chi si ferma dopo email e password) */
+  const incompleto = !f.nome || f.nome === "Nuovo professionista" || !f.ruolo || !(f.pacchetti?.length);
+  if (incompleto) {
+    return (
+      <div className="fp-root"><Style />
+        <header className="fp-head">
+          <div className="fp-wrap fp-headin">
+            <a href="/" className="fp-logo">Click<em>Eventi</em></a>
+            <button className="fp-link" onClick={async () => { await supabase.auth.signOut(); location.href = "/"; }}>
+              <LogOut size={14} /> Esci
+            </button>
+          </div>
+        </header>
+        <div className="fp-wrap" style={{ maxWidth: 560 }}>
+          <div className="fp-card" style={{ textAlign: "center", padding: "36px 26px", marginTop: 30 }}>
+            <div style={{ width: 58, height: 58, borderRadius: 16, background: "var(--accent-soft)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <User size={26} />
+            </div>
+            <h2 className="fp-display" style={{ fontSize: 22, marginBottom: 8 }}>Completa il tuo profilo</h2>
+            <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--grigio)", marginBottom: 22 }}>
+              Il tuo account è attivo, ma il profilo non è ancora compilato.
+              Aggiungi chi sei, i tuoi pacchetti e le foto: solo così il team può
+              verificarlo e pubblicarlo sul sito.
+            </p>
+            <a href="/?iscrizione" className="fp-btn ok" style={{ textDecoration: "none" }}>
+              Completa il profilo
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const nuove = richieste.filter((r) => r.stato === "nuova").length;
   const valore = richieste.filter((r) => r.stato !== "rifiutata").reduce((s, r) => s + (r.totale || 0), 0);
   const occupati = (f.indisponibilita || []).map((x) => x.giorno);

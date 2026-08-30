@@ -426,9 +426,12 @@ export default function Iscrizione() {
       if (!session?.user) { setStato("crea"); return; }
       setUser(session.user);
       // ha già un profilo completo? (nome valorizzato = già compilato)
-      const { data: forn } = await supabase.from("fornitori").select("nome").eq("user_id", session.user.id).maybeSingle();
-      if (forn && forn.nome && forn.nome !== "Nuovo professionista") setStato("giafatto");
-      else setStato("completa");
+      const { data: forn } = await supabase
+        .from("fornitori").select("nome, ruolo, pacchetti(id)")
+        .eq("user_id", session.user.id).maybeSingle();
+      const completo = forn && forn.nome && forn.nome !== "Nuovo professionista"
+        && forn.ruolo && forn.pacchetti?.length > 0;
+      setStato(completo ? "giafatto" : "completa");
     })();
   }, []);
 
