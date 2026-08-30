@@ -806,6 +806,8 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
   const [saving, setSaving] = useState(false);
   const [errore, setErrore] = useState("");
   const [form, setForm] = useState({ nome: "", contatto: "", note: "" });
+  const [privacyOk, setPrivacyOk] = useState(false);
+  const [marketingOk, setMarketingOk] = useState(false);
 
   const pkg = p.packages.find((k) => k.id === pkgId) || p.packages[0];
   if (!pkg) return <div className="cv-panel cv-card-base">Nessun pacchetto disponibile.</div>;
@@ -817,6 +819,10 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
   const invia = async () => {
     if (!form.nome.trim() || !form.contatto.trim()) {
       setErrore("Inserisci nome e un contatto per ricevere la risposta.");
+      return;
+    }
+    if (!privacyOk) {
+      setErrore("Per inviare la richiesta devi accettare l'informativa privacy.");
       return;
     }
     setErrore(""); setSaving(true);
@@ -833,6 +839,7 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
       extra_scelti: p.extras.filter((e) => extras.includes(e.id)).map((e) => e.label),
       totale: quote.tot,
       note: form.note || null,
+      consenso_marketing: marketingOk,
     });
     setSaving(false);
     if (error) { setErrore("Non è stato possibile inviare la richiesta. Riprova."); return; }
@@ -927,6 +934,19 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
       <label htmlFor="q-note">Note (facoltative)</label>
       <textarea id="q-note" rows={3} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })}
                 placeholder="Location, orari, atmosfera che immagini…" />
+
+      <label className="cv-opt" style={{ alignItems: "flex-start", marginTop: 14 }}>
+        <input type="checkbox" checked={privacyOk} onChange={() => setPrivacyOk(!privacyOk)} style={{ marginTop: 3 }} />
+        <span style={{ fontSize: 13, lineHeight: 1.5 }}>
+          Ho letto e accetto l'<a href="/?privacy" target="_blank" style={{ color: "var(--accent)", fontWeight: 600 }}>informativa privacy</a> *
+        </span>
+      </label>
+      <label className="cv-opt" style={{ alignItems: "flex-start" }}>
+        <input type="checkbox" checked={marketingOk} onChange={() => setMarketingOk(!marketingOk)} style={{ marginTop: 3 }} />
+        <span style={{ fontSize: 13, lineHeight: 1.5, color: "var(--grigio)" }}>
+          Vorrei ricevere novità e suggerimenti da Click Eventi (facoltativo)
+        </span>
+      </label>
 
       {errore && <p style={{ color: "var(--accent)", fontSize: 13, marginTop: 10, fontWeight: 600 }}>{errore}</p>}
 
@@ -1051,7 +1071,7 @@ export default function ClickEventiV2() {
       <footer className="cv-footer">
         <div className="cv-container">
           <span><b className="cv-display" style={{ color: "var(--ink)" }}>Click<em style={{ color: "var(--accent)", fontStyle: "normal" }}>Eventi</em></b> — Il tuo evento, in un click.</span>
-          <span>I professionisti mostrati sono profili di esempio</span>
+          <span><a href="/?privacy" style={{ color: "var(--grigio)", fontWeight: 600 }}>Privacy e cookie</a> · I professionisti mostrati sono profili di esempio</span>
         </div>
       </footer>
     </div>

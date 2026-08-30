@@ -448,7 +448,7 @@ export default function Iscrizione() {
         )}
       </div>
       <p style={{ textAlign: "center", fontSize: 12, color: "var(--grigio)", padding: "10px 0 40px" }}>
-        Il team Click Eventi verifica ogni profilo prima della pubblicazione.
+        Il team Click Eventi verifica ogni profilo prima della pubblicazione.<br />Iscrivendoti accetti l'<a href="/?privacy" target="_blank" style={{ color: "var(--accent)", fontWeight: 600 }}>informativa privacy</a>.
       </p>
     </div>
   );
