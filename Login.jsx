@@ -70,7 +70,7 @@ export default function Login() {
     const mail = email.trim();
     if (!mail) { setErrore("Scrivi la tua email per accedere."); return; }
     if (!emailValida(mail)) {
-      setErrore("Questo indirizzo email non sembra valido. Controlla che ci siano la chiocciola e il dominio, ad esempio nome@esempio.it");
+      setErrore("Inserisci un indirizzo e-mail valido");
       return;
     }
     if (!password) { setErrore("Scrivi la tua password."); return; }
@@ -105,7 +105,7 @@ export default function Login() {
     const mail = email.trim();
     if (!mail) { setErrore("Scrivi prima la tua email qui sopra, poi clicca di nuovo."); return; }
     if (!emailValida(mail)) {
-      setErrore("Questo indirizzo email non sembra valido: controllalo e riprova.");
+      setErrore("Inserisci un indirizzo e-mail valido");
       return;
     }
     const { error } = await supabase.auth.resetPasswordForEmail(mail, { redirectTo: "https://clickeventi.it/?pannello" });

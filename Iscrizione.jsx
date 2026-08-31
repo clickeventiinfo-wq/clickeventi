@@ -103,7 +103,7 @@ function CreaAccount() {
     const mail = email.trim();
     if (!mail) { setErrore("Scrivi la tua email per continuare."); return; }
     if (!emailValida(mail)) {
-      setErrore("Questo indirizzo email non sembra valido. Controlla che ci siano la chiocciola e il dominio, ad esempio nome@esempio.it");
+      setErrore("Inserisci un indirizzo e-mail valido");
       return;
     }
     if (!password) { setErrore("Scegli una password per il tuo account."); return; }
@@ -119,7 +119,7 @@ function CreaAccount() {
       if (m.includes("registered") || m.includes("already"))
         setErrore("Questa email è già registrata. Vai su \"Accedi\" per entrare, oppure usa \"Password dimenticata\".");
       else if (m.includes("invalid") && m.includes("email"))
-        setErrore("Questo indirizzo email non è valido. Controllalo e riprova.");
+        setErrore("Inserisci un indirizzo e-mail valido");
       else if (m.includes("password"))
         setErrore("La password non va bene: scegline una di almeno 6 caratteri.");
       else if (m.includes("rate") || m.includes("many") || m.includes("seconds"))
