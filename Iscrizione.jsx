@@ -97,19 +97,35 @@ function CreaAccount() {
   const [errore, setErrore] = useState("");
   const [inviato, setInviato] = useState(false);
 
+  const emailValida = (e) => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e.trim());
+
   const registra = async () => {
-    if (!email.includes("@")) { setErrore("Inserisci un'email valida."); return; }
-    if (password.length < 6) { setErrore("La password deve avere almeno 6 caratteri."); return; }
+    const mail = email.trim();
+    if (!mail) { setErrore("Scrivi la tua email per continuare."); return; }
+    if (!emailValida(mail)) {
+      setErrore("Questo indirizzo email non sembra valido. Controlla che ci siano la chiocciola e il dominio, ad esempio nome@esempio.it");
+      return;
+    }
+    if (!password) { setErrore("Scegli una password per il tuo account."); return; }
+    if (password.length < 6) { setErrore("La password è troppo corta: servono almeno 6 caratteri."); return; }
     setErrore(""); setSaving(true);
     const { error } = await supabase.auth.signUp({
-      email, password,
+      email: mail, password,
       options: { emailRedirectTo: "https://clickeventi.it/?iscrizione" },
     });
     setSaving(false);
     if (error) {
-      setErrore(error.message.includes("registered")
-        ? "Questa email è già registrata. Vai al login per accedere."
-        : "Errore: " + error.message);
+      const m = (error.message || "").toLowerCase();
+      if (m.includes("registered") || m.includes("already"))
+        setErrore("Questa email è già registrata. Vai su \"Accedi\" per entrare, oppure usa \"Password dimenticata\".");
+      else if (m.includes("invalid") && m.includes("email"))
+        setErrore("Questo indirizzo email non è valido. Controllalo e riprova.");
+      else if (m.includes("password"))
+        setErrore("La password non va bene: scegline una di almeno 6 caratteri.");
+      else if (m.includes("rate") || m.includes("many") || m.includes("seconds"))
+        setErrore("Hai fatto troppi tentativi ravvicinati. Aspetta un minuto e riprova.");
+      else
+        setErrore("Non siamo riusciti a creare l'account. Riprova tra poco: se il problema resta, scrivici a info@clickeventi.it");
       return;
     }
     setInviato(true);

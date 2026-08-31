@@ -63,18 +63,30 @@ export default function Login() {
     })();
   }, []);
 
+  const emailValida = (e) => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e.trim());
+
   const accedi = async () => {
-    setErrore(""); setInfo(""); setSaving(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    setErrore(""); setInfo("");
+    const mail = email.trim();
+    if (!mail) { setErrore("Scrivi la tua email per accedere."); return; }
+    if (!emailValida(mail)) {
+      setErrore("Questo indirizzo email non sembra valido. Controlla che ci siano la chiocciola e il dominio, ad esempio nome@esempio.it");
+      return;
+    }
+    if (!password) { setErrore("Scrivi la tua password."); return; }
+    setSaving(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email: mail, password });
     setSaving(false);
     if (error) {
-      if (error.message.toLowerCase().includes("confirm")) {
-        setErrore("Devi prima confermare l'email: controlla la tua casella (anche lo spam).");
-      } else if (error.message.toLowerCase().includes("invalid")) {
-        setErrore("Email o password non corretti.");
-      } else {
-        setErrore(error.message);
-      }
+      const m = (error.message || "").toLowerCase();
+      if (m.includes("confirm"))
+        setErrore("Devi prima confermare l'email: controlla la tua casella, anche nello spam.");
+      else if (m.includes("invalid"))
+        setErrore("Email o password non corretti. Controlla di averli scritti bene, oppure usa \"Password dimenticata\".");
+      else if (m.includes("rate") || m.includes("many") || m.includes("seconds"))
+        setErrore("Troppi tentativi ravvicinati. Aspetta un minuto e riprova.");
+      else
+        setErrore("Non riusciamo ad accedere in questo momento. Riprova tra poco.");
       return;
     }
     setUtente(data.user);
@@ -89,10 +101,22 @@ export default function Login() {
   };
 
   const recuperaPassword = async () => {
-    if (!email) { setErrore("Scrivi la tua email qui sopra, poi clicca di nuovo."); return; }
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: "https://clickeventi.it/?pannello" });
-    if (error) setErrore(error.message);
-    else setInfo("Ti abbiamo inviato un'email per reimpostare la password.");
+    setErrore(""); setInfo("");
+    const mail = email.trim();
+    if (!mail) { setErrore("Scrivi prima la tua email qui sopra, poi clicca di nuovo."); return; }
+    if (!emailValida(mail)) {
+      setErrore("Questo indirizzo email non sembra valido: controllalo e riprova.");
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(mail, { redirectTo: "https://clickeventi.it/?pannello" });
+    if (error) {
+      const m = (error.message || "").toLowerCase();
+      setErrore(m.includes("rate") || m.includes("many")
+        ? "Hai già richiesto il recupero da poco. Aspetta qualche minuto e riprova."
+        : "Non siamo riusciti a inviare l'email. Riprova tra poco.");
+      return;
+    }
+    setInfo("Ti abbiamo inviato un'email per reimpostare la password. Controlla anche nello spam.");
   };
 
   if (checking) {
