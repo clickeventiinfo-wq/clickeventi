@@ -178,6 +178,7 @@ const GlobalStyle = () => (
       --ombra: 0 10px 30px rgba(35,32,58,0.08);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    img { max-width: 100%; height: auto; }
     .cv-root {
       font-family: 'Work Sans', system-ui, sans-serif;
       background: var(--bg); color: var(--ink);
@@ -258,7 +259,7 @@ const GlobalStyle = () => (
     .cv-h2 { font-family: 'Sora', sans-serif; font-weight: 700; font-size: clamp(23px, 3.6vw, 30px); letter-spacing: -0.01em; margin-bottom: 24px; }
 
     /* categorie */
-    .cv-cats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .cv-cats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
     .cv-cat {
       padding: 18px 16px; cursor: pointer; text-align: left;
       transition: border-color .15s ease, box-shadow .15s ease;
@@ -268,7 +269,8 @@ const GlobalStyle = () => (
     .cv-cat span { display: block; font-weight: 600; font-size: 14px; line-height: 1.3; }
 
     /* card fornitore */
-    .cv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .cv-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .cv-grid > * { min-width: 0; }
     .cv-card {
       padding: 20px; cursor: pointer; text-align: left; position: relative;
       transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
@@ -280,7 +282,7 @@ const GlobalStyle = () => (
       font-family: 'Sora', sans-serif; font-size: 17px; font-weight: 700;
       display: flex; align-items: center; justify-content: center; margin-bottom: 12px;
     }
-    .cv-card h3 { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 17.5px; }
+    .cv-card h3 { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 17.5px; overflow-wrap: anywhere; }
     .cv-role { color: var(--grigio); font-size: 13.5px; margin: 2px 0 10px; }
     .cv-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 12.5px; color: var(--grigio); }
     .cv-meta .cv-star { color: var(--ink); font-weight: 600; display: flex; align-items: center; gap: 4px; }
@@ -311,7 +313,7 @@ const GlobalStyle = () => (
     .cv-empty { padding: 44px 24px; text-align: center; color: var(--grigio); border-style: dashed; }
 
     /* profilo */
-    .cv-two { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; align-items: start; }
+    .cv-two { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 18px; align-items: start; }
     .cv-panel { padding: 22px; }
     .cv-chip {
       display: inline-block; background: var(--bg2); border: 1px solid var(--linea);
@@ -364,7 +366,7 @@ const GlobalStyle = () => (
     .cv-ok svg { color: var(--accent); margin-bottom: 10px; }
 
     /* come funziona */
-    .cv-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .cv-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
     .cv-step { padding: 22px; }
     .cv-step .cv-dot {
       width: 32px; height: 32px; border-radius: 50%;
@@ -410,6 +412,13 @@ const GlobalStyle = () => (
       .cv-cats { grid-template-columns: repeat(2, 1fr); }
       .cv-steps { grid-template-columns: 1fr; }
     }
+    .cv-lb { position: fixed; inset: 0; background: rgba(27,24,44,.88); z-index: 200;
+      display: flex; align-items: center; justify-content: center; padding: 24px; cursor: zoom-out; }
+    .cv-lb img { max-width: min(880px, 92vw); max-height: 86vh; width: auto; height: auto;
+      object-fit: contain; border-radius: 12px; display: block; }
+    .cv-lb-x { position: absolute; top: 18px; right: 20px; background: rgba(255,255,255,.15);
+      border: none; color: #fff; width: 38px; height: 38px; border-radius: 50%; font-size: 20px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .cv-spin { animation: cv-rot 1s linear infinite; }
     @keyframes cv-rot { to { transform: rotate(360deg); } }
     @media (prefers-reduced-motion: reduce) {
@@ -527,8 +536,10 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
   const [date, setDate] = useState("");
   const [etype, setEtype] = useState("Festa privata");
   const [cat, setCat] = useState("");
+  const [testo, setTesto] = useState("");
+  const specialita = [...new Set(providers.map((p) => p.role).filter(Boolean))].sort();
   const featured = [...providers].sort((a, b) => b.bookings - a.bookings).slice(0, 6);
-  const doSearch = () => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat });
+  const doSearch = () => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat, testo });
 
   /* mostra solo le categorie che hanno almeno un professionista attivo:
      il sito cresce da solo man mano che si aggiungono fornitori */
@@ -557,11 +568,12 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
             </select>
           </div>
           <div className="cv-field">
-            <span className="cv-flabel">Cosa cerchi</span>
-            <select value={cat} onChange={(e) => setCat(e.target.value)} aria-label="Categoria">
-              <option value="">Tutto</option>
-              {cats.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-            </select>
+            <span className="cv-flabel">Chi cerchi</span>
+            <input list="cv-specialita" value={testo} onChange={(e) => setTesto(e.target.value)}
+                   placeholder="Es. arpista, DJ, fotografo…" aria-label="Tipo di professionista" />
+            <datalist id="cv-specialita">
+              {specialita.map((r) => <option key={r} value={r} />)}
+            </datalist>
           </div>
           <button className="cv-search-btn" onClick={doSearch}>
             <Search size={17} /> Trova
@@ -581,8 +593,8 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
               const Icon = c.icon;
               return (
                 <div key={c.id} className="cv-cat cv-card-base" role="button" tabIndex={0}
-                     onClick={() => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id })}
-                     onKeyDown={(e) => e.key === "Enter" && onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id })}>
+                     onClick={() => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id, testo: "" })}
+                     onKeyDown={(e) => e.key === "Enter" && onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id, testo: "" })}>
                   <Icon size={24} strokeWidth={1.9} />
                   <span>{c.label}</span>
                 </div>
@@ -622,7 +634,7 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
             <div className="cv-step cv-card-base">
               <div className="cv-dot">3</div>
               <h4>Invia la richiesta</h4>
-              <p>Il team Click Eventi la gira al professionista e ti ricontatta con la conferma entro 24 ore.</p>
+              <p>Il team Click Eventi la gira al professionista e ti ricontatta appena ha la conferma.</p>
             </div>
           </div>
         </div>
@@ -657,9 +669,14 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
 /* ---------- risultati ---------- */
 
 function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
-  const { loc, date, etype, cat } = q;
+  const { loc, date, etype, cat, testo } = q;
+  const cerca = (testo || "").trim().toLowerCase();
   const results = providers
     .filter((p) => (!cat || p.cat === cat) && isAvailable(p, date))
+    .filter((p) => !cerca ||
+      (p.role || "").toLowerCase().includes(cerca) ||
+      (p.name || "").toLowerCase().includes(cerca) ||
+      catLabel(p.cat).toLowerCase().includes(cerca))
     .sort((a, b) => {
       const fa = a.eventTypes.includes(etype) ? 1 : 0;
       const fb = b.eventTypes.includes(etype) ? 1 : 0;
@@ -680,7 +697,7 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
       <div className="cv-container">
         <button className="cv-back" onClick={goHome}><ArrowLeft size={16} /> Torna alla home</button>
         <h2 className="cv-h2 cv-display" style={{ marginTop: 8, marginBottom: 6 }}>
-          {cat ? catLabel(cat) : "Professionisti"} per il tuo {etype.toLowerCase()}
+          {cerca ? `"${testo}"` : cat ? catLabel(cat) : "Professionisti"} per il tuo {etype.toLowerCase()}
         </h2>
         <p style={{ fontSize: 14, color: "var(--grigio)", marginBottom: 20 }}>
           Evento a {loc.name}{date ? ` · disponibili il ${dateLabel}` : " — scegli una data per vedere solo i disponibili"}
@@ -697,6 +714,9 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
             <option value="">Tutte le categorie</option>
             {cats.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
           </select>
+          <input className="cv-select" style={{ minWidth: 150 }} value={testo || ""}
+                 onChange={(e) => setQ({ ...q, testo: e.target.value })}
+                 placeholder="Es. arpista, DJ…" aria-label="Tipo di professionista" />
           <span style={{ fontSize: 13, color: "var(--grigio)", fontWeight: 600 }}>
             {results.length} disponibil{results.length === 1 ? "e" : "i"}
           </span>
@@ -711,7 +731,7 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
         ) : (
           <div className="cv-empty cv-card-base">
             <b style={{ color: "var(--ink)", display: "block", marginBottom: 6 }}>
-              Stiamo aggiungendo professionisti in questa zona
+              {cerca ? `Nessun risultato per "${testo}"` : "Stiamo aggiungendo professionisti in questa zona"}
             </b>
             Prova un'altra data o un'altra categoria — oppure scrivici a{" "}
             <a href="mailto:info@clickeventi.it" style={{ color: "var(--accent)", fontWeight: 600 }}>
@@ -785,7 +805,7 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
         <h4 className="cv-display" style={{ fontSize: 20, marginBottom: 6 }}>Richiesta inviata</h4>
         <p style={{ fontSize: 14, color: "var(--grigio)" }}>
           Hai richiesto <b>{p.name}</b> — pacchetto "{pkg.label}", totale stimato <b>{quote.tot} €</b>.
-          Il team Click Eventi verifica con il professionista e ti ricontatta entro 24 ore.
+          Il team Click Eventi verifica la disponibilità con il professionista e ti ricontatta al più presto.
         </p>
       </div>
     );
@@ -885,12 +905,13 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
       <button className="cv-submit" onClick={invia} disabled={saving}>
         <Send size={16} /> {saving ? "Invio…" : `Invia richiesta · ${quote.tot} €`}
       </button>
-      <p className="cv-note">Gratis e senza impegno. Ti risponde il team Click Eventi entro 24 ore.</p>
+      <p className="cv-note">Gratis e senza impegno. Ti ricontattiamo appena abbiamo la conferma.</p>
     </div>
   );
 }
 
 function ProfileView({ p, goBack, q }) {
+  const [zoom, setZoom] = useState(null);
   const initials = p.name.split(" ").map((w) => w[0]).slice(0, 2).join("");
   const avail = q.date ? isAvailable(p, q.date) : null;
 
@@ -901,7 +922,7 @@ function ProfileView({ p, goBack, q }) {
 
         <div style={{ display: "flex", gap: 16, alignItems: "flex-start", margin: "14px 0 20px", flexWrap: "wrap" }}>
           {p.foto?.length > 0 ? (
-            <div style={{ width: 96, height: 96, borderRadius: 18, overflow: "hidden", flexShrink: 0, border: "1px solid var(--linea)" }}>
+            <div style={{ width: 88, height: 88, borderRadius: 18, overflow: "hidden", flexShrink: 0, border: "1px solid var(--linea)" }}>
               <img src={p.foto[0]} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
             </div>
           ) : (
@@ -937,11 +958,12 @@ function ProfileView({ p, goBack, q }) {
                 <h4 className="cv-display" style={{ fontSize: 16, margin: "18px 0 8px" }}>Foto</h4>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
                   {p.foto.map((u, i) => (
-                    <a key={i} href={u} target="_blank" rel="noreferrer"
-                       style={{ display: "block", aspectRatio: "1", borderRadius: 10, overflow: "hidden", border: "1px solid var(--linea)" }}>
+                    <div key={i} onClick={() => setZoom(u)} role="button" tabIndex={0}
+                         onKeyDown={(e) => e.key === "Enter" && setZoom(u)}
+                         style={{ cursor: "zoom-in", aspectRatio: "1", borderRadius: 10, overflow: "hidden", border: "1px solid var(--linea)" }}>
                       <img src={u} alt={`${p.name} ${i + 1}`} loading="lazy"
                            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                    </a>
+                    </div>
                   ))}
                 </div>
               </>
@@ -958,6 +980,13 @@ function ProfileView({ p, goBack, q }) {
           <QuoteBuilder p={p} eventType={q.etype} eventLoc={q.loc} prefillDate={q.date} />
         </div>
       </div>
+
+      {zoom && (
+        <div className="cv-lb" onClick={() => setZoom(null)}>
+          <button className="cv-lb-x" aria-label="Chiudi">×</button>
+          <img src={zoom} alt="" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
     </section>
   );
 }
@@ -966,7 +995,7 @@ function ProfileView({ p, goBack, q }) {
 
 export default function ClickEventiV2() {
   const [view, setView] = useState("home");
-  const [q, setQ] = useState({ loc: LOC_DEFAULT, date: "", etype: "Festa privata", cat: "" });
+  const [q, setQ] = useState({ loc: LOC_DEFAULT, date: "", etype: "Festa privata", cat: "", testo: "" });
   const [provider, setProvider] = useState(null);
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
