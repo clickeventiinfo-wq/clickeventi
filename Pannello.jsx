@@ -585,6 +585,9 @@ export default function Pannello() {
             <a href="/?iscrizione" className="fp-btn ok" style={{ textDecoration: "none" }}>
               Completa il profilo
             </a>
+            <p style={{ marginTop: 16, fontSize: 13 }}>
+              <a href="/?admin" style={{ color: "var(--grigio)" }}>Sei l'amministratore? Vai all'area admin</a>
+            </p>
           </div>
         </div>
       </div>

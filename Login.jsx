@@ -56,7 +56,8 @@ export default function Login() {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        window.location.href = "/?pannello";
+        const { data: admin } = await supabase.rpc("is_admin");
+        window.location.href = admin ? "/?admin" : "/?pannello";
         return;
       }
       setChecking(false);
@@ -90,9 +91,8 @@ export default function Login() {
       return;
     }
     setUtente(data.user);
-    const { data: prof } = await supabase.from("fornitori").select("nome, stato, verificato").eq("user_id", data.user.id).maybeSingle();
-    setProfilo(prof);
-    window.location.href = "/?pannello";
+    const { data: admin } = await supabase.rpc("is_admin");
+    window.location.href = admin ? "/?admin" : "/?pannello";
   };
 
   const esci = async () => {
