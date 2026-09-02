@@ -212,8 +212,8 @@ const GlobalStyle = () => (
 
     /* ricerca */
     .cv-search {
-      display: grid; grid-template-columns: 1.3fr 1fr 1.1fr 1fr auto; gap: 0;
-      max-width: 940px; margin: 0 auto; text-align: left;
+      display: grid; grid-template-columns: 1.15fr .9fr 1fr .95fr 1fr auto; gap: 0;
+      max-width: 1040px; margin: 0 auto; text-align: left;
       background: var(--bg); border: 1px solid var(--linea);
       border-radius: 18px; box-shadow: var(--ombra);
     }
@@ -537,7 +537,6 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
   const [etype, setEtype] = useState("Festa privata");
   const [cat, setCat] = useState("");
   const [testo, setTesto] = useState("");
-  const specialita = [...new Set(providers.map((p) => p.role).filter(Boolean))].sort();
   const featured = [...providers].sort((a, b) => b.bookings - a.bookings).slice(0, 6);
   const doSearch = () => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat, testo });
 
@@ -562,18 +561,23 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="Data dell'evento" />
           </div>
           <div className="cv-field">
-            <span className="cv-flabel">Che evento è</span>
+            <span className="cv-flabel">Tipo di evento</span>
             <select value={etype} onChange={(e) => setEtype(e.target.value)} aria-label="Tipo di evento">
               {EVENT_TYPES.map((t) => <option key={t}>{t}</option>)}
             </select>
           </div>
           <div className="cv-field">
+            <span className="cv-flabel">Categoria</span>
+            <select value={cat} onChange={(e) => setCat(e.target.value)} aria-label="Categoria">
+              <option value="">Tutte</option>
+              {cats.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+            </select>
+          </div>
+          <div className="cv-field">
             <span className="cv-flabel">Chi cerchi</span>
-            <input list="cv-specialita" value={testo} onChange={(e) => setTesto(e.target.value)}
-                   placeholder="Es. arpista, DJ, fotografo…" aria-label="Tipo di professionista" />
-            <datalist id="cv-specialita">
-              {specialita.map((r) => <option key={r} value={r} />)}
-            </datalist>
+            <input value={testo} onChange={(e) => setTesto(e.target.value)}
+                   onKeyDown={(e) => e.key === "Enter" && doSearch()}
+                   placeholder="Es. arpista, DJ…" aria-label="Tipo di professionista" />
           </div>
           <button className="cv-search-btn" onClick={doSearch}>
             <Search size={17} /> Trova
@@ -714,9 +718,14 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
             <option value="">Tutte le categorie</option>
             {cats.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
           </select>
-          <input className="cv-select" style={{ minWidth: 150 }} value={testo || ""}
+          <input className="cv-select" style={{ minWidth: 170 }} list="cv-specialita" value={testo || ""}
                  onChange={(e) => setQ({ ...q, testo: e.target.value })}
-                 placeholder="Es. arpista, DJ…" aria-label="Tipo di professionista" />
+                 placeholder="Cerca: arpista, DJ…" aria-label="Cerca per specialità" />
+          <datalist id="cv-specialita">
+            {[...new Set(providers.map((p) => p.role).filter(Boolean))].sort().map((r) => (
+              <option key={r} value={r} />
+            ))}
+          </datalist>
           <span style={{ fontSize: 13, color: "var(--grigio)", fontWeight: 600 }}>
             {results.length} disponibil{results.length === 1 ? "e" : "i"}
           </span>
