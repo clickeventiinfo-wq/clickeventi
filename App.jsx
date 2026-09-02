@@ -23,155 +23,45 @@ const CATEGORIES = [
 ];
 
 /* località con coordinate reali (demo — in produzione: Google Places) */
-const LOCALITIES = [
-  { id: "roma", name: "Roma", area: "RM", lat: 41.893, lng: 12.483 },
-  { id: "fiumicino", name: "Fiumicino", area: "RM", lat: 41.766, lng: 12.229 },
-  { id: "frascati", name: "Frascati", area: "RM", lat: 41.808, lng: 12.681 },
-  { id: "tivoli", name: "Tivoli", area: "RM", lat: 41.963, lng: 12.798 },
-  { id: "anzio", name: "Anzio", area: "RM", lat: 41.449, lng: 12.629 },
-  { id: "latina", name: "Latina", area: "LT", lat: 41.467, lng: 12.904 },
-  { id: "lecce", name: "Lecce", area: "LE", lat: 40.352, lng: 18.169 },
-  { id: "squinzano", name: "Squinzano", area: "LE", lat: 40.434, lng: 18.045 },
-  { id: "gallipoli", name: "Gallipoli", area: "LE", lat: 40.056, lng: 17.992 },
-  { id: "otranto", name: "Otranto", area: "LE", lat: 40.146, lng: 18.490 },
-  { id: "ostuni", name: "Ostuni", area: "BR", lat: 40.729, lng: 17.578 },
-  { id: "brindisi", name: "Brindisi", area: "BR", lat: 40.632, lng: 17.936 },
-  { id: "taranto", name: "Taranto", area: "TA", lat: 40.464, lng: 17.247 },
-  { id: "bari", name: "Bari", area: "BA", lat: 41.117, lng: 16.871 },
-  { id: "bracciano", name: "Bracciano", area: "RM", lat: 42.103, lng: 12.176 },
-  { id: "ostia", name: "Ostia", area: "RM", lat: 41.731, lng: 12.276 },
-  { id: "civitavecchia", name: "Civitavecchia", area: "RM", lat: 42.094, lng: 11.796 },
-  { id: "velletri", name: "Velletri", area: "RM", lat: 41.686, lng: 12.777 },
-  { id: "pomezia", name: "Pomezia", area: "RM", lat: 41.669, lng: 12.503 },
-  { id: "guidonia", name: "Guidonia", area: "RM", lat: 42.001, lng: 12.726 },
-  { id: "viterbo", name: "Viterbo", area: "VT", lat: 42.417, lng: 12.104 },
-  { id: "nardo", name: "Nardò", area: "LE", lat: 40.180, lng: 18.033 },
-  { id: "maglie", name: "Maglie", area: "LE", lat: 40.119, lng: 18.298 },
-  { id: "casarano", name: "Casarano", area: "LE", lat: 40.008, lng: 18.161 },
-  { id: "copertino", name: "Copertino", area: "LE", lat: 40.271, lng: 18.049 },
-  { id: "monopoli", name: "Monopoli", area: "BA", lat: 40.949, lng: 17.298 },
-  { id: "martina", name: "Martina Franca", area: "TA", lat: 40.705, lng: 17.336 },
-  { id: "francavilla", name: "Francavilla Fontana", area: "BR", lat: 40.531, lng: 17.583 },
-  { id: "manduria", name: "Manduria", area: "TA", lat: 40.401, lng: 17.634 },
-];
+/* ============================================================
+   LOCALITÀ — tutti i comuni italiani con le loro coordinate.
+   L'elenco (public/comuni.json) viene scaricato solo quando
+   serve, cioè quando si inizia a scrivere nel campo "Dove".
+   ============================================================ */
 
-/* capoluoghi di tutte le province italiane */
-const CAPOLUOGHI = [
-  { id: "cap-to", name: "Torino", area: "TO", lat: 45.07, lng: 7.686 },
-  { id: "cap-vc", name: "Vercelli", area: "VC", lat: 45.32, lng: 8.418 },
-  { id: "cap-no", name: "Novara", area: "NO", lat: 45.446, lng: 8.621 },
-  { id: "cap-cn", name: "Cuneo", area: "CN", lat: 44.384, lng: 7.542 },
-  { id: "cap-at", name: "Asti", area: "AT", lat: 44.9, lng: 8.206 },
-  { id: "cap-al", name: "Alessandria", area: "AL", lat: 44.913, lng: 8.615 },
-  { id: "cap-bi", name: "Biella", area: "BI", lat: 45.566, lng: 8.053 },
-  { id: "cap-vb", name: "Verbano", area: "VB", lat: 45.921, lng: 8.551 },
-  { id: "cap-ao", name: "Aosta", area: "AO", lat: 45.737, lng: 7.32 },
-  { id: "cap-im", name: "Imperia", area: "IM", lat: 43.887, lng: 8.027 },
-  { id: "cap-sv", name: "Savona", area: "SV", lat: 44.308, lng: 8.481 },
-  { id: "cap-ge", name: "Genova", area: "GE", lat: 44.407, lng: 8.934 },
-  { id: "cap-sp", name: "La Spezia", area: "SP", lat: 44.103, lng: 9.824 },
-  { id: "cap-va", name: "Varese", area: "VA", lat: 45.82, lng: 8.825 },
-  { id: "cap-co", name: "Como", area: "CO", lat: 45.808, lng: 9.085 },
-  { id: "cap-so", name: "Sondrio", area: "SO", lat: 46.17, lng: 9.879 },
-  { id: "cap-mi", name: "Milano", area: "MI", lat: 45.464, lng: 9.19 },
-  { id: "cap-bg", name: "Bergamo", area: "BG", lat: 45.698, lng: 9.677 },
-  { id: "cap-bs", name: "Brescia", area: "BS", lat: 45.539, lng: 10.22 },
-  { id: "cap-pv", name: "Pavia", area: "PV", lat: 45.185, lng: 9.155 },
-  { id: "cap-cr", name: "Cremona", area: "CR", lat: 45.133, lng: 10.024 },
-  { id: "cap-mn", name: "Mantova", area: "MN", lat: 45.156, lng: 10.791 },
-  { id: "cap-lc", name: "Lecco", area: "LC", lat: 45.856, lng: 9.397 },
-  { id: "cap-lo", name: "Lodi", area: "LO", lat: 45.314, lng: 9.503 },
-  { id: "cap-mb", name: "Monza", area: "MB", lat: 45.584, lng: 9.274 },
-  { id: "cap-bz", name: "Bolzano", area: "BZ", lat: 46.498, lng: 11.354 },
-  { id: "cap-tn", name: "Trento", area: "TN", lat: 46.074, lng: 11.121 },
-  { id: "cap-vr", name: "Verona", area: "VR", lat: 45.438, lng: 10.992 },
-  { id: "cap-vi", name: "Vicenza", area: "VI", lat: 45.545, lng: 11.535 },
-  { id: "cap-bl", name: "Belluno", area: "BL", lat: 46.14, lng: 12.216 },
-  { id: "cap-tv", name: "Treviso", area: "TV", lat: 45.667, lng: 12.243 },
-  { id: "cap-ve", name: "Venezia", area: "VE", lat: 45.44, lng: 12.316 },
-  { id: "cap-pd", name: "Padova", area: "PD", lat: 45.407, lng: 11.876 },
-  { id: "cap-ro", name: "Rovigo", area: "RO", lat: 45.07, lng: 11.79 },
-  { id: "cap-ud", name: "Udine", area: "UD", lat: 46.071, lng: 13.235 },
-  { id: "cap-go", name: "Gorizia", area: "GO", lat: 45.941, lng: 13.622 },
-  { id: "cap-ts", name: "Trieste", area: "TS", lat: 45.649, lng: 13.777 },
-  { id: "cap-pn", name: "Pordenone", area: "PN", lat: 45.954, lng: 12.66 },
-  { id: "cap-pc", name: "Piacenza", area: "PC", lat: 45.052, lng: 9.693 },
-  { id: "cap-pr", name: "Parma", area: "PR", lat: 44.801, lng: 10.328 },
-  { id: "cap-re", name: "Reggio Emilia", area: "RE", lat: 44.698, lng: 10.63 },
-  { id: "cap-mo", name: "Modena", area: "MO", lat: 44.647, lng: 10.925 },
-  { id: "cap-bo", name: "Bologna", area: "BO", lat: 44.494, lng: 11.343 },
-  { id: "cap-fe", name: "Ferrara", area: "FE", lat: 44.838, lng: 11.62 },
-  { id: "cap-ra", name: "Ravenna", area: "RA", lat: 44.418, lng: 12.203 },
-  { id: "cap-fc", name: "Forlì", area: "FC", lat: 44.223, lng: 12.041 },
-  { id: "cap-rn", name: "Rimini", area: "RN", lat: 44.06, lng: 12.566 },
-  { id: "cap-ms", name: "Massa", area: "MS", lat: 44.036, lng: 10.139 },
-  { id: "cap-lu", name: "Lucca", area: "LU", lat: 43.844, lng: 10.502 },
-  { id: "cap-pt", name: "Pistoia", area: "PT", lat: 43.933, lng: 10.918 },
-  { id: "cap-fi", name: "Firenze", area: "FI", lat: 43.77, lng: 11.256 },
-  { id: "cap-li", name: "Livorno", area: "LI", lat: 43.548, lng: 10.311 },
-  { id: "cap-pi", name: "Pisa", area: "PI", lat: 43.716, lng: 10.397 },
-  { id: "cap-ar", name: "Arezzo", area: "AR", lat: 43.463, lng: 11.881 },
-  { id: "cap-si", name: "Siena", area: "SI", lat: 43.319, lng: 11.331 },
-  { id: "cap-gr", name: "Grosseto", area: "GR", lat: 42.76, lng: 11.114 },
-  { id: "cap-po", name: "Prato", area: "PO", lat: 43.881, lng: 11.096 },
-  { id: "cap-pg", name: "Perugia", area: "PG", lat: 43.111, lng: 12.39 },
-  { id: "cap-tr", name: "Terni", area: "TR", lat: 42.563, lng: 12.643 },
-  { id: "cap-pu", name: "Pesaro", area: "PU", lat: 43.91, lng: 12.913 },
-  { id: "cap-an", name: "Ancona", area: "AN", lat: 43.616, lng: 13.519 },
-  { id: "cap-mc", name: "Macerata", area: "MC", lat: 43.3, lng: 13.453 },
-  { id: "cap-ap", name: "Ascoli Piceno", area: "AP", lat: 42.854, lng: 13.575 },
-  { id: "cap-fm", name: "Fermo", area: "FM", lat: 43.16, lng: 13.718 },
-  { id: "cap-vt", name: "Viterbo", area: "VT", lat: 42.417, lng: 12.104 },
-  { id: "cap-ri", name: "Rieti", area: "RI", lat: 42.404, lng: 12.857 },
-  { id: "cap-rm", name: "Roma", area: "RM", lat: 41.893, lng: 12.483 },
-  { id: "cap-lt", name: "Latina", area: "LT", lat: 41.467, lng: 12.904 },
-  { id: "cap-fr", name: "Frosinone", area: "FR", lat: 41.64, lng: 13.351 },
-  { id: "cap-aq", name: "L'Aquila", area: "AQ", lat: 42.35, lng: 13.399 },
-  { id: "cap-te", name: "Teramo", area: "TE", lat: 42.659, lng: 13.704 },
-  { id: "cap-pe", name: "Pescara", area: "PE", lat: 42.461, lng: 14.216 },
-  { id: "cap-ch", name: "Chieti", area: "CH", lat: 42.351, lng: 14.167 },
-  { id: "cap-cb", name: "Campobasso", area: "CB", lat: 41.56, lng: 14.663 },
-  { id: "cap-is", name: "Isernia", area: "IS", lat: 41.596, lng: 14.233 },
-  { id: "cap-ce", name: "Caserta", area: "CE", lat: 41.072, lng: 14.327 },
-  { id: "cap-bn", name: "Benevento", area: "BN", lat: 41.13, lng: 14.783 },
-  { id: "cap-na", name: "Napoli", area: "NA", lat: 40.852, lng: 14.268 },
-  { id: "cap-av", name: "Avellino", area: "AV", lat: 40.914, lng: 14.79 },
-  { id: "cap-sa", name: "Salerno", area: "SA", lat: 40.682, lng: 14.768 },
-  { id: "cap-fg", name: "Foggia", area: "FG", lat: 41.462, lng: 15.544 },
-  { id: "cap-ba", name: "Bari", area: "BA", lat: 41.117, lng: 16.871 },
-  { id: "cap-ta", name: "Taranto", area: "TA", lat: 40.464, lng: 17.247 },
-  { id: "cap-br", name: "Brindisi", area: "BR", lat: 40.632, lng: 17.936 },
-  { id: "cap-le", name: "Lecce", area: "LE", lat: 40.352, lng: 18.169 },
-  { id: "cap-bt", name: "Barletta", area: "BT", lat: 41.32, lng: 16.284 },
-  { id: "cap-pz", name: "Potenza", area: "PZ", lat: 40.64, lng: 15.806 },
-  { id: "cap-mt", name: "Matera", area: "MT", lat: 40.666, lng: 16.604 },
-  { id: "cap-cs", name: "Cosenza", area: "CS", lat: 39.298, lng: 16.253 },
-  { id: "cap-cz", name: "Catanzaro", area: "CZ", lat: 38.91, lng: 16.588 },
-  { id: "cap-rc", name: "Reggio Calabria", area: "RC", lat: 38.111, lng: 15.647 },
-  { id: "cap-kr", name: "Crotone", area: "KR", lat: 39.081, lng: 17.127 },
-  { id: "cap-vv", name: "Vibo Valentia", area: "VV", lat: 38.675, lng: 16.1 },
-  { id: "cap-tp", name: "Trapani", area: "TP", lat: 38.017, lng: 12.537 },
-  { id: "cap-pa", name: "Palermo", area: "PA", lat: 38.116, lng: 13.362 },
-  { id: "cap-me", name: "Messina", area: "ME", lat: 38.194, lng: 15.554 },
-  { id: "cap-ag", name: "Agrigento", area: "AG", lat: 37.311, lng: 13.577 },
-  { id: "cap-cl", name: "Caltanissetta", area: "CL", lat: 37.49, lng: 14.063 },
-  { id: "cap-en", name: "Enna", area: "EN", lat: 37.567, lng: 14.279 },
-  { id: "cap-ct", name: "Catania", area: "CT", lat: 37.507, lng: 15.083 },
-  { id: "cap-rg", name: "Ragusa", area: "RG", lat: 36.925, lng: 14.731 },
-  { id: "cap-sr", name: "Siracusa", area: "SR", lat: 37.075, lng: 15.287 },
-  { id: "cap-ss", name: "Sassari", area: "SS", lat: 40.726, lng: 8.556 },
-  { id: "cap-nu", name: "Nuoro", area: "NU", lat: 40.321, lng: 9.33 },
-  { id: "cap-ca", name: "Cagliari", area: "CA", lat: 39.223, lng: 9.122 },
-  { id: "cap-or", name: "Oristano", area: "OR", lat: 39.906, lng: 8.588 },
-  { id: "cap-su", name: "Sud Sardegna", area: "SU", lat: 39.167, lng: 8.522 },
-];
+const LOC_DEFAULT = { name: "Roma", area: "RM", lat: 41.8928, lng: 12.4837 };
 
-/* elenco completo cercabile: comuni + capoluoghi, senza duplicati */
-const TUTTE_LOCALITA = [
-  ...LOCALITIES,
-  ...CAPOLUOGHI.filter((c) => !LOCALITIES.some((l) => l.name === c.name)),
-];
-const locById = (id) => LOCALITIES.find((l) => l.id === id);
+let comuniCache = null;      // [[nome, sigla, lat, lng], ...] ordinati per popolazione
+let comuniPromise = null;
+
+function caricaComuni() {
+  if (comuniCache) return Promise.resolve(comuniCache);
+  if (!comuniPromise) {
+    comuniPromise = fetch("/comuni.json")
+      .then((r) => r.json())
+      .then((d) => { comuniCache = d; return d; })
+      .catch(() => { comuniCache = []; return []; });
+  }
+  return comuniPromise;
+}
+
+/* confronto senza accenti e maiuscole */
+const senzaAccenti = (t) =>
+  t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+function cercaComuni(elenco, testo) {
+  const t = senzaAccenti(testo.trim());
+  if (t.length < 2) return [];
+  const iniziano = [], contengono = [];
+  for (const c of elenco) {
+    const n = senzaAccenti(c[0]);
+    if (n.startsWith(t)) iniziano.push(c);
+    else if (n.includes(t)) contengono.push(c);
+    if (iniziano.length >= 8) break;
+  }
+  return [...iniziano, ...contengono].slice(0, 8)
+    .map((c) => ({ name: c[0], area: c[1], lat: c[2], lng: c[3] }));
+}
 
 function distanceKm(a, b) {
   if (!a || !b) return 0;
@@ -303,11 +193,11 @@ const GlobalStyle = () => (
     .cv-logo { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 20px; cursor: pointer; }
     .cv-logo em { font-style: normal; color: var(--accent); }
     .cv-btn {
-      font: 600 13.5px 'Work Sans', sans-serif; color: var(--ink);
-      background: var(--bg); border: 1px solid var(--linea); border-radius: 999px;
-      padding: 8px 16px; cursor: pointer;
+      font: 600 13.5px 'Work Sans', sans-serif; color: #fff;
+      background: var(--accent); border: 1px solid var(--accent); border-radius: 999px;
+      padding: 9px 18px; cursor: pointer;
     }
-    .cv-btn:hover { border-color: var(--ink); }
+    .cv-btn:hover { background: #7A5CE8; border-color: #7A5CE8; }
 
     /* hero */
     .cv-hero { text-align: center; padding: 68px 20px 60px; background: linear-gradient(180deg, var(--bg2), var(--bg)); }
@@ -485,6 +375,23 @@ const GlobalStyle = () => (
     .cv-step h4 { font-size: 15.5px; margin-bottom: 6px; font-weight: 600; }
     .cv-step p { font-size: 13.5px; color: var(--grigio); line-height: 1.55; }
 
+    .cv-pro {
+      background: var(--ink); border-radius: 20px; padding: 40px 36px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 26px; flex-wrap: wrap; margin: 10px 0 50px;
+    }
+    .cv-pro h3 { font-family: 'Sora', sans-serif; font-size: 25px; color: #fff; margin-bottom: 8px; line-height: 1.25; }
+    .cv-pro p { color: #C9C4DA; font-size: 15px; line-height: 1.6; max-width: 430px; }
+    .cv-pro ul { list-style: none; display: flex; gap: 18px; flex-wrap: wrap; margin-top: 14px; }
+    .cv-pro li { color: #E4E0F0; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .cv-pro-btn {
+      background: var(--accent); color: #fff; border: none; border-radius: 12px;
+      font: 700 16px 'Work Sans', sans-serif; padding: 16px 30px; cursor: pointer;
+      white-space: nowrap; text-decoration: none; display: inline-block;
+    }
+    .cv-pro-btn:hover { background: #7A5CE8; }
+    .cv-pro-sub { display: block; font-size: 12.5px; color: #9A96A8; margin-top: 10px; text-align: center; font-weight: 500; }
+    @media (max-width: 700px) { .cv-pro { padding: 30px 24px; } .cv-pro h3 { font-size: 21px; } }
     .cv-footer { border-top: 1px solid var(--linea); padding: 28px 0; margin-top: 28px; font-size: 13px; color: var(--grigio); background: var(--bg2); }
     .cv-footer .cv-container { display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
 
@@ -515,41 +422,43 @@ const GlobalStyle = () => (
 function LocationInput({ value, onChange, compact }) {
   const [text, setText] = useState(value ? value.name : "");
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  const t = text.toLowerCase();
-  const matches = TUTTE_LOCALITA.filter(
-    (l) => l.name.toLowerCase().startsWith(t) || l.area.toLowerCase() === t
-  ).slice(0, 7);
+  const [matches, setMatches] = useState([]);
+  const [pronto, setPronto] = useState(!!comuniCache);
+
+  const scrivi = async (v) => {
+    setText(v); setOpen(true);
+    const elenco = await caricaComuni();
+    setPronto(true);
+    setMatches(cercaComuni(elenco, v));
+  };
 
   const pick = (l) => { onChange(l); setText(l.name); setOpen(false); };
 
   return (
     <div style={{ position: "relative" }}>
       <input
-        ref={ref}
         value={text}
-        placeholder="Cerca città o zona…"
-        onChange={(e) => { setText(e.target.value); setOpen(true); }}
-        onFocus={() => setOpen(true)}
+        placeholder="Cerca il tuo comune…"
+        onChange={(e) => scrivi(e.target.value)}
+        onFocus={() => { caricaComuni(); setOpen(true); }}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         aria-label="Località dell'evento"
         className={compact ? "cv-select" : undefined}
-        style={compact ? { minWidth: 150 } : undefined}
+        style={compact ? { minWidth: 160 } : undefined}
       />
-      {open && text.length > 0 && matches.length === 0 && (
+      {open && text.trim().length >= 2 && (
         <div className="cv-locdrop">
-          <div style={{ padding: "10px 14px", fontSize: 13, color: "var(--grigio)" }}>
-            Nessuna località trovata. Prova con il capoluogo più vicino.
-          </div>
-        </div>
-      )}
-      {open && text.length > 0 && matches.length > 0 && (
-        <div className="cv-locdrop">
-          {matches.map((l) => (
-            <div key={l.id} className="cv-locitem" onMouseDown={() => pick(l)}>
-              <MapPin size={15} /> {l.name} <small>{l.area}</small>
+          {matches.length > 0 ? (
+            matches.map((l, i) => (
+              <div key={l.name + l.area + i} className="cv-locitem" onMouseDown={() => pick(l)}>
+                <MapPin size={15} /> {l.name} <small>{l.area}</small>
+              </div>
+            ))
+          ) : (
+            <div style={{ padding: "10px 14px", fontSize: 13, color: "var(--grigio)" }}>
+              {pronto ? "Nessun comune trovato con questo nome." : "Carico l'elenco dei comuni…"}
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>
@@ -619,7 +528,7 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
   const [etype, setEtype] = useState("Festa privata");
   const [cat, setCat] = useState("");
   const featured = [...providers].sort((a, b) => b.bookings - a.bookings).slice(0, 6);
-  const doSearch = () => onSearch({ loc: loc || locById("roma"), date, etype, cat });
+  const doSearch = () => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat });
 
   /* mostra solo le categorie che hanno almeno un professionista attivo:
      il sito cresce da solo man mano che si aggiungono fornitori */
@@ -672,8 +581,8 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
               const Icon = c.icon;
               return (
                 <div key={c.id} className="cv-cat cv-card-base" role="button" tabIndex={0}
-                     onClick={() => onSearch({ loc: loc || locById("roma"), date, etype, cat: c.id })}
-                     onKeyDown={(e) => e.key === "Enter" && onSearch({ loc: loc || locById("roma"), date, etype, cat: c.id })}>
+                     onClick={() => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id })}
+                     onKeyDown={(e) => e.key === "Enter" && onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id })}>
                   <Icon size={24} strokeWidth={1.9} />
                   <span>{c.label}</span>
                 </div>
@@ -714,6 +623,29 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
               <div className="cv-dot">3</div>
               <h4>Invia la richiesta</h4>
               <p>Il team Click Eventi la gira al professionista e ti ricontatta con la conferma entro 24 ore.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style={{ paddingBottom: 10 }}>
+        <div className="cv-container">
+          <div className="cv-pro">
+            <div>
+              <h3>Lavori nel mondo degli eventi?</h3>
+              <p>
+                Pubblica i tuoi pacchetti su Click Eventi e ricevi richieste già complete
+                di data, luogo e budget. Niente trattative al buio.
+              </p>
+              <ul>
+                <li>✓ Iscrizione gratuita</li>
+                <li>✓ Nessuna commissione</li>
+                <li>✓ Gestisci tu prezzi e calendario</li>
+              </ul>
+            </div>
+            <div>
+              <a href="/?iscrizione" className="cv-pro-btn">Iscriviti gratis</a>
+              <span className="cv-pro-sub">Ci vogliono 5 minuti</span>
             </div>
           </div>
         </div>
@@ -1034,7 +966,7 @@ function ProfileView({ p, goBack, q }) {
 
 export default function ClickEventiV2() {
   const [view, setView] = useState("home");
-  const [q, setQ] = useState({ loc: locById("roma"), date: "", etype: "Festa privata", cat: "" });
+  const [q, setQ] = useState({ loc: LOC_DEFAULT, date: "", etype: "Festa privata", cat: "" });
   const [provider, setProvider] = useState(null);
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
