@@ -313,7 +313,7 @@ function Listino({ f, ricarica, mostra }) {
             </div>
             <label>Cosa include</label>
             <input value={p.includes || ""} onChange={(e) => upPkg(p.id, "includes", e.target.value)} placeholder="Es. 1 ora · Impianto incluso" />
-            <label>Descrizione (la legge il cliente)</label>
+            <label>Descrizione pacchetto</label>
             <textarea rows={2} value={p.descrizione || ""} onChange={(e) => upPkg(p.id, "descrizione", e.target.value)}
                       placeholder="Spiega cosa comprende davvero il pacchetto…" />
             <label>Come scala il prezzo</label>
@@ -344,7 +344,7 @@ function Listino({ f, ricarica, mostra }) {
           </div>
           <label>Cosa include</label>
           <input value={nuovo.includes} onChange={(e) => setNuovo({ ...nuovo, includes: e.target.value })} />
-          <label>Descrizione (la legge il cliente)</label>
+          <label>Descrizione pacchetto</label>
           <textarea rows={2} value={nuovo.descrizione || ""} onChange={(e) => setNuovo({ ...nuovo, descrizione: e.target.value })}
                     placeholder="Spiega cosa comprende davvero il pacchetto…" />
           <label>Come scala il prezzo</label>

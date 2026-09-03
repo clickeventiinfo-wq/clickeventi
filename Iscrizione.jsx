@@ -345,7 +345,7 @@ function CompletaProfilo({ user }) {
               </div>
               <label>Cosa include</label>
               <input value={p.includes} onChange={(e) => upPkg(i, "includes", e.target.value)} placeholder="Es. 1 ora · Impianto incluso" />
-              <label>Descrizione (la legge il cliente)</label>
+              <label>Descrizione pacchetto</label>
               <textarea rows={2} value={p.descrizione} onChange={(e) => upPkg(i, "descrizione", e.target.value)}
                         placeholder="Spiega cosa comprende davvero: cosa fai, come si svolge, cosa serve da parte del cliente…" />
               <label>Come scala il prezzo</label>
