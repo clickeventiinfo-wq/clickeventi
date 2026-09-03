@@ -5,6 +5,7 @@ import {
   ChevronLeft, ChevronRight, Star, TrendingUp, AlertCircle, Video, Link as LinkIcon
 } from "lucide-react";
 import { supabase } from "./supabase";
+import { ComuneInput } from "./comuni.jsx";
 
 /* ============================================================
    CLICK EVENTI — Pannello del professionista (collegato al DB)
@@ -405,9 +406,12 @@ function Listino({ f, ricarica, mostra }) {
 /* ---------------- PROFILO ---------------- */
 function Profilo({ f, user, ricarica, mostra }) {
   const [d, setD] = useState({
-    nome: f.nome || "", ruolo: f.ruolo || "", localita: f.localita || "",
+    nome: f.nome || "", ruolo: f.ruolo || "",
     telefono: f.telefono || "", bio: f.bio || "", link: f.link || "", video_link: f.video_link || "",
   });
+  const [comune, setComune] = useState(
+    f.localita ? { name: f.localita, area: f.provincia, lat: f.lat, lng: f.lng } : null
+  );
   const [foto, setFoto] = useState((f.foto || []).map((u) => ({ url: u, path: null })));
   const [caricando, setCaricando] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -435,8 +439,11 @@ function Profilo({ f, user, ricarica, mostra }) {
 
   const salva = async () => {
     setSalvando(true);
+    if (!comune) { setSalvando(false); mostra("Scegli il comune dall'elenco dei suggerimenti"); return; }
     const { error } = await supabase.from("fornitori").update({
-      nome: d.nome, ruolo: d.ruolo, localita: d.localita, telefono: d.telefono,
+      nome: d.nome, ruolo: d.ruolo,
+      localita: comune.name, provincia: comune.area, lat: comune.lat, lng: comune.lng,
+      telefono: d.telefono,
       bio: d.bio || null, link: d.link || null, video_link: d.video_link || null,
       foto: foto.map((x) => x.url),
     }).eq("id", f.id);
@@ -476,7 +483,7 @@ function Profilo({ f, user, ricarica, mostra }) {
           <div><label>Cosa fai</label><input value={d.ruolo} onChange={(e) => setD({ ...d, ruolo: e.target.value })} /></div>
         </div>
         <div className="fp-row">
-          <div><label>Città</label><input value={d.localita} onChange={(e) => setD({ ...d, localita: e.target.value })} /></div>
+          <div><label htmlFor="fp-comune">Comune</label><ComuneInput id="fp-comune" valore={comune?.name} onChange={setComune} /></div>
           <div><label>Telefono</label><input value={d.telefono} onChange={(e) => setD({ ...d, telefono: e.target.value })} /></div>
         </div>
         <label>Presentazione (la leggono i clienti)</label>

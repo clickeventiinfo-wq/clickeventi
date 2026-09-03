@@ -4,6 +4,7 @@ import {
   Check, ArrowLeft, ArrowRight, Plus, Trash2, PartyPopper as Party, Loader2, Mail, Link as LinkIcon, ImagePlus, X, Video
 } from "lucide-react";
 import { supabase } from "./supabase";
+import { ComuneInput } from "./comuni.jsx";
 
 /* ============================================================
    CLICK EVENTI — Iscrizione professionista (2 fasi)
@@ -173,7 +174,8 @@ function CompletaProfilo({ user }) {
   const [errore, setErrore] = useState("");
   const [fatto, setFatto] = useState(false);
 
-  const [d, setD] = useState({ nome: "", ruolo: "", categoria: "", nuovaCat: "", localita: "", telefono: "", link: "" });
+  const [d, setD] = useState({ nome: "", ruolo: "", categoria: "", nuovaCat: "", telefono: "", link: "" });
+  const [comune, setComune] = useState(null);   // {name, area, lat, lng}
   const [pacchetti, setPacchetti] = useState([pacchettoVuoto()]);
   const [extra, setExtra] = useState([]);
   const [fasce, setFasce] = useState([{ fino: 30, fee: 0 }, { fino: 100, fee: "" }, { fino: 99999, fee: "" }]);
@@ -185,7 +187,8 @@ function CompletaProfilo({ user }) {
   const so = (id) => scaleOpt(id);
 
   const validStep1 = () => {
-    if (!d.nome || !d.ruolo || !d.localita) return "Compila nome, cosa fai e città.";
+    if (!d.nome || !d.ruolo) return "Compila nome e cosa fai.";
+    if (!comune) return "Scegli il tuo comune dall'elenco dei suggerimenti.";
     if (!d.categoria) return "Scegli una categoria.";
     if (d.categoria === "altro" && !d.nuovaCat) return "Scrivi il nome della categoria che proponi.";
     return "";
@@ -249,7 +252,9 @@ function CompletaProfilo({ user }) {
     const noteBio = d.categoria === "altro" ? ("Categoria proposta dal fornitore: " + d.nuovaCat) : null;
     const { error: e1 } = await supabase.from("fornitori").update({
       nome: d.nome, ruolo: d.ruolo, categoria: categoriaFinale,
-      localita: d.localita, telefono: d.telefono, email: user.email,
+      localita: comune.name, provincia: comune.area,
+      lat: comune.lat, lng: comune.lng,
+      telefono: d.telefono, email: user.email,
       bio: noteBio, link: d.link || null,
       foto: foto.map((f) => f.url), video_link: videoLink || null,
     }).eq("id", fid);
@@ -308,7 +313,7 @@ function CompletaProfilo({ user }) {
           </div>
           {d.categoria === "altro" && <input style={{ marginTop: 8 }} value={d.nuovaCat} onChange={set("nuovaCat")} placeholder="Es. Scenografie, Noleggio auto…" />}
           <div className="is-row">
-            <div><label>Città *</label><input value={d.localita} onChange={set("localita")} placeholder="Es. Lecce" /></div>
+            <div><label htmlFor="is-comune">Comune *</label><ComuneInput id="is-comune" valore={comune?.name} onChange={setComune} /></div>
             <div><label>Telefono</label><input value={d.telefono} onChange={set("telefono")} placeholder="Per i clienti" /></div>
           </div>
           <label><LinkIcon size={13} style={{ verticalAlign: "-2px" }} /> Link (Instagram, sito, YouTube…)</label>
