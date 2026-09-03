@@ -102,9 +102,10 @@ function fromDb(r) {
       event: p.evento,
       base: p.base,
       includes: (p.includes || "").split(" \u00b7 ").filter(Boolean),
+      descrizione: p.descrizione,
       scale: { on: p.scale_on === "fisso" ? null : p.scale_on, included: p.inclusi, extra: p.extra_unita },
     })),
-    extras: (r.extra || []).map((e) => ({ id: e.id, label: e.label, price: e.prezzo })),
+    extras: (r.extra || []).map((e) => ({ id: e.id, label: e.label, price: e.prezzo, descrizione: e.descrizione })),
   };
 }
 
@@ -832,6 +833,9 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
           <span className="cv-pkg-event">{k.event === "Tutti" ? "Ogni evento" : k.event}</span>
           <b>{k.label} <span>{k.base + feeFor(p, eventLoc)} €</span></b>
           <small>{k.includes.join(" · ")}</small>
+          {k.descrizione && k.id === pkgId && (
+            <small style={{ display: "block", marginTop: 6, color: "var(--ink)", lineHeight: 1.5 }}>{k.descrizione}</small>
+          )}
         </label>
       ))}
 
@@ -864,9 +868,16 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
         <>
           <label>Aggiungi extra</label>
           {p.extras.map((e) => (
-            <label key={e.id} className="cv-opt">
-              <input type="checkbox" checked={extras.includes(e.id)} onChange={() => toggle(e.id)} />
-              {e.label}
+            <label key={e.id} className="cv-opt" style={{ alignItems: "flex-start" }}>
+              <input type="checkbox" checked={extras.includes(e.id)} onChange={() => toggle(e.id)} style={{ marginTop: 3 }} />
+              <span style={{ flex: 1 }}>
+                {e.label}
+                {e.descrizione && (
+                  <small style={{ display: "block", color: "var(--grigio)", fontSize: 12.5, lineHeight: 1.45, marginTop: 2 }}>
+                    {e.descrizione}
+                  </small>
+                )}
+              </span>
               <span className="cv-opt-price">+{e.price} €</span>
             </label>
           ))}

@@ -28,7 +28,7 @@ const SCALE_OPTS = [
   { id: "persone", label: "A persona", inclLabel: "Persone incluse", extraLabel: "€ / persona in più" },
 ];
 const scaleOpt = (id) => SCALE_OPTS.find((s) => s.id === id);
-const pacchettoVuoto = () => ({ label: "", event: "Ogni evento", base: "", includes: "", scaleOn: "fisso", included: "", extra: "" });
+const pacchettoVuoto = () => ({ label: "", event: "Ogni evento", base: "", includes: "", descrizione: "", scaleOn: "fisso", included: "", extra: "" });
 
 const Style = () => (
   <style>{`
@@ -212,7 +212,7 @@ function CompletaProfilo({ user }) {
   const addPkg = () => setPacchetti([...pacchetti, pacchettoVuoto()]);
   const delPkg = (i) => setPacchetti(pacchetti.filter((_, x) => x !== i));
   const upPkg = (i, k, v) => setPacchetti(pacchetti.map((p, x) => x === i ? { ...p, [k]: v } : p));
-  const addExtra = () => setExtra([...extra, { label: "", price: "" }]);
+  const addExtra = () => setExtra([...extra, { label: "", price: "", descrizione: "" }]);
   const delExtra = (i) => setExtra(extra.filter((_, x) => x !== i));
   const upExtra = (i, k, v) => setExtra(extra.map((e, x) => x === i ? { ...e, [k]: v } : e));
   const upFascia = (i, v) => setFasce(fasce.map((f, x) => x === i ? { ...f, fee: v } : f));
@@ -262,11 +262,12 @@ function CompletaProfilo({ user }) {
 
     const pkgRows = pacchetti.filter((p) => p.label && p.base).map((p) => ({
       fornitore_id: fid, label: p.label, evento: p.event, base: Number(p.base) || 0,
-      includes: p.includes, scale_on: p.scaleOn, inclusi: Number(p.included) || 0, extra_unita: Number(p.extra) || 0,
+      includes: p.includes, descrizione: p.descrizione || null,
+      scale_on: p.scaleOn, inclusi: Number(p.included) || 0, extra_unita: Number(p.extra) || 0,
     }));
     if (pkgRows.length) { const { error } = await supabase.from("pacchetti").insert(pkgRows); if (error) { setSaving(false); setErrore("Errore pacchetti: " + error.message); return; } }
 
-    const exRows = extra.filter((e) => e.label && e.price).map((e) => ({ fornitore_id: fid, label: e.label, prezzo: Number(e.price) || 0 }));
+    const exRows = extra.filter((e) => e.label && e.price).map((e) => ({ fornitore_id: fid, label: e.label, prezzo: Number(e.price) || 0, descrizione: e.descrizione || null }));
     if (exRows.length) await supabase.from("extra").insert(exRows);
 
     const faRows = fasce.map((f) => ({ fornitore_id: fid, fino_a_km: Number(f.fino), fee: Number(f.fee) || 0 }));
@@ -344,6 +345,9 @@ function CompletaProfilo({ user }) {
               </div>
               <label>Cosa include</label>
               <input value={p.includes} onChange={(e) => upPkg(i, "includes", e.target.value)} placeholder="Es. 1 ora · Impianto incluso" />
+              <label>Descrizione (la legge il cliente)</label>
+              <textarea rows={2} value={p.descrizione} onChange={(e) => upPkg(i, "descrizione", e.target.value)}
+                        placeholder="Spiega cosa comprende davvero: cosa fai, come si svolge, cosa serve da parte del cliente…" />
               <label>Come scala il prezzo</label>
               <select value={p.scaleOn} onChange={(e) => upPkg(i, "scaleOn", e.target.value)}>{SCALE_OPTS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select>
               {p.scaleOn !== "fisso" && (

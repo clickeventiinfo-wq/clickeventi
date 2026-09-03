@@ -190,6 +190,7 @@ function Dettaglio({ f, onIndietro, onApprova, onRifiuta, onVerif, busy }) {
                 {p.evento === "Tutti" ? "Ogni evento" : p.evento}
                 {p.scale_on !== "fisso" ? ` · scala su ${p.scale_on} (${p.inclusi} inclusi, +${p.extra_unita} € l'uno)` : " · prezzo fisso"}
                 {p.includes ? <><br />{p.includes}</> : null}
+                {p.descrizione ? <><br /><span style={{ color: "var(--ink)" }}>{p.descrizione}</span></> : null}
               </small>
             </div>
           )) : <p className="ad-vuoto">Nessun pacchetto inserito.</p>}
@@ -199,7 +200,7 @@ function Dettaglio({ f, onIndietro, onApprova, onRifiuta, onVerif, busy }) {
           <h5>Extra</h5>
           {f.extra?.length ? (
             <div className="ad-chips">
-              {f.extra.map((e) => <span key={e.id} className="ad-chip">{e.label} · +{e.prezzo} €</span>)}
+              {f.extra.map((e) => <span key={e.id} className="ad-chip" title={e.descrizione || ""}>{e.label} · +{e.prezzo} €{e.descrizione ? " ⓘ" : ""}</span>)}
             </div>
           ) : <p className="ad-vuoto">Nessun extra.</p>}
         </div>

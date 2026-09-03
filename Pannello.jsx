@@ -251,7 +251,7 @@ function Listino({ f, ricarica, mostra }) {
   const [extra, setExtra] = useState(f.extra || []);
   const [fasce, setFasce] = useState([...(f.fasce || [])].sort((a, b) => a.fino_a_km - b.fino_a_km));
   const [nuovo, setNuovo] = useState(null);
-  const [nuovoExtra, setNuovoExtra] = useState({ label: "", prezzo: "" });
+  const [nuovoExtra, setNuovoExtra] = useState({ label: "", prezzo: "", descrizione: "" });
   const [salvando, setSalvando] = useState(false);
 
   const upPkg = (id, k, v) => setPkg(pkg.map((p) => p.id === id ? { ...p, [k]: v } : p));
@@ -262,11 +262,11 @@ function Listino({ f, ricarica, mostra }) {
     setSalvando(true);
     for (const p of pkg) {
       await supabase.from("pacchetti").update({
-        label: p.label, evento: p.evento, base: Number(p.base) || 0, includes: p.includes,
+        label: p.label, evento: p.evento, base: Number(p.base) || 0, includes: p.includes, descrizione: p.descrizione || null,
         scale_on: p.scale_on, inclusi: Number(p.inclusi) || 0, extra_unita: Number(p.extra_unita) || 0,
       }).eq("id", p.id);
     }
-    for (const e of extra) await supabase.from("extra").update({ label: e.label, prezzo: Number(e.prezzo) || 0 }).eq("id", e.id);
+    for (const e of extra) await supabase.from("extra").update({ label: e.label, prezzo: Number(e.prezzo) || 0, descrizione: e.descrizione || null }).eq("id", e.id);
     for (const x of fasce) await supabase.from("fasce").update({ fee: Number(x.fee) || 0 }).eq("id", x.id);
     setSalvando(false);
     mostra("Listino aggiornato ✓");
@@ -277,7 +277,7 @@ function Listino({ f, ricarica, mostra }) {
     if (!nuovo?.label || !nuovo?.base) { mostra("Servono nome e prezzo"); return; }
     const { error } = await supabase.from("pacchetti").insert({
       fornitore_id: f.id, label: nuovo.label, evento: nuovo.evento, base: Number(nuovo.base) || 0,
-      includes: nuovo.includes, scale_on: nuovo.scale_on, inclusi: Number(nuovo.inclusi) || 0,
+      includes: nuovo.includes, descrizione: nuovo.descrizione || null, scale_on: nuovo.scale_on, inclusi: Number(nuovo.inclusi) || 0,
       extra_unita: Number(nuovo.extra_unita) || 0,
     });
     if (error) { mostra("Errore: " + error.message); return; }
@@ -286,7 +286,7 @@ function Listino({ f, ricarica, mostra }) {
   const eliminaPkg = async (id) => { await supabase.from("pacchetti").delete().eq("id", id); mostra("Pacchetto eliminato"); ricarica(); };
   const creaExtra = async () => {
     if (!nuovoExtra.label || !nuovoExtra.prezzo) return;
-    await supabase.from("extra").insert({ fornitore_id: f.id, label: nuovoExtra.label, prezzo: Number(nuovoExtra.prezzo) || 0 });
+    await supabase.from("extra").insert({ fornitore_id: f.id, label: nuovoExtra.label, prezzo: Number(nuovoExtra.prezzo) || 0, descrizione: nuovoExtra.descrizione || null });
     setNuovoExtra({ label: "", prezzo: "" }); mostra("Extra aggiunto ✓"); ricarica();
   };
   const eliminaExtra = async (id) => { await supabase.from("extra").delete().eq("id", id); ricarica(); };
@@ -313,6 +313,9 @@ function Listino({ f, ricarica, mostra }) {
             </div>
             <label>Cosa include</label>
             <input value={p.includes || ""} onChange={(e) => upPkg(p.id, "includes", e.target.value)} placeholder="Es. 1 ora · Impianto incluso" />
+            <label>Descrizione (la legge il cliente)</label>
+            <textarea rows={2} value={p.descrizione || ""} onChange={(e) => upPkg(p.id, "descrizione", e.target.value)}
+                      placeholder="Spiega cosa comprende davvero il pacchetto…" />
             <label>Come scala il prezzo</label>
             <select value={p.scale_on} onChange={(e) => upPkg(p.id, "scale_on", e.target.value)}>
               {SCALE_OPTS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
@@ -341,6 +344,9 @@ function Listino({ f, ricarica, mostra }) {
           </div>
           <label>Cosa include</label>
           <input value={nuovo.includes} onChange={(e) => setNuovo({ ...nuovo, includes: e.target.value })} />
+          <label>Descrizione (la legge il cliente)</label>
+          <textarea rows={2} value={nuovo.descrizione || ""} onChange={(e) => setNuovo({ ...nuovo, descrizione: e.target.value })}
+                    placeholder="Spiega cosa comprende davvero il pacchetto…" />
           <label>Come scala il prezzo</label>
           <select value={nuovo.scale_on} onChange={(e) => setNuovo({ ...nuovo, scale_on: e.target.value })}>
             {SCALE_OPTS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
@@ -357,7 +363,7 @@ function Listino({ f, ricarica, mostra }) {
           </div>
         </div>
       ) : (
-        <button className="fp-btn" style={{ marginBottom: 14 }} onClick={() => setNuovo({ label: "", evento: "Tutti", base: "", includes: "", scale_on: "fisso", inclusi: "", extra_unita: "" })}>
+        <button className="fp-btn" style={{ marginBottom: 14 }} onClick={() => setNuovo({ label: "", evento: "Tutti", base: "", includes: "", descrizione: "", scale_on: "fisso", inclusi: "", extra_unita: "" })}>
           <Plus size={15} /> Crea nuovo pacchetto
         </button>
       )}
@@ -366,17 +372,27 @@ function Listino({ f, ricarica, mostra }) {
         <b className="fp-display" style={{ fontSize: 16 }}>I tuoi extra</b>
         <p className="fp-hint">Voci che il cliente può aggiungere a qualsiasi pacchetto.</p>
         {extra.map((e) => (
-          <div key={e.id} className="fp-inline" style={{ marginTop: 9 }}>
-            <input style={{ flex: 1, width: "auto" }} value={e.label} onChange={(ev) => upExtra(e.id, "label", ev.target.value)} />
-            <input type="number" value={e.prezzo} onChange={(ev) => upExtra(e.id, "prezzo", ev.target.value)} />
-            <span>€</span>
-            <button className="fp-del" onClick={() => eliminaExtra(e.id)}><Trash2 size={15} /></button>
+          <div key={e.id} style={{ border: "1px solid var(--linea)", borderRadius: 11, padding: 11, marginTop: 10 }}>
+            <div className="fp-inline">
+              <input style={{ flex: 1, width: "auto" }} value={e.label} onChange={(ev) => upExtra(e.id, "label", ev.target.value)} />
+              <input type="number" value={e.prezzo} onChange={(ev) => upExtra(e.id, "prezzo", ev.target.value)} />
+              <span>€</span>
+              <button className="fp-del" onClick={() => eliminaExtra(e.id)}><Trash2 size={15} /></button>
+            </div>
+            <input style={{ marginTop: 8 }} value={e.descrizione || ""}
+                   onChange={(ev) => upExtra(e.id, "descrizione", ev.target.value)}
+                   placeholder="Descrizione breve (facoltativa)" />
           </div>
         ))}
-        <div className="fp-inline" style={{ marginTop: 11 }}>
-          <input style={{ flex: 1, width: "auto" }} value={nuovoExtra.label} onChange={(e) => setNuovoExtra({ ...nuovoExtra, label: e.target.value })} placeholder="Nuovo extra" />
-          <input type="number" value={nuovoExtra.prezzo} onChange={(e) => setNuovoExtra({ ...nuovoExtra, prezzo: e.target.value })} placeholder="€" />
-          <button className="fp-btn" onClick={creaExtra}><Plus size={14} /> Aggiungi</button>
+        <div style={{ marginTop: 12 }}>
+          <div className="fp-inline">
+            <input style={{ flex: 1, width: "auto" }} value={nuovoExtra.label} onChange={(e) => setNuovoExtra({ ...nuovoExtra, label: e.target.value })} placeholder="Nuovo extra" />
+            <input type="number" value={nuovoExtra.prezzo} onChange={(e) => setNuovoExtra({ ...nuovoExtra, prezzo: e.target.value })} placeholder="€" />
+            <button className="fp-btn" onClick={creaExtra}><Plus size={14} /> Aggiungi</button>
+          </div>
+          <input style={{ marginTop: 8 }} value={nuovoExtra.descrizione}
+                 onChange={(e) => setNuovoExtra({ ...nuovoExtra, descrizione: e.target.value })}
+                 placeholder="Descrizione breve (facoltativa)" />
         </div>
       </div>
 
