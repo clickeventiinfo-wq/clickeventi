@@ -567,6 +567,15 @@ export default function Pannello() {
     mostra(msg); ricarica();
   };
 
+  const rimandaInVerifica = async () => {
+    setBusy(true);
+    const { error } = await supabase.from("fornitori").update({ stato: "in_attesa" }).eq("id", f.id);
+    setBusy(false);
+    if (error) { mostra("Errore: " + error.message); return; }
+    mostra("Profilo rimandato in verifica ✓");
+    ricarica();
+  };
+
   const toggleGiorno = async (giorno, occupato) => {
     if (occupato) await supabase.from("indisponibilita").delete().eq("fornitore_id", f.id).eq("giorno", giorno);
     else await supabase.from("indisponibilita").insert({ fornitore_id: f.id, giorno });
@@ -638,10 +647,28 @@ export default function Pannello() {
       </header>
 
       <div className="fp-wrap">
-        {f.stato !== "approvato" && (
+        {f.stato === "in_attesa" && (
           <div className="fp-banner">
             <AlertCircle size={17} />
             <span><b>Profilo in attesa di approvazione.</b> Puoi già completare tutto: appena il team lo verifica, il tuo profilo va online e inizi a ricevere richieste.</span>
+          </div>
+        )}
+
+        {f.stato === "sospeso" && (
+          <div className="fp-banner" style={{ background: "#F9EAEA", color: "#A33F3F", flexDirection: "column", alignItems: "stretch" }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <AlertCircle size={17} style={{ flexShrink: 0, marginTop: 2 }} />
+              <span>
+                <b>Il tuo profilo non è pubblicato.</b>
+                {f.motivo_rifiuto ? <><br />Motivo: {f.motivo_rifiuto}</> : null}
+                <br />Correggi quello che serve e rimandalo in verifica: lo ricontrolliamo appena possibile.
+              </span>
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <button className="fp-btn ok" disabled={busy} onClick={rimandaInVerifica}>
+                <Check size={15} /> Rimanda in verifica
+              </button>
+            </div>
           </div>
         )}
 

@@ -131,8 +131,18 @@ function Riga({ f, onApri }) {
 }
 
 /* ---------- scheda di dettaglio ---------- */
+const MOTIVI = [
+  "Le foto non permettono di capire il tuo lavoro",
+  "Il profilo è incompleto: mancano informazioni",
+  "La categoria indicata non corrisponde al servizio",
+  "Non siamo riusciti a verificare la tua attività dal link",
+  "I pacchetti non sono chiari o mancano i prezzi",
+];
+
 function Dettaglio({ f, onIndietro, onApprova, onRifiuta, onVerif, busy }) {
   const proposta = categoriaProposta(f.bio);
+  const [rifiutando, setRifiutando] = useState(false);
+  const [motivo, setMotivo] = useState("");
   return (
     <>
       <button className="ad-back" onClick={onIndietro}><ArrowLeft size={16} /> Torna all'elenco</button>
@@ -156,6 +166,13 @@ function Dettaglio({ f, onIndietro, onApprova, onRifiuta, onVerif, busy }) {
             </div>
           </div>
         </div>
+
+        {f.stato === "sospeso" && f.motivo_rifiuto && (
+          <div className="ad-propose">
+            <X size={16} />
+            <span><b>Rifiutato in precedenza:</b> {f.motivo_rifiuto}</span>
+          </div>
+        )}
 
         {proposta && (
           <div className="ad-propose">
@@ -220,14 +237,44 @@ function Dettaglio({ f, onIndietro, onApprova, onRifiuta, onVerif, busy }) {
         </div>
       </div>
 
+      {rifiutando && (
+        <div className="ad-card">
+          <h5 style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--grigio)", marginBottom: 10 }}>
+            Perché non lo pubblichi?
+          </h5>
+          <p style={{ fontSize: 13.5, color: "var(--grigio)", marginBottom: 12 }}>
+            Il motivo viene inviato per email al professionista, così può correggere e rimandare il profilo in verifica.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 12 }}>
+            {MOTIVI.map((m) => (
+              <button key={m} className={"ad-btn" + (motivo === m ? " ok" : "")}
+                      style={{ justifyContent: "flex-start", textAlign: "left", fontWeight: 500 }}
+                      onClick={() => setMotivo(m)}>
+                {m}
+              </button>
+            ))}
+          </div>
+          <textarea rows={3} value={motivo} onChange={(e) => setMotivo(e.target.value)}
+                    placeholder="Oppure scrivi il motivo con parole tue…"
+                    style={{ width: "100%", border: "1px solid var(--linea)", borderRadius: 10, padding: 11, font: "500 14px 'Work Sans', sans-serif", color: "var(--ink)", outlineColor: "var(--accent)" }} />
+          <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+            <button className="ad-btn no" disabled={busy || !motivo.trim()}
+                    onClick={() => { onRifiuta(f, motivo.trim()); setRifiutando(false); setMotivo(""); }}>
+              <X size={16} /> Invia il rifiuto
+            </button>
+            <button className="ad-btn" onClick={() => { setRifiutando(false); setMotivo(""); }}>Annulla</button>
+          </div>
+        </div>
+      )}
+
       <div className="ad-actions">
         {f.stato === "in_attesa" ? (
           <>
             <button className="ad-btn ok" disabled={busy} onClick={() => onApprova(f)}><Check size={16} /> Approva e pubblica</button>
-            <button className="ad-btn no" disabled={busy} onClick={() => onRifiuta(f)}><X size={16} /> Rifiuta</button>
+            {!rifiutando && <button className="ad-btn no" disabled={busy} onClick={() => setRifiutando(true)}><X size={16} /> Rifiuta…</button>}
           </>
         ) : (
-          <button className="ad-btn no" disabled={busy} onClick={() => onRifiuta(f)}><X size={16} /> Sospendi (togli dal sito)</button>
+          !rifiutando && <button className="ad-btn no" disabled={busy} onClick={() => setRifiutando(true)}><X size={16} /> Sospendi (togli dal sito)</button>
         )}
         <label className="ad-verif">
           <input type="checkbox" checked={!!f.verificato} disabled={busy} onChange={() => onVerif(f)} />
@@ -276,8 +323,8 @@ export default function Admin() {
     if (msg) mostra(msg);
     await carica();
   };
-  const approva = (f) => { azione(f, { stato: "approvato" }, `${f.nome} è ora online! 🎉`); setApertoId(null); };
-  const rifiuta = (f) => { azione(f, { stato: "sospeso" }, `${f.nome} sospeso.`); setApertoId(null); };
+  const approva = (f) => { azione(f, { stato: "approvato", motivo_rifiuto: null }, `${f.nome} è ora online! 🎉`); setApertoId(null); };
+  const rifiuta = (f, motivo) => { azione(f, { stato: "sospeso", motivo_rifiuto: motivo || null }, `${f.nome}: rifiuto inviato.`); setApertoId(null); };
   const verif = (f) => azione(f, { verificato: !f.verificato }, null);
 
   if (stato === "check") return <div className="ad-root"><Style /><div className="ad-center"><Loader2 size={26} className="ad-spin" /><p style={{ marginTop: 10 }}>Verifico l'accesso…</p></div></div>;
