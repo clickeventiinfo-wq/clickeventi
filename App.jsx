@@ -81,13 +81,6 @@ const EVENTI_FEMMINILI = ["Festa privata", "Laurea"];
 const perIlTuo = (evento) =>
   (EVENTI_FEMMINILI.includes(evento) ? "la tua " : "il tuo ") + evento.toLowerCase();
 
-/* fasce di prezzo per il filtro dei risultati (sul prezzo già adattato alla zona) */
-const FASCE_PREZZO = [
-  { id: "300", label: "Fino a 300 €", max: 300 },
-  { id: "600", label: "300 – 600 €", min: 300, max: 600 },
-  { id: "1000", label: "600 – 1.000 €", min: 600, max: 1000 },
-  { id: "oltre", label: "Oltre 1.000 €", min: 1000 },
-];
 
 /* trasforma una riga del database nel formato usato dal sito */
 function fromDb(r) {
@@ -283,7 +276,7 @@ const GlobalStyle = () => (
     .cv-cat span { display: block; font-weight: 600; font-size: 14px; line-height: 1.3; }
 
     /* card fornitore */
-    .cv-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .cv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
     .cv-grid > * { min-width: 0; }
     .cv-cover {
       width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden;
@@ -317,6 +310,62 @@ const GlobalStyle = () => (
     .cv-bookings { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--grigio); margin-top: 8px; }
 
     /* toolbar */
+    /* --- pagina risultati: filtri a lato --- */
+    .cv-layout { display: grid; grid-template-columns: 258px minmax(0, 1fr); gap: 24px; align-items: start; }
+    .cv-side {
+      background: var(--bg); border: 1px solid var(--linea); border-radius: 16px;
+      padding: 4px 18px 18px; position: sticky; top: 78px;
+    }
+    .cv-fgroup { padding: 16px 0; border-bottom: 1px solid var(--linea); }
+    .cv-fgroup:last-child { border-bottom: none; padding-bottom: 4px; }
+    .cv-flabel2 {
+      display: block; font: 700 11.5px 'Work Sans', sans-serif; letter-spacing: .07em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 9px;
+    }
+    .cv-side input[type="text"], .cv-side input[type="date"], .cv-side select, .cv-side input:not([type]) {
+      width: 100%; border: 1px solid var(--linea); border-radius: 10px; background: var(--bg2);
+      font: 500 14px 'Work Sans', sans-serif; padding: 9px 11px; color: var(--ink); outline-color: var(--accent);
+    }
+    .cv-chiprow { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cv-fchip {
+      font: 600 12.5px 'Work Sans', sans-serif; border-radius: 999px; padding: 6px 12px;
+      border: 1px solid var(--linea); background: var(--bg); color: var(--grigio); cursor: pointer;
+    }
+    .cv-fchip:hover { border-color: var(--accent); color: var(--accent); }
+    .cv-fchip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+    .cv-prezzo-val { font: 700 15px 'Sora', sans-serif; color: var(--ink); margin-bottom: 10px; }
+    .cv-range { width: 100%; -webkit-appearance: none; appearance: none; background: transparent; }
+    .cv-range::-webkit-slider-runnable-track {
+      height: 6px; border-radius: 999px;
+      background: linear-gradient(to right, var(--accent) var(--pct, 100%), var(--linea) var(--pct, 100%));
+    }
+    .cv-range::-moz-range-track { height: 6px; border-radius: 999px; background: var(--linea); }
+    .cv-range::-moz-range-progress { height: 6px; border-radius: 999px; background: var(--accent); }
+    .cv-range::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+      background: #fff; border: 3px solid var(--accent); margin-top: -7px; cursor: grab;
+      box-shadow: 0 2px 6px rgba(35,32,58,.18);
+    }
+    .cv-range::-moz-range-thumb {
+      width: 20px; height: 20px; border-radius: 50%; background: #fff;
+      border: 3px solid var(--accent); cursor: grab; box-shadow: 0 2px 6px rgba(35,32,58,.18);
+    }
+    .cv-range-legend { display: flex; justify-content: space-between; font-size: 12px; color: var(--grigio); margin-top: 6px; }
+    .cv-reset {
+      background: none; border: none; color: var(--accent); font: 600 13px 'Work Sans', sans-serif;
+      cursor: pointer; padding: 0; margin-top: 4px;
+    }
+    .cv-filtri-btn {
+      display: none; align-items: center; gap: 8px; width: 100%; justify-content: center;
+      background: var(--bg); border: 1px solid var(--linea); border-radius: 12px;
+      font: 600 14px 'Work Sans', sans-serif; padding: 12px; cursor: pointer; margin-bottom: 16px; color: var(--ink);
+    }
+    @media (max-width: 900px) {
+      .cv-layout { grid-template-columns: 1fr; }
+      .cv-side { position: static; }
+      .cv-filtri-btn { display: flex; }
+      .cv-side.chiusa { display: none; }
+    }
     .cv-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
     .cv-select {
       border: 1px solid var(--linea); background: var(--bg);
@@ -557,7 +606,7 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
   const [cat, setCat] = useState("");
   const [testo, setTesto] = useState("");
   const featured = [...providers].sort((a, b) => b.bookings - a.bookings).slice(0, 6);
-  const doSearch = () => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat, testo, prezzo: "" });
+  const doSearch = () => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat, testo, budget: undefined });
 
   /* mostra solo le categorie che hanno almeno un professionista attivo:
      il sito cresce da solo man mano che si aggiungono fornitori */
@@ -616,8 +665,8 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
               const Icon = c.icon;
               return (
                 <div key={c.id} className="cv-cat cv-card-base" role="button" tabIndex={0}
-                     onClick={() => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id, testo: "", prezzo: "" })}
-                     onKeyDown={(e) => e.key === "Enter" && onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id, testo: "", prezzo: "" })}>
+                     onClick={() => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id, testo: "", budget: undefined })}
+                     onKeyDown={(e) => e.key === "Enter" && onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id, testo: "", budget: undefined })}>
                   <Icon size={24} strokeWidth={1.9} />
                   <span>{c.label}</span>
                 </div>
@@ -692,22 +741,26 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
 /* ---------- risultati ---------- */
 
 function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
-  const { loc, date, etype, cat, testo, prezzo } = q;
+  const { loc, date, etype, cat, testo } = q;
+  const [filtriAperti, setFiltriAperti] = useState(false);
   const cerca = (testo || "").trim().toLowerCase();
-  const fascia = FASCE_PREZZO.find((f) => f.id === prezzo);
+
+  /* prezzo massimo possibile, arrotondato, per calibrare il cursore */
+  const maxPossibile = Math.max(
+    600,
+    ...providers.map((p) => minPrice(p, loc)).filter((n) => Number.isFinite(n))
+  );
+  const tetto = Math.ceil(maxPossibile / 100) * 100;
+  const budget = q.budget ?? tetto;          // undefined = nessun limite
+  const senzaLimite = budget >= tetto;
+
   const results = providers
     .filter((p) => (!cat || p.cat === cat) && isAvailable(p, date))
     .filter((p) => !cerca ||
       (p.role || "").toLowerCase().includes(cerca) ||
       (p.name || "").toLowerCase().includes(cerca) ||
       catLabel(p.cat).toLowerCase().includes(cerca))
-    .filter((p) => {
-      if (!fascia) return true;
-      const da = minPrice(p, loc);           // prezzo già adattato alla zona
-      if (fascia.min && da < fascia.min) return false;
-      if (fascia.max && da > fascia.max) return false;
-      return true;
-    })
+    .filter((p) => senzaLimite || minPrice(p, loc) <= budget)
     .sort((a, b) => {
       const fa = a.eventTypes.includes(etype) ? 1 : 0;
       const fb = b.eventTypes.includes(etype) ? 1 : 0;
@@ -717,11 +770,14 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
       if (ka !== kb) return ka - kb;
       return b.rating - a.rating;
     });
+
   const dateLabel = date
     ? new Date(date).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })
     : "";
   const attive = CATEGORIES.filter((c) => providers.some((p) => p.cat === c.id));
   const cats = attive.length ? attive : CATEGORIES;
+  const specialita = [...new Set(providers.map((p) => p.role).filter(Boolean))].sort();
+  const filtriAttivi = !!cat || !!cerca || !senzaLimite || !!date;
 
   return (
     <section className="cv-section">
@@ -734,60 +790,104 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
           Evento a {loc.name}{date ? ` · disponibili il ${dateLabel}` : " — scegli una data per vedere solo i disponibili"}
         </p>
 
-        <div className="cv-toolbar">
-          <LocationInput value={loc} onChange={(l) => setQ({ ...q, loc: l })} compact />
-          <input className="cv-select" type="date" value={date}
-                 onChange={(e) => setQ({ ...q, date: e.target.value })} aria-label="Data" />
-          <select className="cv-select" value={etype} onChange={(e) => setQ({ ...q, etype: e.target.value })} aria-label="Tipo di evento">
-            {EVENT_TYPES.map((t) => <option key={t}>{t}</option>)}
-          </select>
-          <select className="cv-select" value={cat} onChange={(e) => setQ({ ...q, cat: e.target.value })} aria-label="Categoria">
-            <option value="">Tutte le categorie</option>
-            {cats.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-          </select>
-          <select className="cv-select" value={prezzo || ""} onChange={(e) => setQ({ ...q, prezzo: e.target.value })} aria-label="Fascia di prezzo">
-            <option value="">Qualsiasi prezzo</option>
-            {FASCE_PREZZO.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-          </select>
-          <input className="cv-select" style={{ minWidth: 170 }} list="cv-specialita" value={testo || ""}
-                 onChange={(e) => setQ({ ...q, testo: e.target.value })}
-                 placeholder="Cerca: arpista, DJ…" aria-label="Cerca per specialità" />
-          <datalist id="cv-specialita">
-            {[...new Set(providers.map((p) => p.role).filter(Boolean))].sort().map((r) => (
-              <option key={r} value={r} />
-            ))}
-          </datalist>
-          <span style={{ fontSize: 13, color: "var(--grigio)", fontWeight: 600 }}>
-            {results.length} disponibil{results.length === 1 ? "e" : "i"}
-          </span>
-        </div>
+        <button className="cv-filtri-btn" onClick={() => setFiltriAperti(!filtriAperti)}>
+          <Search size={16} /> {filtriAperti ? "Nascondi i filtri" : "Filtra la ricerca"}
+        </button>
 
-        {loading ? <Caricamento /> : results.length > 0 ? (
-          <div className="cv-grid">
-            {results.map((p) => (
-              <ProviderCard key={p.id} p={p} onOpen={openProvider} eventType={etype} eventLoc={loc} />
-            ))}
+        <div className="cv-layout">
+          <aside className={"cv-side" + (filtriAperti ? "" : " chiusa")}>
+            <div className="cv-fgroup">
+              <span className="cv-flabel2">Dove</span>
+              <LocationInput value={loc} onChange={(l) => setQ({ ...q, loc: l })} />
+            </div>
+
+            <div className="cv-fgroup">
+              <span className="cv-flabel2">Quando</span>
+              <input type="date" value={date} onChange={(e) => setQ({ ...q, date: e.target.value })} aria-label="Data" />
+            </div>
+
+            <div className="cv-fgroup">
+              <span className="cv-flabel2">Tipo di evento</span>
+              <select value={etype} onChange={(e) => setQ({ ...q, etype: e.target.value })} aria-label="Tipo di evento">
+                {EVENT_TYPES.map((t) => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+
+            <div className="cv-fgroup">
+              <span className="cv-flabel2">Categoria</span>
+              <div className="cv-chiprow">
+                <button className={"cv-fchip" + (!cat ? " on" : "")} onClick={() => setQ({ ...q, cat: "" })}>Tutte</button>
+                {cats.map((c) => (
+                  <button key={c.id} className={"cv-fchip" + (cat === c.id ? " on" : "")}
+                          onClick={() => setQ({ ...q, cat: cat === c.id ? "" : c.id })}>
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="cv-fgroup">
+              <span className="cv-flabel2">Budget</span>
+              <div className="cv-prezzo-val">
+                {senzaLimite ? "Qualsiasi prezzo" : `Fino a ${budget} €`}
+              </div>
+              <input className="cv-range" type="range" min={100} max={tetto} step={50}
+                     value={budget}
+                     style={{ "--pct": `${((budget - 100) / (tetto - 100)) * 100}%` }}
+                     onChange={(e) => setQ({ ...q, budget: Number(e.target.value) })}
+                     aria-label="Prezzo massimo" />
+              <div className="cv-range-legend"><span>100 €</span><span>{tetto} €+</span></div>
+            </div>
+
+            <div className="cv-fgroup">
+              <span className="cv-flabel2">Chi cerchi</span>
+              <input list="cv-specialita" value={testo || ""}
+                     onChange={(e) => setQ({ ...q, testo: e.target.value })}
+                     placeholder="Es. arpista, DJ…" aria-label="Cerca per specialità" />
+              <datalist id="cv-specialita">
+                {specialita.map((r) => <option key={r} value={r} />)}
+              </datalist>
+            </div>
+
+            {filtriAttivi && (
+              <button className="cv-reset"
+                      onClick={() => setQ({ ...q, cat: "", testo: "", budget: undefined, date: "" })}>
+                Azzera i filtri
+              </button>
+            )}
+          </aside>
+
+          <div>
+            <p style={{ fontSize: 13.5, color: "var(--grigio)", fontWeight: 600, marginBottom: 14 }}>
+              {results.length} professionist{results.length === 1 ? "a disponibile" : "i disponibili"}
+            </p>
+
+            {loading ? <Caricamento /> : results.length > 0 ? (
+              <div className="cv-grid">
+                {results.map((p) => (
+                  <ProviderCard key={p.id} p={p} onOpen={openProvider} eventType={etype} eventLoc={loc} />
+                ))}
+              </div>
+            ) : (
+              <div className="cv-empty cv-card-base">
+                <b style={{ color: "var(--ink)", display: "block", marginBottom: 6 }}>
+                  {cerca ? `Nessun risultato per "${testo}"`
+                    : !senzaLimite ? "Nessun professionista entro questo budget"
+                    : "Stiamo aggiungendo professionisti in questa zona"}
+                </b>
+                Prova ad allargare i filtri — oppure scrivici a{" "}
+                <a href="mailto:info@clickeventi.it" style={{ color: "var(--accent)", fontWeight: 600 }}>
+                  info@clickeventi.it
+                </a>{" "}
+                e cerchiamo noi la persona giusta per il tuo evento.
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="cv-empty cv-card-base">
-            <b style={{ color: "var(--ink)", display: "block", marginBottom: 6 }}>
-              {cerca ? `Nessun risultato per "${testo}"`
-                : fascia ? "Nessun professionista in questa fascia di prezzo"
-                : "Stiamo aggiungendo professionisti in questa zona"}
-            </b>
-            Prova un'altra data o un'altra categoria — oppure scrivici a{" "}
-            <a href="mailto:info@clickeventi.it" style={{ color: "var(--accent)", fontWeight: 600 }}>
-              info@clickeventi.it
-            </a>{" "}
-            e cerchiamo noi la persona giusta per il tuo evento.
-          </div>
-        )}
+        </div>
       </div>
     </section>
   );
 }
-
-/* ---------- profilo + preventivo ---------- */
 
 function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
   const def = defaultPackage(p, eventType);
@@ -1051,7 +1151,7 @@ function ProfileView({ p, goBack, q }) {
 
 export default function ClickEventiV2() {
   const [view, setView] = useState("home");
-  const [q, setQ] = useState({ loc: LOC_DEFAULT, date: "", etype: "Festa privata", cat: "", testo: "", prezzo: "" });
+  const [q, setQ] = useState({ loc: LOC_DEFAULT, date: "", etype: "Festa privata", cat: "", testo: "", budget: undefined });
   const [provider, setProvider] = useState(null);
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
