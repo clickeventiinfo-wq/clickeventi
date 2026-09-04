@@ -272,6 +272,11 @@ const GlobalStyle = () => (
     /* card fornitore */
     .cv-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
     .cv-grid > * { min-width: 0; }
+    .cv-cover {
+      width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden;
+      margin-bottom: 12px; background: var(--bg2);
+    }
+    .cv-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .cv-card {
       padding: 20px; cursor: pointer; text-align: left; position: relative;
       transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
