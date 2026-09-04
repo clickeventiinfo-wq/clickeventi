@@ -502,14 +502,17 @@ function LocationInput({ value, onChange, compact }) {
   const [matches, setMatches] = useState([]);
   const [pronto, setPronto] = useState(!!comuniCache);
 
-  const scrivi = async (v) => {
-    setText(v); setOpen(true);
+  const [scelto, setScelto] = useState(!!value);
+
+  const aggiorna = async (v) => {
     const elenco = await caricaComuni();
     setPronto(true);
     setMatches(cercaComuni(elenco, v));
   };
 
-  const pick = (l) => { onChange(l); setText(l.name); setOpen(false); };
+  const scrivi = (v) => { setText(v); setOpen(true); setScelto(false); aggiorna(v); };
+  const apri = () => { setOpen(true); aggiorna(text); };
+  const pick = (l) => { onChange(l); setText(l.name); setScelto(true); setOpen(false); };
 
   return (
     <div style={{ position: "relative" }}>
@@ -517,13 +520,13 @@ function LocationInput({ value, onChange, compact }) {
         value={text}
         placeholder="Cerca il tuo comune…"
         onChange={(e) => scrivi(e.target.value)}
-        onFocus={() => { caricaComuni(); setOpen(true); }}
+        onFocus={apri}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         aria-label="Località dell'evento"
         className={compact ? "cv-select" : undefined}
         style={compact ? { minWidth: 160 } : undefined}
       />
-      {open && text.trim().length >= 2 && (
+      {open && !scelto && text.trim().length >= 2 && (
         <div className="cv-locdrop">
           {matches.length > 0 ? (
             matches.map((l, i) => (
