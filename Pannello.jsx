@@ -136,6 +136,7 @@ function Richieste({ richieste, onAggiorna, busy }) {
           </div>
           <div className="fp-rmeta">
             <span><CalendarDays size={13} /> {dataIt(r.data_evento)}</span>
+            {r.orario && <span><Clock size={13} /> {r.orario}</span>}
             {r.localita && <span><MapPin size={13} /> {r.localita}</span>}
             {r.pacchetto && <span><Package size={13} /> {r.pacchetto}</span>}
             {r.ore ? <span><Clock size={13} /> {r.ore} h</span> : null}

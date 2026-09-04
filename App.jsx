@@ -76,6 +76,14 @@ function distanceKm(a, b) {
 
 const catLabel = (id) => CATEGORIES.find((c) => c.id === id)?.label || "";
 
+/* fasce di prezzo per il filtro dei risultati (sul prezzo già adattato alla zona) */
+const FASCE_PREZZO = [
+  { id: "300", label: "Fino a 300 €", max: 300 },
+  { id: "600", label: "300 – 600 €", min: 300, max: 600 },
+  { id: "1000", label: "600 – 1.000 €", min: 600, max: 1000 },
+  { id: "oltre", label: "Oltre 1.000 €", min: 1000 },
+];
+
 /* trasforma una riga del database nel formato usato dal sito */
 function fromDb(r) {
   return {
@@ -544,7 +552,7 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
   const [cat, setCat] = useState("");
   const [testo, setTesto] = useState("");
   const featured = [...providers].sort((a, b) => b.bookings - a.bookings).slice(0, 6);
-  const doSearch = () => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat, testo });
+  const doSearch = () => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat, testo, prezzo: "" });
 
   /* mostra solo le categorie che hanno almeno un professionista attivo:
      il sito cresce da solo man mano che si aggiungono fornitori */
@@ -603,8 +611,8 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
               const Icon = c.icon;
               return (
                 <div key={c.id} className="cv-cat cv-card-base" role="button" tabIndex={0}
-                     onClick={() => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id, testo: "" })}
-                     onKeyDown={(e) => e.key === "Enter" && onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id, testo: "" })}>
+                     onClick={() => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id, testo: "", prezzo: "" })}
+                     onKeyDown={(e) => e.key === "Enter" && onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id, testo: "", prezzo: "" })}>
                   <Icon size={24} strokeWidth={1.9} />
                   <span>{c.label}</span>
                 </div>
@@ -679,14 +687,22 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
 /* ---------- risultati ---------- */
 
 function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
-  const { loc, date, etype, cat, testo } = q;
+  const { loc, date, etype, cat, testo, prezzo } = q;
   const cerca = (testo || "").trim().toLowerCase();
+  const fascia = FASCE_PREZZO.find((f) => f.id === prezzo);
   const results = providers
     .filter((p) => (!cat || p.cat === cat) && isAvailable(p, date))
     .filter((p) => !cerca ||
       (p.role || "").toLowerCase().includes(cerca) ||
       (p.name || "").toLowerCase().includes(cerca) ||
       catLabel(p.cat).toLowerCase().includes(cerca))
+    .filter((p) => {
+      if (!fascia) return true;
+      const da = minPrice(p, loc);           // prezzo già adattato alla zona
+      if (fascia.min && da < fascia.min) return false;
+      if (fascia.max && da > fascia.max) return false;
+      return true;
+    })
     .sort((a, b) => {
       const fa = a.eventTypes.includes(etype) ? 1 : 0;
       const fb = b.eventTypes.includes(etype) ? 1 : 0;
@@ -746,7 +762,9 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
         ) : (
           <div className="cv-empty cv-card-base">
             <b style={{ color: "var(--ink)", display: "block", marginBottom: 6 }}>
-              {cerca ? `Nessun risultato per "${testo}"` : "Stiamo aggiungendo professionisti in questa zona"}
+              {cerca ? `Nessun risultato per "${testo}"`
+                : fascia ? "Nessun professionista in questa fascia di prezzo"
+                : "Stiamo aggiungendo professionisti in questa zona"}
             </b>
             Prova un'altra data o un'altra categoria — oppure scrivici a{" "}
             <a href="mailto:info@clickeventi.it" style={{ color: "var(--accent)", fontWeight: 600 }}>
@@ -772,7 +790,7 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
   const [sent, setSent] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errore, setErrore] = useState("");
-  const [form, setForm] = useState({ nome: "", contatto: "", note: "" });
+  const [form, setForm] = useState({ nome: "", contatto: "", note: "", orario: "" });
   const [privacyOk, setPrivacyOk] = useState(false);
   const [marketingOk, setMarketingOk] = useState(false);
 
@@ -806,6 +824,7 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
       extra_scelti: p.extras.filter((e) => extras.includes(e.id)).map((e) => e.label),
       totale: quote.tot,
       note: form.note || null,
+      orario: form.orario || null,
       consenso_marketing: marketingOk,
     });
     setSaving(false);
@@ -908,6 +927,9 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
           <CalendarDays size={13} style={{ verticalAlign: "-2px" }} /> Data richiesta: {new Date(prefillDate).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })} · {eventLoc?.name}
         </p>
       )}
+      <label htmlFor="q-orario">Orario indicativo (facoltativo)</label>
+      <input id="q-orario" value={form.orario} onChange={(e) => setForm({ ...form, orario: e.target.value })}
+             placeholder="Es. dalle 19 alle 24" />
       <label htmlFor="q-note">Note (facoltative)</label>
       <textarea id="q-note" rows={3} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })}
                 placeholder="Location, orari, atmosfera che immagini…" />
@@ -1020,7 +1042,7 @@ function ProfileView({ p, goBack, q }) {
 
 export default function ClickEventiV2() {
   const [view, setView] = useState("home");
-  const [q, setQ] = useState({ loc: LOC_DEFAULT, date: "", etype: "Festa privata", cat: "", testo: "" });
+  const [q, setQ] = useState({ loc: LOC_DEFAULT, date: "", etype: "Festa privata", cat: "", testo: "", prezzo: "" });
   const [provider, setProvider] = useState(null);
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
