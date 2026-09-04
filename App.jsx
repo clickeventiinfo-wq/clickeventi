@@ -76,6 +76,11 @@ function distanceKm(a, b) {
 
 const catLabel = (id) => CATEGORIES.find((c) => c.id === id)?.label || "";
 
+/* articolo corretto per il tipo di evento (es. "la tua festa privata") */
+const EVENTI_FEMMINILI = ["Festa privata", "Laurea"];
+const perIlTuo = (evento) =>
+  (EVENTI_FEMMINILI.includes(evento) ? "la tua " : "il tuo ") + evento.toLowerCase();
+
 /* fasce di prezzo per il filtro dei risultati (sul prezzo già adattato alla zona) */
 const FASCE_PREZZO = [
   { id: "300", label: "Fino a 300 €", max: 300 },
@@ -723,7 +728,7 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
       <div className="cv-container">
         <button className="cv-back" onClick={goHome}><ArrowLeft size={16} /> Torna alla home</button>
         <h2 className="cv-h2 cv-display" style={{ marginTop: 8, marginBottom: 6 }}>
-          {cerca ? `"${testo}"` : cat ? catLabel(cat) : "Professionisti"} per il tuo {etype.toLowerCase()}
+          {cerca ? `"${testo}"` : cat ? catLabel(cat) : "Professionisti"} per {perIlTuo(etype)}
         </h2>
         <p style={{ fontSize: 14, color: "var(--grigio)", marginBottom: 20 }}>
           Evento a {loc.name}{date ? ` · disponibili il ${dateLabel}` : " — scegli una data per vedere solo i disponibili"}
@@ -739,6 +744,10 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
           <select className="cv-select" value={cat} onChange={(e) => setQ({ ...q, cat: e.target.value })} aria-label="Categoria">
             <option value="">Tutte le categorie</option>
             {cats.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+          </select>
+          <select className="cv-select" value={prezzo || ""} onChange={(e) => setQ({ ...q, prezzo: e.target.value })} aria-label="Fascia di prezzo">
+            <option value="">Qualsiasi prezzo</option>
+            {FASCE_PREZZO.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
           </select>
           <input className="cv-select" style={{ minWidth: 170 }} list="cv-specialita" value={testo || ""}
                  onChange={(e) => setQ({ ...q, testo: e.target.value })}
