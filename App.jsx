@@ -99,6 +99,7 @@ function fromDb(r) {
     verificato: r.verificato,
     foto: r.foto || [],
     videoLink: r.video_link,
+    listaRecensioni: (r.recensioni || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
     eventTypes: r.tipi_evento || [],
     busy: (r.indisponibilita || []).map((d) => d.giorno),
     fasce: [...(r.fasce || [])].sort((a, b) => a.fino_a_km - b.fino_a_km),
@@ -578,14 +579,22 @@ function ProviderCard({ p, onOpen, eventType, eventLoc }) {
       <h3>{p.name}</h3>
       <div className="cv-role">{p.role} · {catLabel(p.cat)}</div>
       <div className="cv-meta">
-        <span className="cv-star"><Star size={13} fill="#F0A32B" /> {p.rating}</span>
-        <span>({p.reviews})</span>
+        {p.reviews > 0 ? (
+          <>
+            <span className="cv-star"><Star size={13} fill="#F0A32B" /> {p.rating}</span>
+            <span>({p.reviews})</span>
+          </>
+        ) : (
+          <span style={{ fontStyle: "italic" }}>Nuovo su Click Eventi</span>
+        )}
         <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <MapPin size={12} /> {p.city}
         </span>
         {p.verificato && <span style={{ color: "var(--accent)", fontWeight: 600 }}>✓ Verificato</span>}
       </div>
-      <div className="cv-bookings"><Check size={13} /> {p.bookings} eventi prenotati su Click Eventi</div>
+      {p.bookings > 0 && (
+        <div className="cv-bookings"><Check size={13} /> {p.bookings} event{p.bookings === 1 ? "o" : "i"} su Click Eventi</div>
+      )}
       <div className="cv-price">da {minPrice(p, eventLoc)} € <small>a pacchetto</small></div>
     </div>
   );
@@ -1091,11 +1100,19 @@ function ProfileView({ p, goBack, q }) {
             <h2 className="cv-display" style={{ fontSize: 28, fontWeight: 700 }}>{p.name}</h2>
             <div className="cv-role" style={{ fontSize: 15 }}>{p.role} · {catLabel(p.cat)}</div>
             <div className="cv-meta" style={{ marginTop: 6 }}>
-              <span className="cv-star"><Star size={13} fill="#F0A32B" /> {p.rating}</span>
-              <span>({p.reviews} recensioni)</span>
+              {p.reviews > 0 ? (
+                <>
+                  <span className="cv-star"><Star size={13} fill="#F0A32B" /> {p.rating}</span>
+                  <span>({p.reviews} recension{p.reviews === 1 ? "e" : "i"})</span>
+                </>
+              ) : (
+                <span style={{ fontStyle: "italic" }}>Nuovo su Click Eventi</span>
+              )}
               <span style={{ display: "flex", alignItems: "center", gap: 4 }}><MapPin size={12} /> {p.city}</span>
               {p.verificato && <span style={{ color: "var(--accent)", fontWeight: 600 }}>✓ Verificato</span>}
-              <span className="cv-bookings" style={{ marginTop: 0 }}><Check size={13} /> {p.bookings} eventi prenotati</span>
+              {p.bookings > 0 && (
+                <span className="cv-bookings" style={{ marginTop: 0 }}><Check size={13} /> {p.bookings} event{p.bookings === 1 ? "o" : "i"} su Click Eventi</span>
+              )}
             </div>
             <div style={{ marginTop: 10 }}>
               {p.eventTypes.map((t) => <span key={t} className="cv-chip">{t}</span>)}
@@ -1134,6 +1151,33 @@ function ProfileView({ p, goBack, q }) {
                 </a>
               </p>
             )}
+
+            {p.listaRecensioni?.length > 0 && (
+              <>
+                <h4 className="cv-display" style={{ fontSize: 16, margin: "22px 0 10px" }}>
+                  Recensioni verificate ({p.listaRecensioni.length})
+                </h4>
+                {p.listaRecensioni.slice(0, 5).map((r, i) => (
+                  <div key={i} style={{ borderTop: "1px solid var(--linea)", paddingTop: 12, marginTop: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                      <span style={{ display: "flex", gap: 1 }}>
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <Star key={n} size={13} fill={n <= r.voto ? "#F0A32B" : "none"} color={n <= r.voto ? "#F0A32B" : "#D9D5E0"} />
+                        ))}
+                      </span>
+                      <b style={{ fontSize: 14 }}>{(r.cliente_nome || "").split(" ")[0]}</b>
+                      <small style={{ color: "var(--grigio)", fontSize: 12.5 }}>
+                        {new Date(r.created_at).toLocaleDateString("it-IT", { month: "long", year: "numeric" })}
+                      </small>
+                    </div>
+                    {r.testo && <p style={{ fontSize: 14, lineHeight: 1.6, color: "#3A3552" }}>{r.testo}</p>}
+                  </div>
+                ))}
+                <p className="cv-note" style={{ textAlign: "left", marginTop: 12 }}>
+                  Solo chi ha prenotato tramite Click Eventi può lasciare una recensione.
+                </p>
+              </>
+            )}
           </div>
 
           <QuoteBuilder p={p} eventType={q.etype} eventLoc={q.loc} prefillDate={q.date} />
@@ -1164,7 +1208,7 @@ export default function ClickEventiV2() {
     (async () => {
       const { data, error } = await supabase
         .from("fornitori")
-        .select("*, pacchetti(*), extra(*), fasce(*), indisponibilita(giorno)")
+        .select("*, pacchetti(*), extra(*), fasce(*), indisponibilita(giorno), recensioni(voto, testo, cliente_nome, created_at)")
         .eq("stato", "approvato");
       if (error) setErrore("Non riesco a caricare i professionisti. Riprova tra poco.");
       else setProviders((data || []).map(fromDb));
