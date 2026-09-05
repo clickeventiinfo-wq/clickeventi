@@ -4,7 +4,7 @@ import {
   Check, ArrowLeft, ArrowRight, Plus, Trash2, PartyPopper as Party, Loader2, Mail, Link as LinkIcon, ImagePlus, X, Video
 } from "lucide-react";
 import { supabase } from "./supabase";
-import { ComuneInput } from "./comuni.jsx";
+import { ComuneInput, ComuniMultipli } from "./comuni.jsx";
 
 /* ============================================================
    CLICK EVENTI — Iscrizione professionista (2 fasi)
@@ -97,6 +97,7 @@ function CreaAccount() {
   const [saving, setSaving] = useState(false);
   const [errore, setErrore] = useState("");
   const [inviato, setInviato] = useState(false);
+  const [giaRegistrato, setGiaRegistrato] = useState(false);
 
   const emailValida = (e) => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e.trim());
 
@@ -110,11 +111,20 @@ function CreaAccount() {
     if (!password) { setErrore("Scegli una password per il tuo account."); return; }
     if (password.length < 6) { setErrore("La password è troppo corta: servono almeno 6 caratteri."); return; }
     setErrore(""); setSaving(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: mail, password,
       options: { emailRedirectTo: "https://clickeventi.it/?iscrizione" },
     });
     setSaving(false);
+
+    /* Supabase, per non rivelare quali indirizzi sono registrati, risponde
+       "ok" anche se l'account esiste già: si riconosce dal fatto che non
+       viene restituita nessuna identità. In quel caso avvisiamo l'utente. */
+    if (!error && data?.user && (data.user.identities?.length ?? 0) === 0) {
+      setGiaRegistrato(true);
+      return;
+    }
+
     if (error) {
       const m = (error.message || "").toLowerCase();
       if (m.includes("registered") || m.includes("already"))
@@ -131,6 +141,25 @@ function CreaAccount() {
     }
     setInviato(true);
   };
+
+  if (giaRegistrato) {
+    return (
+      <div className="is-card is-ok">
+        <div className="is-mailbox"><Mail size={30} /></div>
+        <h1 className="is-t is-display">Hai già un account</h1>
+        <p className="is-sub" style={{ maxWidth: 440, margin: "8px auto 0" }}>
+          L'indirizzo <b>{email}</b> è già registrato su Click Eventi.
+          Accedi con la tua password, oppure recuperala se non la ricordi.
+        </p>
+        <div className="is-nav" style={{ justifyContent: "center", gap: 10 }}>
+          <a href="/?accedi" className="is-btn primary">Vai al login</a>
+          <button className="is-btn" onClick={() => { setGiaRegistrato(false); setEmail(""); setPassword(""); }}>
+            Usa un'altra email
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (inviato) {
     return (
@@ -176,6 +205,7 @@ function CompletaProfilo({ user }) {
 
   const [d, setD] = useState({ nome: "", ruolo: "", categoria: "", nuovaCat: "", telefono: "", link: "" });
   const [comune, setComune] = useState(null);   // {name, area, lat, lng}
+  const [zone, setZone] = useState([]);        // altre zone di lavoro
   const [pacchetti, setPacchetti] = useState([pacchettoVuoto()]);
   const [extra, setExtra] = useState([]);
   const [fasce, setFasce] = useState([{ fino: 30, fee: 0 }, { fino: 100, fee: "" }, { fino: 99999, fee: "" }]);
@@ -254,6 +284,7 @@ function CompletaProfilo({ user }) {
       nome: d.nome, ruolo: d.ruolo, categoria: categoriaFinale,
       localita: comune.name, provincia: comune.area,
       lat: comune.lat, lng: comune.lng,
+      zone: zone.filter(Boolean),
       telefono: d.telefono, email: user.email,
       bio: noteBio, link: d.link || null,
       foto: foto.map((f) => f.url), video_link: videoLink || null,
@@ -314,7 +345,7 @@ function CompletaProfilo({ user }) {
           </div>
           {d.categoria === "altro" && <input style={{ marginTop: 8 }} value={d.nuovaCat} onChange={set("nuovaCat")} placeholder="Es. Scenografie, Noleggio auto…" />}
           <div className="is-row">
-            <div><label htmlFor="is-comune">Comune *</label><ComuneInput id="is-comune" valore={comune?.name} onChange={setComune} /></div>
+            <div><label htmlFor="is-comune">Comune *</label><ComuniMultipli id="is-comune" principale={comune} zone={zone} onChange={({ principale, zone: z }) => { setComune(principale); setZone(z); }} /></div>
             <div><label>Telefono</label><input value={d.telefono} onChange={set("telefono")} placeholder="Per i clienti" /></div>
           </div>
           <label><LinkIcon size={13} style={{ verticalAlign: "-2px" }} /> Link (Instagram, sito, YouTube…)</label>

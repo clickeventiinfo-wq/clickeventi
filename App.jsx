@@ -92,6 +92,7 @@ function fromDb(r) {
     city: r.localita,
     lat: r.lat,
     lng: r.lng,
+    zone: Array.isArray(r.zone) ? r.zone : [],
     bio: r.bio,
     rating: r.rating,
     reviews: r.recensioni,
@@ -123,9 +124,16 @@ function isAvailable(p, date) {
 }
 
 /* fascia chilometrica: il prezzo si adatta alla zona, senza mostrare i km */
+/* distanza dalla zona più vicina fra quelle dichiarate dal professionista */
+function distanzaMinima(p, eventLoc) {
+  if (!eventLoc || !p.lat) return null;
+  const punti = [{ lat: p.lat, lng: p.lng }, ...(p.zone || []).filter((z) => z && z.lat)];
+  return Math.min(...punti.map((z) => distanceKm(z, eventLoc)));
+}
+
 function feeFor(p, eventLoc) {
   if (!eventLoc || !p.lat) return 0;
-  const km = distanceKm({ lat: p.lat, lng: p.lng }, eventLoc);
+  const km = distanzaMinima(p, eventLoc);
   const f = p.fasce.find((x) => km <= x.fino_a_km) || p.fasce[p.fasce.length - 1];
   return f ? f.fee : 0;
 }
@@ -777,8 +785,8 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
       const fa = a.eventTypes.includes(etype) ? 1 : 0;
       const fb = b.eventTypes.includes(etype) ? 1 : 0;
       if (fb !== fa) return fb - fa;
-      const ka = distanceKm({ lat: a.lat, lng: a.lng }, loc);
-      const kb = distanceKm({ lat: b.lat, lng: b.lng }, loc);
+      const ka = distanzaMinima(a, loc) ?? 99999;
+      const kb = distanzaMinima(b, loc) ?? 99999;
       if (ka !== kb) return ka - kb;
       return b.rating - a.rating;
     });

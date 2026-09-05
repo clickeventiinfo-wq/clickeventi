@@ -5,7 +5,7 @@ import {
   ChevronLeft, ChevronRight, Star, TrendingUp, AlertCircle, Video, Link as LinkIcon
 } from "lucide-react";
 import { supabase } from "./supabase";
-import { ComuneInput } from "./comuni.jsx";
+import { ComuneInput, ComuniMultipli } from "./comuni.jsx";
 
 /* ============================================================
    CLICK EVENTI — Pannello del professionista (collegato al DB)
@@ -429,6 +429,7 @@ function Profilo({ f, user, ricarica, mostra }) {
   const [comune, setComune] = useState(
     f.localita ? { name: f.localita, area: f.provincia, lat: f.lat, lng: f.lng } : null
   );
+  const [zone, setZone] = useState(f.zone || []);
   const [foto, setFoto] = useState((f.foto || []).map((u) => ({ url: u, path: null })));
   const [caricando, setCaricando] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -460,6 +461,7 @@ function Profilo({ f, user, ricarica, mostra }) {
     const { error } = await supabase.from("fornitori").update({
       nome: d.nome, ruolo: d.ruolo,
       localita: comune.name, provincia: comune.area, lat: comune.lat, lng: comune.lng,
+      zone: (zone || []).filter(Boolean),
       telefono: d.telefono,
       bio: d.bio || null, link: d.link || null, video_link: d.video_link || null,
       foto: foto.map((x) => x.url),
@@ -500,10 +502,10 @@ function Profilo({ f, user, ricarica, mostra }) {
           <div><label>Cosa fai</label><input value={d.ruolo} onChange={(e) => setD({ ...d, ruolo: e.target.value })} /></div>
         </div>
         <div className="fp-row">
-          <div><label htmlFor="fp-comune">Comune</label><ComuneInput id="fp-comune" valore={comune?.name} onChange={setComune} /></div>
+          <div style={{ gridColumn: "1 / -1" }}><label htmlFor="fp-comune">Comune e zone di lavoro</label><ComuniMultipli id="fp-comune" principale={comune} zone={zone} onChange={({ principale, zone: z }) => { setComune(principale); setZone(z); }} /></div>
           <div><label>Telefono</label><input value={d.telefono} onChange={(e) => setD({ ...d, telefono: e.target.value })} /></div>
         </div>
-        <label>Presentazione (la leggono i clienti)</label>
+        <label>Presentazione</label>
         <textarea rows={4} value={d.bio} onChange={(e) => setD({ ...d, bio: e.target.value })}
                   placeholder="Racconta chi sei, il tuo stile, cosa rende speciale il tuo servizio…" />
         <label><LinkIcon size={13} style={{ verticalAlign: "-2px" }} /> Link (Instagram, sito…)</label>
