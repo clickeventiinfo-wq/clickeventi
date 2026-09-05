@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin } from "lucide-react";
+import { MapPin, Plus, X } from "lucide-react";
 
 /* ============================================================
    COMUNI ITALIANI — elenco condiviso
@@ -94,6 +94,59 @@ export function ComuneInput({ valore, onChange, placeholder = "Cerca il tuo comu
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+
+/* Più comuni insieme: il primo è quello principale, gli altri sono
+   zone aggiuntive in cui il professionista lavora. */
+export function ComuniMultipli({ principale, zone, onChange, id }) {
+  const lista = [principale || null, ...(zone || [])];
+
+  const aggiorna = (i, valore) => {
+    const nuova = [...lista];
+    nuova[i] = valore;
+    onChange({ principale: nuova[0], zone: nuova.slice(1).filter(Boolean) });
+  };
+  const aggiungi = () => onChange({ principale: lista[0], zone: [...(zone || []), null] });
+  const togli = (i) => {
+    const nuova = lista.filter((_, x) => x !== i);
+    onChange({ principale: nuova[0] || null, zone: nuova.slice(1).filter(Boolean) });
+  };
+
+  return (
+    <div>
+      {lista.map((c, i) => (
+        <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: i === lista.length - 1 ? 0 : 8 }}>
+          <div style={{ flex: 1 }}>
+            <ComuneInput
+              id={i === 0 ? id : undefined}
+              valore={c?.name}
+              onChange={(v) => aggiorna(i, v)}
+              placeholder={i === 0 ? "Il tuo comune…" : "Altra zona in cui lavori…"}
+            />
+          </div>
+          {i === 0 ? (
+            <button type="button" onClick={aggiungi} title="Aggiungi un'altra zona"
+                    style={{ flexShrink: 0, width: 42, height: 42, borderRadius: 10, cursor: "pointer",
+                             border: "1px solid #ECE9E2", background: "#F3EFFE", color: "#8B6EF3",
+                             display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Plus size={18} />
+            </button>
+          ) : (
+            <button type="button" onClick={() => togli(i)} title="Rimuovi questa zona"
+                    style={{ flexShrink: 0, width: 42, height: 42, borderRadius: 10, cursor: "pointer",
+                             border: "1px solid #ECE9E2", background: "#fff", color: "#6E6A80",
+                             display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <X size={17} />
+            </button>
+          )}
+        </div>
+      ))}
+      <p style={{ fontSize: 12, color: "#6E6A80", marginTop: 7 }}>
+        Aggiungi altre zone se lavori abitualmente in più aree: i clienti ti troveranno anche lì.
+      </p>
     </div>
   );
 }
