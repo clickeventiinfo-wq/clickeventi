@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Check, X, MapPin, Phone, Mail, Navigation, Search,
   ShieldCheck, Loader2, LogOut, Inbox, Users, Lightbulb,
-  Link as LinkIcon, ArrowLeft, ChevronRight, Calendar, Video, ImageOff
+  Link as LinkIcon, ArrowLeft, ChevronRight, Calendar, Video, ImageOff, Pencil
 } from "lucide-react";
 import { supabase } from "./supabase";
 
@@ -289,6 +289,7 @@ export default function Admin() {
   const [stato, setStato] = useState("check");
   const [tab, setTab] = useState("attesa");
   const [fornitori, setFornitori] = useState([]);
+  const [modifiche, setModifiche] = useState([]);
   const [apertoId, setApertoId] = useState(null);
   const [cerca, setCerca] = useState("");
   const [busyId, setBusyId] = useState(null);
@@ -302,6 +303,12 @@ export default function Admin() {
       .select("*, pacchetti(*), extra(*), fasce(*)")
       .order("created_at", { ascending: false });
     setFornitori(data || []);
+    const { data: mod } = await supabase
+      .from("modifiche_profilo")
+      .select("*, fornitori(id, nome, ruolo, categoria, link, foto)")
+      .eq("stato", "in_attesa")
+      .order("created_at", { ascending: false });
+    setModifiche(mod || []);
   };
 
   useEffect(() => {
@@ -326,6 +333,23 @@ export default function Admin() {
   const approva = (f) => { azione(f, { stato: "approvato", motivo_rifiuto: null }, `${f.nome} è ora online! 🎉`); setApertoId(null); };
   const rifiuta = (f, motivo) => { azione(f, { stato: "sospeso", motivo_rifiuto: motivo || null }, `${f.nome}: rifiuto inviato.`); setApertoId(null); };
   const verif = (f) => azione(f, { verificato: !f.verificato }, null);
+
+  const approvaModifica = async (m) => {
+    setBusyId("m" + m.id);
+    const { data, error } = await supabase.rpc("approva_modifica", { p_id: m.id });
+    setBusyId(null);
+    if (error || !data?.ok) { mostra("Errore nell'approvazione"); return; }
+    mostra("Modifica pubblicata ✓");
+    await carica();
+  };
+  const rifiutaModifica = async (m) => {
+    setBusyId("m" + m.id);
+    const { data, error } = await supabase.rpc("rifiuta_modifica", { p_id: m.id, p_motivo: null });
+    setBusyId(null);
+    if (error || !data?.ok) { mostra("Errore"); return; }
+    mostra("Modifica rifiutata");
+    await carica();
+  };
 
   if (stato === "check") return <div className="ad-root"><Style /><div className="ad-center"><Loader2 size={26} className="ad-spin" /><p style={{ marginTop: 10 }}>Verifico l'accesso…</p></div></div>;
   if (stato === "nonloggato") return <div className="ad-root"><Style /><div className="ad-center"><p style={{ marginBottom: 14 }}>Devi accedere per entrare nell'area amministratore.</p><a href="/?accedi" className="ad-btn ok" style={{ textDecoration: "none" }}>Vai al login</a></div></div>;
@@ -371,7 +395,68 @@ export default function Admin() {
               </div>
             </div>
 
-            {lista.length === 0 ? (
+            {tab === "modifiche" ? (
+              modifiche.length === 0 ? (
+                <div className="ad-empty">Nessuna modifica in attesa di verifica.</div>
+              ) : (
+                modifiche.map((m) => {
+                  const vecchio = m.fornitori || {};
+                  const nuovo = m.dati || {};
+                  const campi = [
+                    ["Nome", vecchio.nome, nuovo.nome],
+                    ["Attività", vecchio.ruolo, nuovo.ruolo],
+                    ["Categoria", CAT_LABEL[vecchio.categoria] || vecchio.categoria,
+                      nuovo.categoria ? (CAT_LABEL[nuovo.categoria] || nuovo.categoria) : undefined],
+                    ["Link", vecchio.link, nuovo.link],
+                  ].filter(([, , n]) => n !== undefined && n !== null);
+                  const fotoNuove = nuovo.foto;
+                  return (
+                    <div key={m.id} className="ad-card">
+                      <div className="ad-fname ad-display" style={{ fontSize: 18, marginBottom: 4 }}>
+                        {vecchio.nome}
+                      </div>
+                      <p style={{ fontSize: 13, color: "var(--grigio)", marginBottom: 14 }}>
+                        Modifica proposta il {new Date(m.created_at).toLocaleDateString("it-IT")} · il profilo online mostra ancora la versione attuale
+                      </p>
+
+                      {campi.map(([etichetta, prima, dopo]) => (
+                        <div key={etichetta} style={{ marginBottom: 12 }}>
+                          <h5 style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--grigio)", marginBottom: 6 }}>{etichetta}</h5>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                            <div style={{ background: "var(--bg2)", borderRadius: 9, padding: "9px 12px", fontSize: 14, color: "var(--grigio)", textDecoration: "line-through" }}>
+                              {prima || "—"}
+                            </div>
+                            <div style={{ background: "var(--ok-soft)", borderRadius: 9, padding: "9px 12px", fontSize: 14, fontWeight: 600, color: "var(--ok)" }}>
+                              {dopo || "—"}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {fotoNuove && (
+                        <div style={{ marginBottom: 12 }}>
+                          <h5 style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--grigio)", marginBottom: 6 }}>Nuove foto ({fotoNuove.length})</h5>
+                          <div className="ad-gal">
+                            {fotoNuove.map((u, i) => (
+                              <a key={i} href={u} target="_blank" rel="noreferrer"><img src={u} alt="" /></a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
+                        <button className="ad-btn ok" disabled={busyId === "m" + m.id} onClick={() => approvaModifica(m)}>
+                          <Check size={16} /> Pubblica la modifica
+                        </button>
+                        <button className="ad-btn no" disabled={busyId === "m" + m.id} onClick={() => rifiutaModifica(m)}>
+                          <X size={16} /> Rifiuta
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )
+            ) : lista.length === 0 ? (
               <div className="ad-empty">
                 {q ? "Nessun risultato per questa ricerca."
                    : tab === "attesa" ? "Nessun professionista in attesa. Quando qualcuno si iscrive, comparirà qui."

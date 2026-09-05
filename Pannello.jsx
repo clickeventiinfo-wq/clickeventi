@@ -454,7 +454,7 @@ function Listino({ f, ricarica, mostra }) {
 }
 
 /* ---------------- PROFILO ---------------- */
-function Profilo({ f, user, ricarica, mostra }) {
+function Profilo({ f, user, ricarica, mostra, modificaAttesa }) {
   const [d, setD] = useState({
     nome: f.nome || "", ruolo: f.ruolo || "",
     telefono: f.telefono || "", bio: f.bio || "", link: f.link || "", video_link: f.video_link || "",
@@ -489,24 +489,56 @@ function Profilo({ f, user, ricarica, mostra }) {
   const rimuovi = (i) => setFoto(foto.filter((_, x) => x !== i));
 
   const salva = async () => {
+    if (!comune) { mostra("Scegli il comune dall'elenco dei suggerimenti"); return; }
     setSalvando(true);
-    if (!comune) { setSalvando(false); mostra("Scegli il comune dall'elenco dei suggerimenti"); return; }
+
+    /* campi liberi: si aggiornano subito */
     const { error } = await supabase.from("fornitori").update({
-      nome: d.nome, ruolo: d.ruolo,
       localita: comune.name, provincia: comune.area, lat: comune.lat, lng: comune.lng,
       zone: (zone || []).filter(Boolean),
       telefono: d.telefono,
-      bio: d.bio || null, link: d.link || null, video_link: d.video_link || null,
-      foto: foto.map((x) => x.url),
+      bio: d.bio || null, video_link: d.video_link || null,
     }).eq("id", f.id);
+    if (error) { setSalvando(false); mostra("Errore: " + error.message); return; }
+
+    /* campi che incidono sull'identità: passano dalla verifica
+       se il profilo è già pubblico */
+    const sensibili = {};
+    if (d.nome !== f.nome) sensibili.nome = d.nome;
+    if (d.ruolo !== f.ruolo) sensibili.ruolo = d.ruolo;
+    if ((d.link || "") !== (f.link || "")) sensibili.link = d.link || "";
+    const fotoNuove = foto.map((x) => x.url);
+    const fotoVecchie = f.foto || [];
+    if (JSON.stringify(fotoNuove) !== JSON.stringify(fotoVecchie)) sensibili.foto = fotoNuove;
+
+    if (Object.keys(sensibili).length > 0) {
+      const { data, error: e2 } = await supabase.rpc("proponi_modifica", { p_dati: sensibili });
+      setSalvando(false);
+      if (e2 || !data?.ok) { mostra("Errore nell'invio della modifica"); return; }
+      mostra(data.in_revisione
+        ? "Modifiche inviate: le verifichiamo prima di pubblicarle"
+        : "Profilo aggiornato ✓");
+      ricarica();
+      return;
+    }
+
     setSalvando(false);
-    if (error) { mostra("Errore: " + error.message); return; }
     mostra("Profilo aggiornato ✓");
     ricarica();
   };
 
   return (
     <div>
+      {modificaAttesa && (
+        <div className="fp-banner">
+          <AlertCircle size={17} />
+          <span>
+            <b>Hai modifiche in attesa di verifica.</b> Il tuo profilo online mostra ancora la versione
+            approvata: appena controlliamo le nuove informazioni le pubblichiamo.
+          </span>
+        </div>
+      )}
+
       <div className="fp-card">
         <b className="fp-display" style={{ fontSize: 16 }}>Le tue foto</b>
         <p className="fp-hint">La prima è la copertina che vedono i clienti nei risultati.</p>
@@ -538,6 +570,10 @@ function Profilo({ f, user, ricarica, mostra }) {
           <div style={{ gridColumn: "1 / -1" }}><label htmlFor="fp-comune">Comune e zone di lavoro</label><ComuniMultipli id="fp-comune" principale={comune} zone={zone} onChange={({ principale, zone: z }) => { setComune(principale); setZone(z); }} /></div>
           <div><label>Telefono</label><input value={d.telefono} onChange={(e) => setD({ ...d, telefono: e.target.value })} /></div>
         </div>
+        <p className="fp-hint" style={{ marginBottom: 10 }}>
+          Nome, attività, link e foto vengono verificati prima di andare online: il tuo profilo
+          resta comunque pubblico con la versione approvata.
+        </p>
         <label>Presentazione</label>
         <textarea rows={4} value={d.bio} onChange={(e) => setD({ ...d, bio: e.target.value })}
                   placeholder="Racconta chi sei, il tuo stile, cosa rende speciale il tuo servizio…" />
@@ -563,6 +599,7 @@ export default function Pannello() {
   const [user, setUser] = useState(null);
   const [f, setF] = useState(null);
   const [richieste, setRichieste] = useState([]);
+  const [modificaAttesa, setModificaAttesa] = useState(false);
   const [tab, setTab] = useState("richieste");
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState("");
@@ -579,6 +616,9 @@ export default function Pannello() {
       const { data: rich } = await supabase.from("richieste").select("*")
         .eq("fornitore_id", forn.id).order("created_at", { ascending: false });
       setRichieste(rich || []);
+      const { data: mod } = await supabase.from("modifiche_profilo")
+        .select("id").eq("fornitore_id", forn.id).eq("stato", "in_attesa").maybeSingle();
+      setModificaAttesa(!!mod);
     }
   };
 
@@ -732,7 +772,7 @@ export default function Pannello() {
         {tab === "richieste" && <Richieste richieste={richieste} onAggiorna={aggiornaRichiesta} busy={busy} />}
         {tab === "calendario" && <Calendario occupati={occupati} onToggle={toggleGiorno} />}
         {tab === "listino" && <Listino key={f.id + "-" + (f.pacchetti?.length || 0)} f={f} ricarica={ricarica} mostra={mostra} />}
-        {tab === "profilo" && <Profilo key={f.id} f={f} user={user} ricarica={ricarica} mostra={mostra} />}
+        {tab === "profilo" && <Profilo key={f.id} f={f} user={user} ricarica={ricarica} mostra={mostra} modificaAttesa={modificaAttesa} />}
 
         <div style={{ height: 30 }} />
       </div>
