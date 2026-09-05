@@ -93,6 +93,7 @@ function fromDb(r) {
     lat: r.lat,
     lng: r.lng,
     zone: Array.isArray(r.zone) ? r.zone : [],
+    raggioMax: r.raggio_max,
     bio: r.bio,
     rating: r.rating,
     reviews: r.recensioni,
@@ -776,6 +777,12 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
 
   const results = providers
     .filter((p) => (!cat || p.cat === cat) && isAvailable(p, date))
+    .filter((p) => {
+      /* fuori dal raggio dichiarato: non lo mostriamo */
+      if (!p.raggioMax) return true;
+      const km = distanzaMinima(p, loc);
+      return km === null || km <= p.raggioMax;
+    })
     .filter((p) => !cerca ||
       (p.role || "").toLowerCase().includes(cerca) ||
       (p.name || "").toLowerCase().includes(cerca) ||

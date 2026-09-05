@@ -208,7 +208,8 @@ function CompletaProfilo({ user }) {
   const [zone, setZone] = useState([]);        // altre zone di lavoro
   const [pacchetti, setPacchetti] = useState([pacchettoVuoto()]);
   const [extra, setExtra] = useState([]);
-  const [fasce, setFasce] = useState([{ fino: 30, fee: 0 }, { fino: 100, fee: "" }, { fino: 99999, fee: "" }]);
+  const [fasce, setFasce] = useState([{ fino: 30, fee: 0 }, { fino: 100, fee: "" }]);
+  const [raggio, setRaggio] = useState(150);
   const [foto, setFoto] = useState([]);          // {url, path}
   const [videoLink, setVideoLink] = useState("");
   const [caricando, setCaricando] = useState(false);
@@ -245,7 +246,9 @@ function CompletaProfilo({ user }) {
   const addExtra = () => setExtra([...extra, { label: "", price: "", descrizione: "" }]);
   const delExtra = (i) => setExtra(extra.filter((_, x) => x !== i));
   const upExtra = (i, k, v) => setExtra(extra.map((e, x) => x === i ? { ...e, [k]: v } : e));
-  const upFascia = (i, v) => setFasce(fasce.map((f, x) => x === i ? { ...f, fee: v } : f));
+  const upFascia = (i, campo, v) => setFasce(fasce.map((f, x) => x === i ? { ...f, [campo]: v } : f));
+  const addFascia = () => setFasce([...fasce, { fino: "", fee: "" }]);
+  const delFascia = (i) => setFasce(fasce.filter((_, x) => x !== i));
 
   const caricaFoto = async (e) => {
     const files = Array.from(e.target.files || []);
@@ -285,6 +288,7 @@ function CompletaProfilo({ user }) {
       localita: comune.name, provincia: comune.area,
       lat: comune.lat, lng: comune.lng,
       zone: zone.filter(Boolean),
+      raggio_max: Number(raggio) || 150,
       telefono: d.telefono, email: user.email,
       bio: noteBio, link: d.link || null,
       foto: foto.map((f) => f.url), video_link: videoLink || null,
@@ -301,8 +305,10 @@ function CompletaProfilo({ user }) {
     const exRows = extra.filter((e) => e.label && e.price).map((e) => ({ fornitore_id: fid, label: e.label, prezzo: Number(e.price) || 0, descrizione: e.descrizione || null }));
     if (exRows.length) await supabase.from("extra").insert(exRows);
 
-    const faRows = fasce.map((f) => ({ fornitore_id: fid, fino_a_km: Number(f.fino), fee: Number(f.fee) || 0 }));
-    await supabase.from("fasce").insert(faRows);
+    const faRows = fasce
+      .filter((f) => f.fino !== "" && Number(f.fino) > 0)
+      .map((f) => ({ fornitore_id: fid, fino_a_km: Number(f.fino), fee: Number(f.fee) || 0 }));
+    if (faRows.length) await supabase.from("fasce").insert(faRows);
 
     setSaving(false); setFatto(true);
   };
@@ -452,12 +458,40 @@ function CompletaProfilo({ user }) {
       {step === 4 && (
         <div className="is-card">
           <div className="is-eyebrow">Passo 5 di 5 · Tariffe di zona</div>
-          <h1 className="is-t is-display">Le tue tariffe di zona</h1>
-          <p className="is-sub">Quanto aggiungi in base alla distanza. Il cliente vedrà solo il totale, mai i km.</p>
-          <div className="is-fascia"><div><label>Entro 30 km</label><input value="Incluso" disabled /></div><div><label>Costo aggiuntivo</label><input value="0 €" disabled /></div></div>
-          <div className="is-fascia"><div><label>Entro 100 km</label><input value="Fascia media" disabled /></div><div><label>Costo aggiuntivo (€)</label><input type="number" value={fasce[1].fee} onChange={(e) => upFascia(1, e.target.value)} placeholder="Es. 100" /></div></div>
-          <div className="is-fascia"><div><label>Oltre 100 km</label><input value="Fascia lontana" disabled /></div><div><label>Costo aggiuntivo (€)</label><input type="number" value={fasce[2].fee} onChange={(e) => upFascia(2, e.target.value)} placeholder="Es. 150" /></div></div>
-          <p className="is-hint">Non sai che valori mettere? Lascia vuoto: li imposti dopo col team.</p>
+          <h1 className="is-t is-display">Fin dove ti sposti?</h1>
+          <p className="is-sub">
+            Indica quanto aggiungi al prezzo in base alla distanza. Il cliente vedrà solo il totale, mai i chilometri.
+          </p>
+
+          {fasce.map((f, i) => (
+            <div key={i} className="is-fascia" style={{ gridTemplateColumns: "1fr 1fr auto", alignItems: "end" }}>
+              <div>
+                <label>{i === 0 ? "Entro (km)" : "Poi fino a (km)"}</label>
+                <input type="number" value={f.fino} onChange={(e) => upFascia(i, "fino", e.target.value)}
+                       placeholder={i === 0 ? "Es. 30" : "Es. 100"} />
+              </div>
+              <div>
+                <label>Costo aggiuntivo (€)</label>
+                <input type="number" value={f.fee} onChange={(e) => upFascia(i, "fee", e.target.value)}
+                       placeholder={i === 0 ? "0" : "Es. 100"} />
+              </div>
+              {fasce.length > 1 && (
+                <button type="button" className="is-pkg-del" style={{ position: "static", paddingBottom: 12 }}
+                        onClick={() => delFascia(i)} title="Rimuovi"><Trash2 size={16} /></button>
+              )}
+            </div>
+          ))}
+          <button className="is-addpkg" onClick={addFascia}><Plus size={16} /> Aggiungi una fascia</button>
+          <p className="is-hint">
+            Esempio: entro 30 km nessun costo, entro 100 km +100 €, entro 250 km +300 €.
+          </p>
+
+          <label style={{ marginTop: 22 }}>Non mi sposto oltre (km) *</label>
+          <input type="number" value={raggio} onChange={(e) => setRaggio(e.target.value)} placeholder="Es. 150" />
+          <p className="is-hint">
+            Oltre questa distanza non comparirai nelle ricerche: eviti richieste per eventi troppo lontani.
+          </p>
+
           {errore && <div className="is-err">{errore}</div>}
           <div className="is-nav">
             <button className="is-btn" onClick={indietro}><ArrowLeft size={16} /> Indietro</button>

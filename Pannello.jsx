@@ -251,13 +251,23 @@ function Listino({ f, ricarica, mostra }) {
   const [pkg, setPkg] = useState(f.pacchetti || []);
   const [extra, setExtra] = useState(f.extra || []);
   const [fasce, setFasce] = useState([...(f.fasce || [])].sort((a, b) => a.fino_a_km - b.fino_a_km));
+  const [nuovaFascia, setNuovaFascia] = useState({ fino: "", fee: "" });
+  const [raggio, setRaggio] = useState(f.raggio_max ?? 150);
   const [nuovo, setNuovo] = useState(null);
   const [nuovoExtra, setNuovoExtra] = useState({ label: "", prezzo: "", descrizione: "" });
   const [salvando, setSalvando] = useState(false);
 
   const upPkg = (id, k, v) => setPkg(pkg.map((p) => p.id === id ? { ...p, [k]: v } : p));
   const upExtra = (id, k, v) => setExtra(extra.map((e) => e.id === id ? { ...e, [k]: v } : e));
-  const upFascia = (id, v) => setFasce(fasce.map((x) => x.id === id ? { ...x, fee: v } : x));
+  const upFascia = (id, campo, v) => setFasce(fasce.map((x) => x.id === id ? { ...x, [campo]: v } : x));
+  const delFascia = async (id) => { await supabase.from("fasce").delete().eq("id", id); mostra("Fascia eliminata"); ricarica(); };
+  const addFascia = async () => {
+    if (!nuovaFascia.fino) { mostra("Indica entro quanti km"); return; }
+    await supabase.from("fasce").insert({
+      fornitore_id: f.id, fino_a_km: Number(nuovaFascia.fino), fee: Number(nuovaFascia.fee) || 0,
+    });
+    setNuovaFascia({ fino: "", fee: "" }); mostra("Fascia aggiunta ✓"); ricarica();
+  };
 
   const salva = async () => {
     setSalvando(true);
@@ -268,7 +278,8 @@ function Listino({ f, ricarica, mostra }) {
       }).eq("id", p.id);
     }
     for (const e of extra) await supabase.from("extra").update({ label: e.label, prezzo: Number(e.prezzo) || 0, descrizione: e.descrizione || null }).eq("id", e.id);
-    for (const x of fasce) await supabase.from("fasce").update({ fee: Number(x.fee) || 0 }).eq("id", x.id);
+    for (const x of fasce) await supabase.from("fasce").update({ fino_a_km: Number(x.fino_a_km) || 0, fee: Number(x.fee) || 0 }).eq("id", x.id);
+    await supabase.from("fornitori").update({ raggio_max: Number(raggio) || 150 }).eq("id", f.id);
     setSalvando(false);
     mostra("Listino aggiornato ✓");
     ricarica();
@@ -399,15 +410,37 @@ function Listino({ f, ricarica, mostra }) {
 
       <div className="fp-card">
         <b className="fp-display" style={{ fontSize: 16 }}>Le tue tariffe di zona</b>
-        <p className="fp-hint">Il prezzo mostrato al cliente si adatta da solo alla zona: lui vede solo il totale, mai i km.</p>
+        <p className="fp-hint">Il prezzo mostrato al cliente si adatta da solo alla distanza: lui vede solo il totale, mai i km.</p>
         {fasce.map((x) => (
           <div key={x.id} className="fp-inline" style={{ marginTop: 10 }}>
             <Navigation size={14} />
-            <span style={{ minWidth: 110 }}>{x.fino_a_km >= 9999 ? "Oltre" : `Entro ${x.fino_a_km} km`}</span>
-            <input type="number" value={x.fee} onChange={(e) => upFascia(x.id, e.target.value)} />
-            <span style={{ color: "var(--grigio)" }}>€ aggiunti</span>
+            <span style={{ color: "var(--grigio)" }}>entro</span>
+            <input type="number" value={x.fino_a_km} onChange={(e) => upFascia(x.id, "fino_a_km", e.target.value)} />
+            <span style={{ color: "var(--grigio)" }}>km →</span>
+            <input type="number" value={x.fee} onChange={(e) => upFascia(x.id, "fee", e.target.value)} />
+            <span style={{ color: "var(--grigio)" }}>€</span>
+            <button className="fp-del" onClick={() => delFascia(x.id)}><Trash2 size={15} /></button>
           </div>
         ))}
+        <div className="fp-inline" style={{ marginTop: 12 }}>
+          <Plus size={14} />
+          <span style={{ color: "var(--grigio)" }}>entro</span>
+          <input type="number" value={nuovaFascia.fino} onChange={(e) => setNuovaFascia({ ...nuovaFascia, fino: e.target.value })} placeholder="km" />
+          <span style={{ color: "var(--grigio)" }}>km →</span>
+          <input type="number" value={nuovaFascia.fee} onChange={(e) => setNuovaFascia({ ...nuovaFascia, fee: e.target.value })} placeholder="€" />
+          <button className="fp-btn" onClick={addFascia}>Aggiungi</button>
+        </div>
+
+        <div style={{ borderTop: "1px solid var(--linea)", marginTop: 18, paddingTop: 16 }}>
+          <label style={{ marginTop: 0 }}>Non mi sposto oltre (km)</label>
+          <div className="fp-inline">
+            <input type="number" value={raggio} onChange={(e) => setRaggio(e.target.value)} />
+            <span style={{ color: "var(--grigio)" }}>km</span>
+          </div>
+          <p className="fp-hint">
+            Oltre questa distanza non comparirai nelle ricerche dei clienti: eviti richieste per eventi troppo lontani.
+          </p>
+        </div>
       </div>
 
       <div className="fp-save">

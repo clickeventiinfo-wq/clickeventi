@@ -223,13 +223,13 @@ function Dettaglio({ f, onIndietro, onApprova, onRifiuta, onVerif, busy }) {
         </div>
 
         <div className="ad-sec">
-          <h5>Tariffe di zona</h5>
+          <h5>Tariffe di zona{f.raggio_max ? ` · si sposta fino a ${f.raggio_max} km` : ""}</h5>
           {f.fasce?.length ? (
             <div className="ad-chips">
               {[...f.fasce].sort((a, b) => a.fino_a_km - b.fino_a_km).map((fa) => (
                 <span key={fa.id} className="ad-chip">
                   <Navigation size={11} style={{ verticalAlign: "-1px" }} />{" "}
-                  {fa.fino_a_km >= 9999 ? "oltre" : `entro ${fa.fino_a_km} km`}: {fa.fee === 0 ? "incluso" : `+${fa.fee} €`}
+                  entro {fa.fino_a_km} km: {fa.fee === 0 ? "incluso" : `+${fa.fee} €`}
                 </span>
               ))}
             </div>
