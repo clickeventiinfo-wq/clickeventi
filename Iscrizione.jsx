@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { supabase } from "./supabase";
 import { ComuneInput, ComuniMultipli } from "./comuni.jsx";
+import { PasswordInput } from "./campi.jsx";
 
 /* ============================================================
    CLICK EVENTI — Iscrizione professionista (2 fasi)
@@ -94,6 +95,7 @@ const Header = () => (
 function CreaAccount() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [conferma, setConferma] = useState("");
   const [saving, setSaving] = useState(false);
   const [errore, setErrore] = useState("");
   const [inviato, setInviato] = useState(false);
@@ -110,6 +112,7 @@ function CreaAccount() {
     }
     if (!password) { setErrore("Scegli una password per il tuo account."); return; }
     if (password.length < 6) { setErrore("La password è troppo corta: servono almeno 6 caratteri."); return; }
+    if (conferma !== password) { setErrore("Le due password non coincidono: controlla di averle scritte uguali."); return; }
     setErrore(""); setSaving(true);
     const { data, error } = await supabase.auth.signUp({
       email: mail, password,
@@ -153,7 +156,7 @@ function CreaAccount() {
         </p>
         <div className="is-nav" style={{ justifyContent: "center", gap: 10 }}>
           <a href="/?accedi" className="is-btn primary">Vai al login</a>
-          <button className="is-btn" onClick={() => { setGiaRegistrato(false); setEmail(""); setPassword(""); }}>
+          <button className="is-btn" onClick={() => { setGiaRegistrato(false); setEmail(""); setPassword(""); setConferma(""); }}>
             Usa un'altra email
           </button>
         </div>
@@ -183,8 +186,22 @@ function CreaAccount() {
       <label>Email *</label>
       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="La userai per accedere" />
       <label>Password *</label>
-      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-             placeholder="Almeno 6 caratteri" onKeyDown={(e) => e.key === "Enter" && registra()} />
+      <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)}
+                     placeholder="Almeno 6 caratteri" autoComplete="new-password" />
+      <label>Ripeti la password *</label>
+      <PasswordInput value={conferma} onChange={(e) => setConferma(e.target.value)}
+                     placeholder="Scrivila di nuovo" autoComplete="new-password"
+                     onKeyDown={(e) => e.key === "Enter" && registra()} />
+      {conferma && conferma !== password && (
+        <p style={{ color: "#C0392B", fontSize: 12.5, fontWeight: 600, marginTop: 5 }}>
+          Le password non coincidono
+        </p>
+      )}
+      {conferma && conferma === password && password.length >= 6 && (
+        <p style={{ color: "#1E9E6A", fontSize: 12.5, fontWeight: 600, marginTop: 5 }}>
+          ✓ Le password coincidono
+        </p>
+      )}
       {errore && <div className="is-err">{errore}</div>}
       <div className="is-nav">
         <a href="/" className="is-btn">Annulla</a>

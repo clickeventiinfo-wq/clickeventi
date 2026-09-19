@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { LogIn, Loader2, Check, Clock, LogOut, ArrowRight } from "lucide-react";
 import { supabase } from "./supabase";
+import { PasswordInput } from "./campi.jsx";
 
 /* ============================================================
    CLICK EVENTI — Accesso professionisti
@@ -56,8 +57,7 @@ export default function Login() {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        const { data: admin } = await supabase.rpc("is_admin");
-        window.location.href = admin ? "/?admin" : "/?pannello";
+        window.location.href = "/?pannello";
         return;
       }
       setChecking(false);
@@ -91,8 +91,9 @@ export default function Login() {
       return;
     }
     setUtente(data.user);
-    const { data: admin } = await supabase.rpc("is_admin");
-    window.location.href = admin ? "/?admin" : "/?pannello";
+    const { data: prof } = await supabase.from("fornitori").select("nome, stato, verificato").eq("user_id", data.user.id).maybeSingle();
+    setProfilo(prof);
+    window.location.href = "/?pannello";
   };
 
   const esci = async () => {
@@ -167,8 +168,9 @@ export default function Login() {
               <label>Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="La tua email" />
               <label>Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                     placeholder="La tua password" onKeyDown={(e) => e.key === "Enter" && accedi()} />
+              <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)}
+                             placeholder="La tua password" autoComplete="current-password"
+                             onKeyDown={(e) => e.key === "Enter" && accedi()} />
 
               {errore && <div className="lg-err">{errore}</div>}
               {info && <div style={{ color: "var(--accent)", fontSize: 13, marginTop: 12, fontWeight: 600 }}>{info}</div>}
