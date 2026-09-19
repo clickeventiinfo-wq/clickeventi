@@ -76,6 +76,27 @@ function distanceKm(a, b) {
 
 const catLabel = (id) => CATEGORIES.find((c) => c.id === id)?.label || "";
 
+/* confronto "morbido": chi cerca "arpa" deve trovare anche "arpista",
+   chi cerca "foto" trova "fotografo". Confrontiamo le radici delle parole. */
+const pulisci = (t) =>
+  (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+function radiceComune(a, b) {
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  return i;
+}
+
+function somiglia(testo, ricerca) {
+  const q = pulisci(ricerca).trim();
+  if (!q) return true;
+  const parole = pulisci(testo).split(/[^a-z0-9]+/).filter(Boolean);
+  const soglia = Math.min(q.length, 3);       // bastano tre lettere in comune
+  return parole.some((w) =>
+    w.startsWith(q) || q.startsWith(w) || radiceComune(w, q) >= soglia
+  );
+}
+
 /* articolo corretto per il tipo di evento (es. "la tua festa privata") */
 const EVENTI_FEMMINILI = ["Festa privata", "Laurea"];
 const perIlTuo = (evento) =>
@@ -497,6 +518,9 @@ const GlobalStyle = () => (
     .cv-lb-x { position: absolute; top: 18px; right: 20px; background: rgba(255,255,255,.15);
       border: none; color: #fff; width: 38px; height: 38px; border-radius: 50%; font-size: 20px;
       cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .cv-form input.err, .cv-form textarea.err { border-color: #C0392B; background: #FDF6F5; }
+    .cv-err-campo { color: #C0392B; font-size: 12.5px; font-weight: 600; margin-top: 5px; display: block; }
+    .cv-req { color: #C0392B; }
     .cv-spin { animation: cv-rot 1s linear infinite; }
     @keyframes cv-rot { to { transform: rotate(360deg); } }
     @media (prefers-reduced-motion: reduce) {
@@ -784,9 +808,10 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
       return km === null || km <= p.raggioMax;
     })
     .filter((p) => !cerca ||
-      (p.role || "").toLowerCase().includes(cerca) ||
-      (p.name || "").toLowerCase().includes(cerca) ||
-      catLabel(p.cat).toLowerCase().includes(cerca))
+      somiglia(p.role, cerca) ||
+      somiglia(p.name, cerca) ||
+      somiglia(catLabel(p.cat), cerca) ||
+      (p.packages || []).some((k) => somiglia(k.label, cerca)))
     .filter((p) => senzaLimite || minPrice(p, loc) <= budget)
     .sort((a, b) => {
       const fa = a.eventTypes.includes(etype) ? 1 : 0;
@@ -928,6 +953,7 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
   const [errore, setErrore] = useState("");
   const [form, setForm] = useState({ nome: "", contatto: "", note: "", orario: "" });
   const [privacyOk, setPrivacyOk] = useState(false);
+  const [campiErrati, setCampiErrati] = useState({});
   const [marketingOk, setMarketingOk] = useState(false);
 
   const pkg = p.packages.find((k) => k.id === pkgId) || p.packages[0];
@@ -938,14 +964,23 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
   const selectPkg = (k) => { setPkgId(k.id); if (k.scale.on === "ore") setOre(k.scale.included); };
 
   const invia = async () => {
-    if (!form.nome.trim() || !form.contatto.trim()) {
-      setErrore("Inserisci nome e un contatto per ricevere la risposta.");
+    const problemi = {};
+    if (!form.nome.trim()) problemi.nome = "Serve il tuo nome per rispondere.";
+    if (!form.contatto.trim()) problemi.contatto = "Serve un'email o un telefono per ricontattarti.";
+    else if (form.contatto.includes("@") && !/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(form.contatto.trim()))
+      problemi.contatto = "Questa email non sembra valida.";
+    if (!privacyOk) problemi.privacy = "Devi accettare l'informativa privacy per inviare.";
+
+    setCampiErrati(problemi);
+    if (Object.keys(problemi).length > 0) {
+      setErrore("Controlla i campi evidenziati in rosso.");
+      const primo = document.getElementById(
+        problemi.nome ? "q-nome" : problemi.contatto ? "q-contatto" : "q-privacy"
+      );
+      if (primo) primo.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
-    if (!privacyOk) {
-      setErrore("Per inviare la richiesta devi accettare l'informativa privacy.");
-      return;
-    }
+
     setErrore(""); setSaving(true);
     const { error } = await supabase.from("richieste").insert({
       fornitore_id: p.id,
@@ -1054,10 +1089,17 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
         </div>
       </div>
 
-      <label htmlFor="q-nome">Il tuo nome</label>
-      <input id="q-nome" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Nome e cognome" />
-      <label htmlFor="q-contatto">Email o telefono</label>
-      <input id="q-contatto" value={form.contatto} onChange={(e) => setForm({ ...form, contatto: e.target.value })} placeholder="Per ricontattarti" />
+      <label htmlFor="q-nome">Il tuo nome <span className="cv-req">*</span></label>
+      <input id="q-nome" className={campiErrati.nome ? "err" : ""} value={form.nome}
+             onChange={(e) => { setForm({ ...form, nome: e.target.value }); setCampiErrati({ ...campiErrati, nome: undefined }); }}
+             placeholder="Nome e cognome" />
+      {campiErrati.nome && <span className="cv-err-campo">{campiErrati.nome}</span>}
+
+      <label htmlFor="q-contatto">Email o telefono <span className="cv-req">*</span></label>
+      <input id="q-contatto" className={campiErrati.contatto ? "err" : ""} value={form.contatto}
+             onChange={(e) => { setForm({ ...form, contatto: e.target.value }); setCampiErrati({ ...campiErrati, contatto: undefined }); }}
+             placeholder="Per ricontattarti" />
+      {campiErrati.contatto && <span className="cv-err-campo">{campiErrati.contatto}</span>}
       {prefillDate && (
         <p className="cv-note" style={{ textAlign: "left", marginTop: 10 }}>
           <CalendarDays size={13} style={{ verticalAlign: "-2px" }} /> Data richiesta: {new Date(prefillDate).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })} · {eventLoc?.name}
@@ -1071,11 +1113,14 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
                 placeholder="Location, orari, atmosfera che immagini…" />
 
       <label className="cv-opt" style={{ alignItems: "flex-start", marginTop: 14 }}>
-        <input type="checkbox" checked={privacyOk} onChange={() => setPrivacyOk(!privacyOk)} style={{ marginTop: 3 }} />
+        <input id="q-privacy" type="checkbox" checked={privacyOk}
+               onChange={() => { setPrivacyOk(!privacyOk); setCampiErrati({ ...campiErrati, privacy: undefined }); }}
+               style={{ marginTop: 3, outline: campiErrati.privacy ? "2px solid #C0392B" : "none", outlineOffset: 2 }} />
         <span style={{ fontSize: 13, lineHeight: 1.5 }}>
-          Ho letto e accetto l'<a href="/?privacy" target="_blank" style={{ color: "var(--accent)", fontWeight: 600 }}>informativa privacy</a> *
+          Ho letto e accetto l'<a href="/?privacy" target="_blank" style={{ color: "var(--accent)", fontWeight: 600 }}>informativa privacy</a> <span className="cv-req">*</span>
         </span>
       </label>
+      {campiErrati.privacy && <span className="cv-err-campo" style={{ marginTop: 0 }}>{campiErrati.privacy}</span>}
       <label className="cv-opt" style={{ alignItems: "flex-start" }}>
         <input type="checkbox" checked={marketingOk} onChange={() => setMarketingOk(!marketingOk)} style={{ marginTop: 3 }} />
         <span style={{ fontSize: 13, lineHeight: 1.5, color: "var(--grigio)" }}>
@@ -1085,6 +1130,9 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
 
       {errore && <p style={{ color: "var(--accent)", fontSize: 13, marginTop: 10, fontWeight: 600 }}>{errore}</p>}
 
+      <p className="cv-note" style={{ textAlign: "left", marginTop: 12, marginBottom: 0 }}>
+        <span className="cv-req">*</span> campi obbligatori
+      </p>
       <button className="cv-submit" onClick={invia} disabled={saving}>
         <Send size={16} /> {saving ? "Invio…" : `Invia richiesta · ${quote.tot} €`}
       </button>
