@@ -184,13 +184,13 @@ function CreaAccount() {
       <h1 className="is-t is-display">Diventa un professionista</h1>
       <p className="is-sub">Inizia con email e password. Poi confermi l'email e completi il profilo.</p>
       <label>Email *</label>
-      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="La userai per accedere" />
+      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Inserisci la tua email" />
       <label>Password *</label>
       <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)}
-                     placeholder="Almeno 6 caratteri" autoComplete="new-password" />
+                     placeholder="Inserisci una password di almeno 6 caratteri" autoComplete="new-password" />
       <label>Ripeti la password *</label>
       <PasswordInput value={conferma} onChange={(e) => setConferma(e.target.value)}
-                     placeholder="Scrivila di nuovo" autoComplete="new-password"
+                     placeholder="Reinserisci la password" autoComplete="new-password"
                      onKeyDown={(e) => e.key === "Enter" && registra()} />
       {conferma && conferma !== password && (
         <p style={{ color: "#C0392B", fontSize: 12.5, fontWeight: 600, marginTop: 5 }}>
