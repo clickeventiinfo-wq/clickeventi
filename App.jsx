@@ -91,10 +91,11 @@ function somiglia(testo, ricerca) {
   const q = pulisci(ricerca).trim();
   if (!q) return true;
   const parole = pulisci(testo).split(/[^a-z0-9]+/).filter(Boolean);
-  const soglia = Math.min(q.length, 3);       // bastano tre lettere in comune
-  return parole.some((w) =>
-    w.startsWith(q) || q.startsWith(w) || radiceComune(w, q) >= soglia
-  );
+  return parole.some((w) => {
+    if (w === q) return true;                   // parola identica (es. "dj")
+    if (w.length < 3 || q.length < 3) return false;  // ignora "a", "di", "e"…
+    return w.startsWith(q) || q.startsWith(w) || radiceComune(w, q) >= 3;
+  });
 }
 
 /* articolo corretto per il tipo di evento (es. "la tua festa privata") */
