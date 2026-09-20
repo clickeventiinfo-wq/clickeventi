@@ -109,7 +109,7 @@ export default function Login() {
       setErrore("Inserisci un indirizzo e-mail valido");
       return;
     }
-    const { error } = await supabase.auth.resetPasswordForEmail(mail, { redirectTo: "https://clickeventi.it/?pannello" });
+    const { error } = await supabase.auth.resetPasswordForEmail(mail, { redirectTo: "https://clickeventi.it/?reimposta" });
     if (error) {
       const m = (error.message || "").toLowerCase();
       setErrore(m.includes("rate") || m.includes("many")
