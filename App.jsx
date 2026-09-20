@@ -1018,9 +1018,15 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
   const invia = async () => {
     const problemi = {};
     if (!form.nome.trim()) problemi.nome = "Serve il tuo nome per rispondere.";
-    if (!form.contatto.trim()) problemi.contatto = "Serve un'email o un telefono per ricontattarti.";
-    else if (form.contatto.includes("@") && !/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(form.contatto.trim()))
-      problemi.contatto = "Questa email non sembra valida.";
+    const c = form.contatto.trim();
+    if (!c) problemi.contatto = "Serve un'email o un numero di telefono per ricontattarti.";
+    else if (c.includes("@")) {
+      if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(c)) problemi.contatto = "Inserisci un indirizzo e-mail valido.";
+    } else if (/\d/.test(c)) {
+      if (c.replace(/\D/g, "").length < 8) problemi.contatto = "Il numero di telefono non sembra completo.";
+    } else {
+      problemi.contatto = "Inserisci un'email valida oppure un numero di telefono.";
+    }
     if (!privacyOk) problemi.privacy = "Devi accettare l'informativa privacy per inviare.";
 
     setCampiErrati(problemi);
@@ -1056,7 +1062,16 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
     });
     setSaving(false);
 
-    if (error) { setErrore("Non è stato possibile inviare la richiesta. Riprova."); return; }
+    if (error) {
+      const m = (error.message || "").toLowerCase();
+      if (m.includes("function") || m.includes("does not exist"))
+        setErrore("Servizio momentaneamente non disponibile. Riprova più tardi o scrivi a info@clickeventi.it");
+      else if (m.includes("network") || m.includes("fetch"))
+        setErrore("Connessione assente: controlla la rete e riprova.");
+      else
+        setErrore("Non è stato possibile inviare la richiesta. Riprova o scrivi a info@clickeventi.it");
+      return;
+    }
     if (!data?.ok) { setErrore(data?.errore || "Non è stato possibile inviare la richiesta."); return; }
     setTotaleConfermato(data.totale);
     setSent(true);
