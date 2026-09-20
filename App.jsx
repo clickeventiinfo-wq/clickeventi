@@ -834,14 +834,15 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
 /* ---------- risultati ---------- */
 
 function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
-  const { loc, date, etype, cat, testo } = q;
+  const { loc, date, etype, cat, testo, locScelta } = q;
+  const zona = locScelta ? loc : null;   // null = nessun luogo indicato
   const [filtriAperti, setFiltriAperti] = useState(false);
   const cerca = (testo || "").trim().toLowerCase();
 
   /* prezzo massimo possibile, arrotondato, per calibrare il cursore */
   const maxPossibile = Math.max(
     600,
-    ...providers.map((p) => minPrice(p, loc)).filter((n) => Number.isFinite(n))
+    ...providers.map((p) => minPrice(p, zona)).filter((n) => Number.isFinite(n))
   );
   const tetto = Math.ceil(maxPossibile / 100) * 100;
   const budget = q.budget ?? tetto;          // undefined = nessun limite
@@ -850,9 +851,9 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
   const results = providers
     .filter((p) => (!cat || p.cat === cat) && isAvailable(p, date))
     .filter((p) => {
-      /* fuori dal raggio dichiarato: non lo mostriamo */
-      if (!p.raggioMax) return true;
-      const km = distanzaMinima(p, loc);
+      /* il raggio si applica solo se il cliente ha indicato il comune */
+      if (!zona || !p.raggioMax) return true;
+      const km = distanzaMinima(p, zona);
       return km === null || km <= p.raggioMax;
     })
     .filter((p) => !cerca ||
@@ -860,13 +861,13 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
       somiglia(p.name, cerca) ||
       somiglia(catLabel(p.cat), cerca) ||
       (p.packages || []).some((k) => somiglia(k.label, cerca)))
-    .filter((p) => senzaLimite || minPrice(p, loc) <= budget)
+    .filter((p) => senzaLimite || minPrice(p, zona) <= budget)
     .sort((a, b) => {
       const fa = a.eventTypes.includes(etype) ? 1 : 0;
       const fb = b.eventTypes.includes(etype) ? 1 : 0;
       if (fb !== fa) return fb - fa;
-      const ka = distanzaMinima(a, loc) ?? 99999;
-      const kb = distanzaMinima(b, loc) ?? 99999;
+      const ka = distanzaMinima(a, zona) ?? 99999;
+      const kb = distanzaMinima(b, zona) ?? 99999;
       if (ka !== kb) return ka - kb;
       return b.rating - a.rating;
     });
@@ -887,7 +888,9 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
           {cerca ? `"${testo}"` : cat ? catLabel(cat) : "Professionisti"} per {perIlTuo(etype)}
         </h2>
         <p style={{ fontSize: 14, color: "var(--grigio)", marginBottom: 20 }}>
-          Evento a {loc.name}{date ? ` · disponibili il ${dateLabel}` : " — scegli una data per vedere solo i disponibili"}
+          {locScelta
+            ? <>Evento a {loc.name}{date ? ` · disponibili il ${dateLabel}` : " — scegli una data per vedere solo i disponibili"}</>
+            : <>Indica il comune dell'evento per vedere chi è disponibile e i prezzi per la tua zona</>}
         </p>
 
         <button className="cv-filtri-btn" onClick={() => setFiltriAperti(!filtriAperti)}>
@@ -898,7 +901,7 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
           <aside className={"cv-side" + (filtriAperti ? "" : " chiusa")}>
             <div className="cv-fgroup">
               <span className="cv-flabel2">Dove</span>
-              <LocationInput value={loc} onChange={(l) => setQ({ ...q, loc: l })} />
+              <LocationInput value={locScelta ? loc : null} onChange={(l) => setQ({ ...q, loc: l, locScelta: true })} />
             </div>
 
             <div className="cv-fgroup">
@@ -965,7 +968,7 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
             {loading ? <Caricamento /> : results.length > 0 ? (
               <div className="cv-grid">
                 {results.map((p) => (
-                  <ProviderCard key={p.id} p={p} onOpen={openProvider} eventType={etype} eventLoc={loc} />
+                  <ProviderCard key={p.id} p={p} onOpen={openProvider} eventType={etype} eventLoc={zona} />
                 ))}
               </div>
             ) : (
@@ -1161,6 +1164,11 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
           <CalendarDays size={13} style={{ verticalAlign: "-2px" }} /> Data richiesta: {new Date(prefillDate).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })} · {eventLoc?.name}
         </p>
       )}
+      {!eventLoc && (
+        <p className="cv-note" style={{ textAlign: "left", marginTop: 10, color: "var(--accent)", fontWeight: 600 }}>
+          Indica il comune dell'evento per un preventivo preciso: il prezzo può variare con la distanza.
+        </p>
+      )}
       <label htmlFor="q-orario">Orario indicativo (facoltativo)</label>
       <input id="q-orario" value={form.orario} onChange={(e) => setForm({ ...form, orario: e.target.value })}
              placeholder="Es. dalle 19 alle 24" />
@@ -1201,6 +1209,7 @@ function ProfileView({ p, goBack, q }) {
   const [zoom, setZoom] = useState(null);
   const initials = p.name.split(" ").map((w) => w[0]).slice(0, 2).join("");
   const avail = q.date ? isAvailable(p, q.date) : null;
+  const zonaProfilo = q.locScelta ? q.loc : null;
 
   return (
     <section className="cv-section">
@@ -1299,7 +1308,7 @@ function ProfileView({ p, goBack, q }) {
             )}
           </div>
 
-          <QuoteBuilder p={p} eventType={q.etype} eventLoc={q.loc} prefillDate={q.date} />
+          <QuoteBuilder p={p} eventType={q.etype} eventLoc={zonaProfilo} prefillDate={q.date} />
         </div>
       </div>
 
