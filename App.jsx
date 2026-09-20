@@ -710,7 +710,7 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
     <>
       <section className="cv-hero">
         <h1 className="cv-display">Il tuo evento, <em>in un click</em></h1>
-        <p>DJ, fotografi, barman, animatori e make-up artist disponibili per la tua data, vicino a te. Preventivo subito.</p>
+        <p>Scegli il professionista per il tuo evento e componi il tuo pacchetto personalizzato: il preventivo si aggiorna <em style={{ fontStyle: "normal", color: "var(--accent)", fontWeight: 600 }}>in un click</em>.</p>
 
         <div className="cv-search">
           <div className="cv-field">
