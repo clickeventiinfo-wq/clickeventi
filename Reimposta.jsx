@@ -61,15 +61,23 @@ export default function Reimposta() {
   }, []);
 
   const salva = async () => {
-    if (password.length < 6) { setErrore("La password deve avere almeno 6 caratteri."); return; }
-    if (password !== conferma) { setErrore("Le due password non coincidono."); return; }
+    if (password.length < 6) { setErrore("La password deve contenere almeno 6 caratteri."); return; }
+    if (password !== conferma) { setErrore("Le password inserite non coincidono."); return; }
     setErrore(""); setSaving(true);
     const { error } = await supabase.auth.updateUser({ password });
     setSaving(false);
     if (error) {
-      setErrore(error.message.toLowerCase().includes("same")
-        ? "La nuova password è uguale alla precedente: scegline un'altra."
-        : "Non è stato possibile cambiare la password. Riprova.");
+      const m = (error.message || "").toLowerCase();
+      if (m.includes("same") || m.includes("different from the old") || m.includes("reuse"))
+        setErrore("La nuova password deve essere diversa dalla precedente.");
+      else if (m.includes("weak") || m.includes("short") || m.includes("least"))
+        setErrore("La password non soddisfa i requisiti minimi di sicurezza.");
+      else if (m.includes("expired") || m.includes("invalid") || m.includes("session"))
+        setErrore("Il link di reimpostazione è scaduto. Richiedine uno nuovo dalla pagina di accesso.");
+      else if (m.includes("rate") || m.includes("many"))
+        setErrore("Troppi tentativi ravvicinati. Riprova tra qualche minuto.");
+      else
+        setErrore("Non è stato possibile aggiornare la password. Per assistenza scrivi a info@clickeventi.it");
       return;
     }
     setStato("fatto");
@@ -92,8 +100,8 @@ export default function Reimposta() {
               <div className="rp-icon"><KeyRound size={24} /></div>
               <h1 className="rp-t">Link non più valido</h1>
               <p className="rp-sub">
-                Il link per reimpostare la password è scaduto o è già stato usato.
-                Richiedine uno nuovo dalla pagina di accesso.
+                Il link per la reimpostazione della password è scaduto o è già stato utilizzato.
+                È possibile richiederne uno nuovo dalla pagina di accesso.
               </p>
               <a href="/?accedi" className="rp-btn">Torna al login</a>
             </div>
@@ -103,7 +111,7 @@ export default function Reimposta() {
             <div className="rp-card" style={{ textAlign: "center" }}>
               <div className="rp-icon" style={{ margin: "0 auto 16px" }}><Check size={24} /></div>
               <h1 className="rp-t">Password aggiornata</h1>
-              <p className="rp-sub">Da ora puoi accedere con la nuova password.</p>
+              <p className="rp-sub">La password è stata aggiornata correttamente. Puoi accedere con le nuove credenziali.</p>
               <a href="/?pannello" className="rp-btn">Vai al mio pannello</a>
             </div>
           )}
@@ -112,7 +120,7 @@ export default function Reimposta() {
             <div className="rp-card">
               <div className="rp-icon"><KeyRound size={24} /></div>
               <h1 className="rp-t">Scegli una nuova password</h1>
-              <p className="rp-sub">Inseriscila due volte per essere sicuri che sia corretta.</p>
+              <p className="rp-sub">Inserisci la nuova password e confermala per proseguire.</p>
 
               <label>Nuova password</label>
               <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)}
