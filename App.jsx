@@ -87,7 +87,47 @@ function radiceComune(a, b) {
   return i;
 }
 
-function somiglia(testo, ricerca) {
+/* Parole che vogliono dire la stessa cosa nel mondo degli eventi:
+   chi cerca "trucco" deve trovare anche "make-up artist". */
+const SINONIMI = [
+  ["trucco", "truccatrice", "truccatore", "makeup", "make-up", "visagista", "mua", "beauty"],
+  ["capelli", "hair", "parrucchiere", "parrucchiera", "acconciatura", "hairstylist", "piega"],
+  ["dj", "deejay", "disc jockey", "consolle", "selecter"],
+  ["musica", "musicista", "band", "gruppo", "live", "concerto", "orchestra"],
+  ["cantante", "voce", "vocalist", "canto"],
+  ["chitarra", "chitarrista"],
+  ["violino", "violinista"],
+  ["arpa", "arpista"],
+  ["sax", "sassofono", "sassofonista"],
+  ["piano", "pianoforte", "pianista", "tastiera", "tastierista"],
+  ["foto", "fotografo", "fotografa", "fotografia", "reportage", "scatti", "servizio fotografico"],
+  ["video", "videomaker", "riprese", "filmato", "cineoperatore", "aftermovie"],
+  ["drone", "riprese aeree"],
+  ["barman", "barista", "bartender", "cocktail", "mixology", "beverage", "open bar", "drink"],
+  ["catering", "buffet", "cibo", "food", "rinfresco", "aperitivo"],
+  ["animazione", "animatore", "animatrice", "intrattenimento", "bambini", "baby"],
+  ["mago", "magia", "illusionista", "prestigiatore"],
+  ["truccabimbi", "facepainting"],
+  ["photobooth", "cabina fotografica", "fotobooth"],
+  ["luci", "illuminazione", "service", "audio", "impianto", "amplificazione", "fonico"],
+  ["wedding planner", "organizzatore", "organizzatrice", "planner"],
+  ["fiori", "fiorista", "addobbi", "allestimento", "decorazioni", "bouquet"],
+];
+
+/* dalla parola cercata alle parole equivalenti */
+function espandiRicerca(ricerca) {
+  const q = pulisci(ricerca).trim();
+  if (!q) return [];
+  const termini = new Set([q]);
+  for (const gruppo of SINONIMI) {
+    if (gruppo.some((parola) => somigliaSemplice(parola, q))) {
+      gruppo.forEach((parola) => termini.add(parola));
+    }
+  }
+  return [...termini];
+}
+
+function somigliaSemplice(testo, ricerca) {
   const q = pulisci(ricerca).trim();
   if (!q) return true;
   const parole = pulisci(testo).split(/[^a-z0-9]+/).filter(Boolean);
@@ -96,6 +136,13 @@ function somiglia(testo, ricerca) {
     if (w.length < 3 || q.length < 3) return false;  // ignora "a", "di", "e"…
     return w.startsWith(q) || q.startsWith(w) || radiceComune(w, q) >= 3;
   });
+}
+
+/* confronto finale: tiene conto anche dei sinonimi */
+function somiglia(testo, ricerca) {
+  const termini = espandiRicerca(ricerca);
+  if (!termini.length) return true;
+  return termini.some((t) => somigliaSemplice(testo, t));
 }
 
 /* articolo corretto per il tipo di evento (es. "la tua festa privata") */
@@ -950,6 +997,7 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
   const [persone, setPersone] = useState(1);
   const [extras, setExtras] = useState([]);
   const [sent, setSent] = useState(false);
+  const [totaleConfermato, setTotaleConfermato] = useState(null);
   const [saving, setSaving] = useState(false);
   const [errore, setErrore] = useState("");
   const [form, setForm] = useState({ nome: "", contatto: "", note: "", orario: "" });
@@ -983,24 +1031,31 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
     }
 
     setErrore(""); setSaving(true);
-    const { error } = await supabase.from("richieste").insert({
-      fornitore_id: p.id,
-      cliente_nome: form.nome,
-      cliente_contatto: form.contatto,
-      tipo_evento: eventType,
-      data_evento: prefillDate || null,
-      localita: eventLoc?.name || null,
-      pacchetto: pkg.label,
-      ore: pkg.scale.on === "ore" ? ore : null,
-      ospiti: pkg.scale.on === "ospiti" ? ospiti : pkg.scale.on === "persone" ? persone : null,
-      extra_scelti: p.extras.filter((e) => extras.includes(e.id)).map((e) => e.label),
-      totale: quote.tot,
-      note: form.note || null,
-      orario: form.orario || null,
-      consenso_marketing: marketingOk,
+
+    /* il totale definitivo lo ricalcola il server leggendo il listino:
+       qui inviamo solo le scelte del cliente */
+    const { data, error } = await supabase.rpc("crea_richiesta", {
+      p_fornitore_id: p.id,
+      p_pacchetto_id: pkg.id,
+      p_ore: pkg.scale.on === "ore" ? ore : null,
+      p_ospiti: pkg.scale.on === "ospiti" ? ospiti : pkg.scale.on === "persone" ? persone : null,
+      p_extra_ids: extras,
+      p_data: prefillDate || null,
+      p_tipo_evento: eventType,
+      p_localita: eventLoc?.name || null,
+      p_lat: eventLoc?.lat ?? null,
+      p_lng: eventLoc?.lng ?? null,
+      p_cliente_nome: form.nome,
+      p_contatto: form.contatto,
+      p_note: form.note || null,
+      p_orario: form.orario || null,
+      p_marketing: marketingOk,
     });
     setSaving(false);
+
     if (error) { setErrore("Non è stato possibile inviare la richiesta. Riprova."); return; }
+    if (!data?.ok) { setErrore(data?.errore || "Non è stato possibile inviare la richiesta."); return; }
+    setTotaleConfermato(data.totale);
     setSent(true);
   };
 
@@ -1010,7 +1065,7 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
         <Check size={38} strokeWidth={2.5} />
         <h4 className="cv-display" style={{ fontSize: 20, marginBottom: 6 }}>Richiesta inviata</h4>
         <p style={{ fontSize: 14, color: "var(--grigio)" }}>
-          Hai richiesto <b>{p.name}</b> — pacchetto "{pkg.label}", totale stimato <b>{quote.tot} €</b>.
+          Hai richiesto <b>{p.name}</b> — pacchetto "{pkg.label}", totale stimato <b>{totaleConfermato ?? quote.tot} €</b>.
           Il team Click Eventi verifica la disponibilità con il professionista e ti ricontatta al più presto.
         </p>
       </div>
