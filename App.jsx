@@ -1359,9 +1359,36 @@ export default function ClickEventiV2() {
     })();
   }, []);
 
-  const goHome = () => { setView("home"); window.scrollTo(0, 0); };
-  const onSearch = (query) => { setQ(query); setView("results"); window.scrollTo(0, 0); };
-  const openProvider = (p) => { setProvider(p); setView("profile"); window.scrollTo(0, 0); };
+  /* il tasto "indietro" del browser deve funzionare come ci si aspetta:
+     dal profilo torna ai risultati, dai risultati torna alla home */
+  useEffect(() => {
+    const torna = (e) => {
+      const st = e.state;
+      if (st?.view) {
+        setView(st.view);
+        if (st.q) setQ(st.q);
+        if (st.providerId) {
+          const p = providers.find((x) => x.id === st.providerId);
+          if (p) setProvider(p);
+        }
+      } else {
+        setView("home");
+      }
+      window.scrollTo(0, 0);
+    };
+    window.addEventListener("popstate", torna);
+    return () => window.removeEventListener("popstate", torna);
+  }, [providers]);
+
+  const vaiA = (nuovaVista, dati = {}) => {
+    const stato = { view: nuovaVista, q: dati.q ?? q, providerId: dati.providerId };
+    window.history.pushState(stato, "");
+    window.scrollTo(0, 0);
+  };
+
+  const goHome = () => { setView("home"); vaiA("home"); };
+  const onSearch = (query) => { setQ(query); setView("results"); vaiA("results", { q: query }); };
+  const openProvider = (p) => { setProvider(p); setView("profile"); vaiA("profile", { providerId: p.id }); };
 
   return (
     <div className="cv-root">
@@ -1373,8 +1400,8 @@ export default function ClickEventiV2() {
         </div>
       )}
       {view === "home" && <HomeView onSearch={onSearch} openProvider={openProvider} providers={providers} loading={loading} />}
-      {view === "results" && <ResultsView q={q} setQ={setQ} openProvider={openProvider} goHome={goHome} providers={providers} loading={loading} />}
-      {view === "profile" && provider && <ProfileView p={provider} goBack={() => setView("results")} q={q} />}
+      {view === "results" && <ResultsView q={q} setQ={setQ} openProvider={openProvider} goHome={() => window.history.back()} providers={providers} loading={loading} />}
+      {view === "profile" && provider && <ProfileView p={provider} goBack={() => window.history.back()} q={q} />}
       <footer className="cv-footer">
         <div className="cv-container">
           <span><b className="cv-display" style={{ color: "var(--ink)" }}>Click<em style={{ color: "var(--accent)", fontStyle: "normal" }}>Eventi</em></b> — Il tuo evento, in un click.</span>
