@@ -219,6 +219,34 @@ function defaultPackage(p, eventType) {
   );
 }
 
+/* Controllo dell'indirizzo email: forma corretta, estensione plausibile
+   e dominio che contenga almeno una vocale (scarta cose tipo "sdfoij.xx").
+   Lo stesso controllo viene ripetuto dal server. */
+const DOMINI_NOTI = ["gmail.com","hotmail.it","hotmail.com","outlook.it","outlook.com",
+  "libero.it","virgilio.it","tiscali.it","alice.it","icloud.com","yahoo.it","yahoo.com",
+  "live.it","pec.it","fastwebnet.it","tin.it"];
+
+function controllaEmail(valore) {
+  const e = (valore || "").trim().toLowerCase();
+  if (!e) return "Inserisci la tua email: serve per ricevere il preventivo e gli aggiornamenti.";
+  if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(e))
+    return "Inserisci un indirizzo e-mail valido.";
+  if (e.includes("..") || e.startsWith(".") || e.includes(".@") || e.includes("@."))
+    return "Inserisci un indirizzo e-mail valido.";
+  const dominio = e.split("@")[1] || "";
+  if (!/[aeiou]/.test(dominio)) return "Il dominio dell'email non sembra corretto.";
+  const estensione = dominio.split(".").pop();
+  if (estensione.length < 2 || estensione.length > 12)
+    return "Inserisci un indirizzo e-mail valido.";
+
+  /* errori di battitura frequenti */
+  const refusi = { "gmail.it":"gmail.com", "gmail.con":"gmail.com", "gmial.com":"gmail.com",
+                   "gmai.com":"gmail.com", "hotmai.it":"hotmail.it", "libero.com":"libero.it",
+                   "outlook.i":"outlook.it", "yahoo.con":"yahoo.com" };
+  if (refusi[dominio]) return `Forse intendevi @${refusi[dominio]}?`;
+  return "";
+}
+
 function computeQuote(p, pkg, ore, ospiti, selectedExtras, eventLoc) {
   const rows = [{ label: pkg.label, value: pkg.base }];
   let tot = pkg.base;
@@ -1003,7 +1031,7 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
   const [totaleConfermato, setTotaleConfermato] = useState(null);
   const [saving, setSaving] = useState(false);
   const [errore, setErrore] = useState("");
-  const [form, setForm] = useState({ nome: "", contatto: "", note: "", orario: "" });
+  const [form, setForm] = useState({ nome: "", contatto: "", telefono: "", note: "", orario: "" });
   const [privacyOk, setPrivacyOk] = useState(false);
   const [campiErrati, setCampiErrati] = useState({});
   const [marketingOk, setMarketingOk] = useState(false);
@@ -1018,22 +1046,18 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
   const invia = async () => {
     const problemi = {};
     if (!form.nome.trim()) problemi.nome = "Serve il tuo nome per rispondere.";
-    const c = form.contatto.trim();
-    if (!c) problemi.contatto = "Serve un'email o un numero di telefono per ricontattarti.";
-    else if (c.includes("@")) {
-      if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(c)) problemi.contatto = "Inserisci un indirizzo e-mail valido.";
-    } else if (/\d/.test(c)) {
-      if (c.replace(/\D/g, "").length < 8) problemi.contatto = "Il numero di telefono non sembra completo.";
-    } else {
-      problemi.contatto = "Inserisci un'email valida oppure un numero di telefono.";
-    }
+    const problemaEmail = controllaEmail(form.contatto);
+    if (problemaEmail) problemi.contatto = problemaEmail;
+    const tel = (form.telefono || "").trim();
+    if (tel && tel.replace(/\D/g, "").length < 8)
+      problemi.telefono = "Il numero di telefono non sembra completo.";
     if (!privacyOk) problemi.privacy = "Devi accettare l'informativa privacy per inviare.";
 
     setCampiErrati(problemi);
     if (Object.keys(problemi).length > 0) {
       setErrore("Controlla i campi evidenziati in rosso.");
       const primo = document.getElementById(
-        problemi.nome ? "q-nome" : problemi.contatto ? "q-contatto" : "q-privacy"
+        problemi.nome ? "q-nome" : problemi.contatto ? "q-contatto" : problemi.telefono ? "q-telefono" : "q-privacy"
       );
       if (primo) primo.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
@@ -1055,7 +1079,8 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
       p_lat: eventLoc?.lat ?? null,
       p_lng: eventLoc?.lng ?? null,
       p_cliente_nome: form.nome,
-      p_contatto: form.contatto,
+      p_contatto: form.contatto.trim().toLowerCase(),
+      p_telefono: form.telefono || null,
       p_note: form.note || null,
       p_orario: form.orario || null,
       p_marketing: marketingOk,
@@ -1169,11 +1194,18 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
              placeholder="Nome e cognome" />
       {campiErrati.nome && <span className="cv-err-campo">{campiErrati.nome}</span>}
 
-      <label htmlFor="q-contatto">Email o telefono <span className="cv-req">*</span></label>
-      <input id="q-contatto" className={campiErrati.contatto ? "err" : ""} value={form.contatto}
+      <label htmlFor="q-contatto">Email <span className="cv-req">*</span></label>
+      <input id="q-contatto" type="email" className={campiErrati.contatto ? "err" : ""} value={form.contatto}
              onChange={(e) => { setForm({ ...form, contatto: e.target.value }); setCampiErrati({ ...campiErrati, contatto: undefined }); }}
-             placeholder="Per ricontattarti" />
+             onBlur={(e) => { const p = controllaEmail(e.target.value); if (p) setCampiErrati((c) => ({ ...c, contatto: p })); }}
+             placeholder="nome@esempio.it" autoComplete="email" />
       {campiErrati.contatto && <span className="cv-err-campo">{campiErrati.contatto}</span>}
+
+      <label htmlFor="q-telefono">Telefono (facoltativo)</label>
+      <input id="q-telefono" type="tel" className={campiErrati.telefono ? "err" : ""} value={form.telefono}
+             onChange={(e) => { setForm({ ...form, telefono: e.target.value }); setCampiErrati({ ...campiErrati, telefono: undefined }); }}
+             placeholder="Se preferisci essere ricontattato per telefono" autoComplete="tel" />
+      {campiErrati.telefono && <span className="cv-err-campo">{campiErrati.telefono}</span>}
       {prefillDate && (
         <p className="cv-note" style={{ textAlign: "left", marginTop: 10 }}>
           <CalendarDays size={13} style={{ verticalAlign: "-2px" }} /> Data richiesta: {new Date(prefillDate).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })} · {eventLoc?.name}
