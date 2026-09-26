@@ -699,7 +699,7 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
   const [cat, setCat] = useState("");
   const [testo, setTesto] = useState("");
   const featured = [...providers].sort((a, b) => b.bookings - a.bookings).slice(0, 6);
-  const doSearch = () => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat, testo, budget: undefined });
+  const doSearch = () => onSearch({ loc: loc || LOC_DEFAULT, locScelta: !!loc, date, etype, cat, testo, budget: undefined });
 
   /* mostra solo le categorie che hanno almeno un professionista attivo:
      il sito cresce da solo man mano che si aggiungono fornitori */
@@ -758,8 +758,8 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
               const Icon = c.icon;
               return (
                 <div key={c.id} className="cv-cat cv-card-base" role="button" tabIndex={0}
-                     onClick={() => onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id, testo: "", budget: undefined })}
-                     onKeyDown={(e) => e.key === "Enter" && onSearch({ loc: loc || LOC_DEFAULT, date, etype, cat: c.id, testo: "", budget: undefined })}>
+                     onClick={() => onSearch({ loc: loc || LOC_DEFAULT, locScelta: !!loc, date, etype, cat: c.id, testo: "", budget: undefined })}
+                     onKeyDown={(e) => e.key === "Enter" && onSearch({ loc: loc || LOC_DEFAULT, locScelta: !!loc, date, etype, cat: c.id, testo: "", budget: undefined })}>
                   <Icon size={24} strokeWidth={1.9} />
                   <span>{c.label}</span>
                 </div>
