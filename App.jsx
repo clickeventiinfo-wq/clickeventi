@@ -1029,6 +1029,11 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
   const [extras, setExtras] = useState([]);
   const [sent, setSent] = useState(false);
   const [totaleConfermato, setTotaleConfermato] = useState(null);
+  const [codiceRichiesta, setCodiceRichiesta] = useState(null);
+  const [emailInviata, setEmailInviata] = useState("");
+  const [correggo, setCorreggo] = useState(false);
+  const [nuovaEmail, setNuovaEmail] = useState("");
+  const [esitoCorrezione, setEsitoCorrezione] = useState("");
   const [saving, setSaving] = useState(false);
   const [errore, setErrore] = useState("");
   const [form, setForm] = useState({ nome: "", contatto: "", telefono: "", note: "", orario: "" });
@@ -1099,7 +1104,21 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
     }
     if (!data?.ok) { setErrore(data?.errore || "Non è stato possibile inviare la richiesta."); return; }
     setTotaleConfermato(data.totale);
+    setCodiceRichiesta(data.codice || null);
+    setEmailInviata(form.contatto.trim().toLowerCase());
     setSent(true);
+  };
+
+  const salvaNuovaEmail = async () => {
+    const problema = controllaEmail(nuovaEmail);
+    if (problema) { setEsitoCorrezione(problema); return; }
+    setEsitoCorrezione("attendi");
+    const { data, error } = await supabase.rpc("correggi_email", {
+      p_codice: codiceRichiesta, p_email: nuovaEmail.trim().toLowerCase(),
+    });
+    if (error || !data?.ok) { setEsitoCorrezione(data?.errore || "Non è stato possibile aggiornare l'indirizzo."); return; }
+    setEmailInviata(nuovaEmail.trim().toLowerCase());
+    setCorreggo(false); setNuovaEmail(""); setEsitoCorrezione("fatto");
   };
 
   if (sent) {
@@ -1109,7 +1128,65 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
         <h4 className="cv-display" style={{ fontSize: 20, marginBottom: 6 }}>Richiesta inviata</h4>
         <p style={{ fontSize: 14, color: "var(--grigio)" }}>
           Hai richiesto <b>{p.name}</b> — pacchetto "{pkg.label}", totale stimato <b>{totaleConfermato ?? quote.tot} €</b>.
-          Il team Click Eventi verifica la disponibilità con il professionista e ti ricontatta al più presto.
+        </p>
+
+        <div style={{ background: "var(--bg2)", borderRadius: 12, padding: "16px 14px", margin: "18px 0 6px", textAlign: "center" }}>
+          <p style={{ fontSize: 13, color: "var(--grigio)", marginBottom: 6 }}>Ti abbiamo scritto a</p>
+          <p style={{ fontFamily: "'Sora', sans-serif", fontSize: 17, fontWeight: 700, wordBreak: "break-all", color: "var(--ink)" }}>
+            {emailInviata}
+          </p>
+
+          {esitoCorrezione === "fatto" && (
+            <p style={{ fontSize: 13, color: "#1E9E6A", fontWeight: 600, marginTop: 10 }}>
+              ✓ Indirizzo aggiornato: ti abbiamo riscritto qui.
+            </p>
+          )}
+
+          {!correggo ? (
+            <p style={{ fontSize: 13, color: "var(--grigio)", marginTop: 12, lineHeight: 1.55 }}>
+              Non trovi l'email? Controlla nella posta indesiderata,
+              {codiceRichiesta && <>
+                {" "}oppure{" "}
+                <button onClick={() => { setCorreggo(true); setNuovaEmail(emailInviata); setEsitoCorrezione(""); }}
+                        style={{ background: "none", border: "none", padding: 0, cursor: "pointer",
+                                 color: "var(--accent)", fontWeight: 600, fontSize: 13, textDecoration: "underline" }}>
+                  correggi l'indirizzo
+                </button>
+              </>}.
+            </p>
+          ) : (
+            <div style={{ marginTop: 12, textAlign: "left" }}>
+              <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 5 }}>
+                Scrivi l'indirizzo corretto
+              </label>
+              <input type="email" value={nuovaEmail} onChange={(e) => { setNuovaEmail(e.target.value); setEsitoCorrezione(""); }}
+                     placeholder="nome@esempio.it"
+                     style={{ width: "100%", border: "1px solid var(--linea)", borderRadius: 10,
+                              padding: "10px 12px", font: "500 14px 'Work Sans', sans-serif" }} />
+              {esitoCorrezione && esitoCorrezione !== "attendi" && esitoCorrezione !== "fatto" && (
+                <span style={{ color: "#C0392B", fontSize: 12.5, fontWeight: 600, display: "block", marginTop: 5 }}>
+                  {esitoCorrezione}
+                </span>
+              )}
+              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                <button onClick={salvaNuovaEmail} disabled={esitoCorrezione === "attendi"}
+                        style={{ flex: 1, background: "var(--accent)", color: "#fff", border: "none",
+                                 borderRadius: 10, padding: "10px", cursor: "pointer",
+                                 font: "600 14px 'Work Sans', sans-serif" }}>
+                  {esitoCorrezione === "attendi" ? "Aggiorno…" : "Aggiorna e rinvia"}
+                </button>
+                <button onClick={() => { setCorreggo(false); setEsitoCorrezione(""); }}
+                        style={{ background: "#fff", border: "1px solid var(--linea)", borderRadius: 10,
+                                 padding: "10px 14px", cursor: "pointer", font: "600 14px 'Work Sans', sans-serif" }}>
+                  Annulla
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <p style={{ fontSize: 13.5, color: "var(--grigio)", marginTop: 14, lineHeight: 1.55 }}>
+          Verifichiamo la disponibilità con il professionista e ti ricontattiamo al più presto.
         </p>
       </div>
     );
