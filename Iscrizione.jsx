@@ -524,7 +524,7 @@ function CompletaProfilo({ user }) {
 
 /* ============ ROUTER INTERNO ============ */
 export default function Iscrizione() {
-  const [stato, setStato] = useState("check"); // check | crea | completa | giafatto
+  const [stato, setStato] = useState("check"); // check | crea | completa
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -538,7 +538,8 @@ export default function Iscrizione() {
         .eq("user_id", session.user.id).maybeSingle();
       const completo = forn && forn.nome && forn.nome !== "Nuovo professionista"
         && forn.ruolo && forn.pacchetti?.length > 0;
-      setStato(completo ? "giafatto" : "completa");
+      if (completo) { window.location.replace("/?pannello"); return; }
+      setStato("completa");
     })();
   }, []);
 
@@ -548,14 +549,7 @@ export default function Iscrizione() {
         {stato === "check" && <div style={{ textAlign: "center", padding: "70px 0", color: "var(--grigio)" }}><Loader2 size={26} className="is-spin" /></div>}
         {stato === "crea" && <CreaAccount />}
         {stato === "completa" && user && <CompletaProfilo user={user} />}
-        {stato === "giafatto" && (
-          <div className="is-card is-ok">
-            <Check size={40} style={{ color: "var(--accent)", marginBottom: 12 }} />
-            <h1 className="is-t is-display">Profilo già inviato ✓</h1>
-            <p className="is-sub">Il tuo profilo è in verifica o già online. Gestiscilo dal tuo account.</p>
-            <a href="/?accedi" className="is-btn primary" style={{ marginTop: 18, display: "inline-flex" }}>Vai al mio account</a>
-          </div>
-        )}
+
       </div>
       <p style={{ textAlign: "center", fontSize: 12, color: "var(--grigio)", padding: "10px 0 40px" }}>
         Il team Click Eventi verifica ogni profilo prima della pubblicazione.<br />Iscrivendoti accetti l'<a href="/?privacy" target="_blank" style={{ color: "var(--accent)", fontWeight: 600 }}>informativa privacy</a>.
