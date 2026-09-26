@@ -42,6 +42,15 @@ const Style = () => (
     .pr-center{text-align:center;padding:80px 20px;color:var(--grigio)}
     .pr-ok{text-align:center;padding:20px 0}
     .pr-ok svg{color:var(--accent);margin-bottom:14px}
+    .pr-storico{border-top:1px solid var(--linea);margin-top:18px;padding-top:16px}
+    .pr-storico h5{font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--grigio);margin-bottom:12px}
+    .pr-riga{display:flex;gap:10px;margin-bottom:12px}
+    .pr-bolla{flex:1;border-radius:12px;padding:10px 13px;font-size:14px;line-height:1.5}
+    .pr-bolla.forn{background:var(--accent-soft)}
+    .pr-bolla.cli{background:var(--bg2)}
+    .pr-bolla b{display:block;font-size:12.5px;color:var(--grigio);font-weight:600;margin-bottom:3px}
+    .pr-bolla .pr-imp{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:var(--ink)}
+    .pr-campo{width:100%;border:1px solid var(--linea);border-radius:11px;font:500 14.5px 'Work Sans',sans-serif;padding:11px 12px;background:#fff;color:var(--ink);outline-color:var(--accent)}
     .pr-spin{animation:pr-rot 1s linear infinite}@keyframes pr-rot{to{transform:rotate(360deg)}}
   `}</style>
 );
@@ -55,28 +64,42 @@ export default function Proposta({ token }) {
   const [esito, setEsito] = useState(null);      // true = accettata
   const [errore, setErrore] = useState("");
   const [saving, setSaving] = useState(false);
+  const [rilancio, setRilancio] = useState(false);
+  const [mioPrezzo, setMioPrezzo] = useState("");
+  const [mioMessaggio, setMioMessaggio] = useState("");
 
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase.rpc("proposta_da_token", { p_token: token });
       if (error || !data?.ok) { setStato("errore"); setErrore("Questo link non è valido o è scaduto."); return; }
       setDati(data);
-      if (data.stato !== "controproposta") {
+      if (data.stato === "accettata" || data.stato === "rifiutata") {
         setEsito(data.stato === "accettata");
         setStato("conclusa");
         return;
       }
+      if (data.turno !== "cliente") { setStato("attesa"); return; }
       setStato("form");
     })();
   }, [token]);
 
-  const rispondi = async (accetta) => {
-    setErrore(""); setSaving(true);
-    const { data, error } = await supabase.rpc("rispondi_proposta", { p_token: token, p_accetta: accetta });
+  const rispondi = async (azione) => {
+    setErrore("");
+    if (azione === "rilancia") {
+      const n = Number(mioPrezzo);
+      if (!n || n <= 0) { setErrore("Indica l'importo che proponi."); return; }
+    }
+    setSaving(true);
+    const { data, error } = await supabase.rpc("rispondi_proposta", {
+      p_token: token, p_azione: azione,
+      p_prezzo: azione === "rilancia" ? Number(mioPrezzo) : null,
+      p_messaggio: mioMessaggio || null,
+    });
     setSaving(false);
     if (error) { setErrore("Non è stato possibile registrare la risposta. Riprova."); return; }
     if (!data?.ok) { setErrore(data?.errore || "Qualcosa è andato storto."); return; }
-    setEsito(accetta); setStato("conclusa");
+    if (azione === "rilancia") { setStato("inviata"); return; }
+    setEsito(azione === "accetta"); setStato("conclusa");
   };
 
   const risparmio = dati ? (dati.totale_iniziale || 0) - (dati.nuovo_prezzo || 0) : 0;
@@ -94,6 +117,30 @@ export default function Proposta({ token }) {
           <div className="pr-card" style={{ textAlign: "center" }}>
             <h1>Link non valido</h1>
             <p className="pr-sub">{errore} Per assistenza scrivi a info@clickeventi.it</p>
+            <a href="/" className="pr-btn ok">Torna al sito</a>
+          </div>
+        )}
+
+        {stato === "attesa" && (
+          <div className="pr-card pr-ok">
+            <Loader2 size={38} className="pr-spin" />
+            <h1 style={{ marginTop: 12 }}>In attesa di risposta</h1>
+            <p className="pr-sub" style={{ marginTop: 8 }}>
+              Abbiamo inviato la tua proposta a {dati?.fornitore || "il professionista"}.
+              Ti avvisiamo per email appena risponde.
+            </p>
+            <a href="/" className="pr-btn ok">Torna al sito</a>
+          </div>
+        )}
+
+        {stato === "inviata" && (
+          <div className="pr-card pr-ok">
+            <Check size={42} />
+            <h1>Proposta inviata</h1>
+            <p className="pr-sub" style={{ marginTop: 8 }}>
+              Abbiamo girato la tua proposta a {dati?.fornitore || "il professionista"}:
+              ti avvisiamo per email appena risponde.
+            </p>
             <a href="/" className="pr-btn ok">Torna al sito</a>
           </div>
         )}
@@ -140,18 +187,63 @@ export default function Proposta({ token }) {
 
             {dati.messaggio && <div className="pr-msg">"{dati.messaggio}"</div>}
 
+            {dati.storico?.length > 1 && (
+              <div className="pr-storico">
+                <h5>Come è andata finora</h5>
+                {dati.storico.map((t, i) => (
+                  <div className="pr-riga" key={i}>
+                    <div className={"pr-bolla " + (t.autore === "fornitore" ? "forn" : "cli")}>
+                      <b>{t.autore === "fornitore" ? dati.fornitore : "La tua proposta"}</b>
+                      {t.prezzo ? <span className="pr-imp">{t.prezzo} €</span> : null}
+                      {t.messaggio ? <div style={{ marginTop: 3 }}>{t.messaggio}</div> : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {errore && <div className="pr-err">{errore}</div>}
 
-            <button className="pr-btn ok" onClick={() => rispondi(true)} disabled={saving}>
-              {saving ? <><Loader2 size={17} className="pr-spin" /> Attendere…</> : <><Check size={17} /> Accetto la proposta</>}
-            </button>
-            <button className="pr-btn" onClick={() => rispondi(false)} disabled={saving}>
-              <X size={17} /> Non mi interessa
-            </button>
-
-            <p className="pr-nota">
-              Accettando, il professionista verrà avvisato e ti contatterà per definire gli ultimi dettagli.
-            </p>
+            {!rilancio ? (
+              <>
+                <button className="pr-btn ok" onClick={() => rispondi("accetta")} disabled={saving}>
+                  {saving ? <><Loader2 size={17} className="pr-spin" /> Attendere…</> : <><Check size={17} /> Accetto la proposta</>}
+                </button>
+                {dati.puo_rilanciare && (
+                  <button className="pr-btn" onClick={() => { setRilancio(true); setMioPrezzo(dati.nuovo_prezzo || ""); }} disabled={saving}>
+                    Propongo un altro importo
+                  </button>
+                )}
+                <button className="pr-btn" onClick={() => rispondi("rifiuta")} disabled={saving}>
+                  <X size={17} /> Non mi interessa
+                </button>
+                <p className="pr-nota">
+                  Accettando, il professionista verrà avvisato e ti contatterà per definire gli ultimi dettagli.
+                </p>
+              </>
+            ) : (
+              <div style={{ marginTop: 6 }}>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "14px 0 6px" }}>
+                  Quanto proponi (€)
+                </label>
+                <input className="pr-campo" type="number" value={mioPrezzo}
+                       onChange={(e) => setMioPrezzo(e.target.value)} placeholder="Es. 270" />
+                <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "14px 0 6px" }}>
+                  Vuoi spiegare il motivo? (facoltativo)
+                </label>
+                <textarea className="pr-campo" rows={3} value={mioMessaggio}
+                          onChange={(e) => setMioMessaggio(e.target.value)}
+                          placeholder="Es. l'evento finisce prima del previsto, servono due ore invece di tre" />
+                <button className="pr-btn ok" onClick={() => rispondi("rilancia")} disabled={saving}>
+                  {saving ? <><Loader2 size={17} className="pr-spin" /> Invio…</> : <>Invia la mia proposta</>}
+                </button>
+                <button className="pr-btn" onClick={() => setRilancio(false)} disabled={saving}>Annulla</button>
+                <p className="pr-nota">
+                  Potete scambiarvi ancora {dati.scambi_rimasti} propost{dati.scambi_rimasti === 1 ? "a" : "e"}:
+                  dopo resteranno solo accetta o rifiuta.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -104,6 +104,14 @@ const Style = () => (
     .fp-hint{font-size:12px;color:var(--grigio);margin-top:7px}
     .fp-empty{background:#fff;border:1px dashed var(--linea);border-radius:16px;padding:40px 22px;text-align:center;color:var(--grigio)}
     .fp-center{text-align:center;padding:70px 20px;color:var(--grigio)}
+    .fp-storico{border-top:1px dashed var(--linea);margin-top:12px;padding-top:12px}
+    .fp-storico h5{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--grigio);margin-bottom:10px}
+    .fp-bolla{border-radius:11px;padding:9px 12px;font-size:13.5px;line-height:1.5;margin-bottom:8px}
+    .fp-bolla.mia{background:var(--accent-soft)}
+    .fp-bolla.sua{background:var(--bg2)}
+    .fp-bolla b{display:block;font-size:12px;color:var(--grigio);margin-bottom:2px}
+    .fp-bolla .fp-imp{font-family:'Sora',sans-serif;font-weight:700;font-size:14.5px;color:var(--ink)}
+    .fp-turno{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:4px 11px;background:var(--warn-soft);color:var(--warn);margin-bottom:10px}
     .fp-spin{animation:fp-rot 1s linear infinite}@keyframes fp-rot{to{transform:rotate(360deg)}}
     .fp-toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:50}
     .fp-save{position:sticky;bottom:14px;background:#fff;border:1px solid var(--linea);border-radius:14px;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 6px 20px rgba(35,32,58,.08);margin-top:6px}
@@ -112,13 +120,15 @@ const Style = () => (
 );
 
 /* ---------------- RICHIESTE ---------------- */
-function Richieste({ richieste, onAggiorna, busy }) {
+function Richieste({ richieste, onAggiorna, onProponi, onErrore, busy }) {
   const [contro, setContro] = useState(null);
   const [dati, setDati] = useState({ prezzo: "", msg: "" });
 
   const apriContro = (r) => { setContro(r.id); setDati({ prezzo: r.totale || "", msg: "" }); };
-  const inviaContro = (r) => {
-    onAggiorna(r, { stato: "controproposta", contro_prezzo: Number(dati.prezzo) || r.totale, contro_msg: dati.msg || null }, "Controproposta inviata");
+  const inviaContro = async (r) => {
+    const n = Number(dati.prezzo);
+    if (!n || n <= 0) { onErrore("Indica un importo valido"); return; }
+    await onProponi(r, n, dati.msg);
     setContro(null);
   };
 
@@ -163,9 +173,9 @@ function Richieste({ richieste, onAggiorna, busy }) {
             </div>
           )}
 
-          {r.stato === "nuova" && contro === r.id && (
+          {contro === r.id && (
             <div style={{ borderTop: "1px dashed var(--linea)", paddingTop: 6 }}>
-              <label>La tua controproposta (€)</label>
+              <label>Il tuo importo (€)</label>
               <input type="number" value={dati.prezzo} onChange={(e) => setDati({ ...dati, prezzo: e.target.value })} />
               <label>Messaggio per il cliente</label>
               <textarea rows={2} value={dati.msg} onChange={(e) => setDati({ ...dati, msg: e.target.value })}
@@ -177,13 +187,43 @@ function Richieste({ richieste, onAggiorna, busy }) {
             </div>
           )}
 
-          {r.stato === "accettata" && <span className="fp-pill accettata">✓ Accettata — il team avvisa il cliente</span>}
-          {r.stato === "rifiutata" && <span className="fp-pill rifiutata">Rifiutata</span>}
-          {r.stato === "controproposta" && (
-            <div>
-              <span className="fp-pill controproposta">↔ Controproposta inviata: {r.contro_prezzo} €</span>
-              {r.contro_msg && <div className="fp-nota" style={{ marginTop: 9 }}>Tuo messaggio: "{r.contro_msg}"</div>}
+          {r.storico?.length > 0 && (
+            <div className="fp-storico">
+              <h5>Trattativa</h5>
+              {r.storico.map((t, i) => (
+                <div key={i} className={"fp-bolla " + (t.autore === "fornitore" ? "mia" : "sua")}>
+                  <b>{t.autore === "fornitore" ? "La tua proposta" : r.cliente_nome}</b>
+                  {t.prezzo ? <span className="fp-imp">{t.prezzo} €</span> : null}
+                  {t.messaggio ? <div style={{ marginTop: 2 }}>{t.messaggio}</div> : null}
+                </div>
+              ))}
             </div>
+          )}
+
+          {r.stato === "accettata" && <span className="fp-pill accettata">✓ Accettata — accordo raggiunto</span>}
+          {r.stato === "rifiutata" && <span className="fp-pill rifiutata">Chiusa senza accordo</span>}
+
+          {r.stato === "controproposta" && r.turno === "cliente" && (
+            <span className="fp-pill controproposta">↔ In attesa della risposta del cliente</span>
+          )}
+
+          {r.stato === "controproposta" && r.turno === "fornitore" && contro !== r.id && (
+            <>
+              <span className="fp-turno">Tocca a te rispondere</span>
+              <div className="fp-acts">
+                <button className="fp-btn ok" disabled={busy}
+                        onClick={() => onAggiorna(r, { stato: "accettata", totale: r.contro_prezzo, turno: null }, "Proposta accettata")}>
+                  <Check size={15} /> Accetto {r.contro_prezzo} €
+                </button>
+                <button className="fp-btn" disabled={busy} onClick={() => apriContro(r)}>
+                  <Euro size={15} /> Rilancio
+                </button>
+                <button className="fp-btn" disabled={busy}
+                        onClick={() => onAggiorna(r, { stato: "rifiutata", turno: null }, "Trattativa chiusa")}>
+                  <X size={15} /> Rifiuto
+                </button>
+              </div>
+            </>
           )}
         </div>
       ))}
@@ -613,9 +653,13 @@ export default function Pannello() {
       .eq("user_id", uid).maybeSingle();
     setF(forn);
     if (forn?.id) {
-      const { data: rich } = await supabase.from("richieste").select("*")
+      const { data: rich } = await supabase.from("richieste")
+        .select("*, trattativa(autore, prezzo, messaggio, created_at)")
         .eq("fornitore_id", forn.id).order("created_at", { ascending: false });
-      setRichieste(rich || []);
+      setRichieste((rich || []).map((r) => ({
+        ...r,
+        storico: (r.trattativa || []).sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
+      })));
       const { data: mod } = await supabase.from("modifiche_profilo")
         .select("id").eq("fornitore_id", forn.id).eq("stato", "in_attesa").maybeSingle();
       setModificaAttesa(!!mod);
@@ -640,6 +684,17 @@ export default function Pannello() {
     setBusy(false);
     if (error) { mostra("Errore: " + error.message); return; }
     mostra(msg); ricarica();
+  };
+
+  const proponi = async (r, prezzo, messaggio) => {
+    setBusy(true);
+    const { data, error } = await supabase.rpc("proponi_fornitore", {
+      p_richiesta_id: r.id, p_prezzo: prezzo, p_messaggio: messaggio || null,
+    });
+    setBusy(false);
+    if (error || !data?.ok) { mostra(data?.errore || "Non è stato possibile inviare la proposta"); return; }
+    mostra("Proposta inviata al cliente ✓");
+    ricarica();
   };
 
   const rimandaInVerifica = async () => {
@@ -769,7 +824,7 @@ export default function Pannello() {
           </button>
         </div>
 
-        {tab === "richieste" && <Richieste richieste={richieste} onAggiorna={aggiornaRichiesta} busy={busy} />}
+        {tab === "richieste" && <Richieste richieste={richieste} onAggiorna={aggiornaRichiesta} onProponi={proponi} onErrore={mostra} busy={busy} />}
         {tab === "calendario" && <Calendario occupati={occupati} onToggle={toggleGiorno} />}
         {tab === "listino" && <Listino key={f.id + "-" + (f.pacchetti?.length || 0)} f={f} ricarica={ricarica} mostra={mostra} />}
         {tab === "profilo" && <Profilo key={f.id} f={f} user={user} ricarica={ricarica} mostra={mostra} modificaAttesa={modificaAttesa} />}
