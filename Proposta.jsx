@@ -99,6 +99,10 @@ export default function Proposta({ token }) {
     if (error) { setErrore("Non è stato possibile registrare la risposta. Riprova."); return; }
     if (!data?.ok) { setErrore(data?.errore || "Qualcosa è andato storto."); return; }
     if (azione === "rilancia") { setStato("inviata"); return; }
+    if (azione === "accetta") {
+      const { data: aggiornati } = await supabase.rpc("proposta_da_token", { p_token: token });
+      if (aggiornati?.ok) setDati(aggiornati);
+    }
     setEsito(azione === "accetta"); setStato("conclusa");
   };
 
@@ -151,9 +155,27 @@ export default function Proposta({ token }) {
             <h1>{esito ? "Proposta accettata" : "Risposta registrata"}</h1>
             <p className="pr-sub" style={{ marginTop: 8 }}>
               {esito
-                ? <>Abbiamo avvisato {dati?.fornitore || "il professionista"}: verrai ricontattato per definire gli ultimi dettagli.</>
+                ? <>L'accordo con {dati?.fornitore || "il professionista"} è confermato. Ti abbiamo inviato il riepilogo per email.</>
                 : <>Abbiamo comunicato la tua risposta. Se vuoi, puoi cercare altri professionisti per il tuo evento.</>}
             </p>
+
+            {esito && (dati?.email_fornitore || dati?.telefono_fornitore) && (
+              <div style={{ background: "var(--accent-soft)", borderRadius: 12, padding: 16, margin: "16px 0", textAlign: "left" }}>
+                <p style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 8 }}>
+                  Contatti di {dati.fornitore}
+                </p>
+                {dati.email_fornitore && (
+                  <p style={{ fontSize: 14.5, marginBottom: 4 }}>
+                    Email: <a href={`mailto:${dati.email_fornitore}`} style={{ color: "var(--accent)", fontWeight: 600 }}>{dati.email_fornitore}</a>
+                  </p>
+                )}
+                {dati.telefono_fornitore && (
+                  <p style={{ fontSize: 14.5 }}>
+                    Telefono: <a href={`tel:${dati.telefono_fornitore.replace(/\s/g, "")}`} style={{ color: "var(--accent)", fontWeight: 600 }}>{dati.telefono_fornitore}</a>
+                  </p>
+                )}
+              </div>
+            )}
             <a href="/" className="pr-btn ok">Torna al sito</a>
           </div>
         )}

@@ -86,7 +86,7 @@ const Header = () => (
   <header className="is-head">
     <div className="is-wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
       <a href="/" className="is-logo">Click<em>Eventi</em></a>
-      <a href="/?accedi" style={{ fontSize: 13, fontWeight: 600, color: "var(--grigio)", textDecoration: "none" }}>Hai già un account? Accedi</a>
+      <a href="/?accedi" style={{ fontSize: 13.5, fontWeight: 600, color: "var(--accent)", textDecoration: "none", border: "1px solid var(--linea)", borderRadius: 999, padding: "7px 14px" }}>Hai già un account? Accedi</a>
     </div>
   </header>
 );

@@ -665,7 +665,7 @@ function Header({ goHome }) {
              onKeyDown={(e) => e.key === "Enter" && goHome()}>
           Click<em>Eventi</em>
         </div>
-        <button className="cv-btn" onClick={() => { window.location.href = "/?accedi"; }}>
+        <button className="cv-btn" onClick={() => { window.location.href = "/?iscrizione"; }}>
           Sei un professionista?
         </button>
       </div>

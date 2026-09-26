@@ -200,7 +200,27 @@ function Richieste({ richieste, onAggiorna, onProponi, onErrore, busy }) {
             </div>
           )}
 
-          {r.stato === "accettata" && <span className="fp-pill accettata">✓ Accettata — accordo raggiunto</span>}
+          {r.stato === "accettata" && (
+            <>
+              <span className="fp-pill accettata">✓ Accettata — accordo raggiunto</span>
+              <div style={{ background: "var(--accent-soft)", borderRadius: 11, padding: "12px 14px", marginTop: 11 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 6 }}>
+                  Contatti del cliente
+                </p>
+                <p style={{ fontSize: 14, marginBottom: 3 }}>
+                  <a href={`mailto:${r.cliente_contatto}`} style={{ color: "var(--accent)", fontWeight: 600 }}>{r.cliente_contatto}</a>
+                </p>
+                {r.telefono && (
+                  <p style={{ fontSize: 14 }}>
+                    <a href={`tel:${(r.telefono || "").replace(/\s/g, "")}`} style={{ color: "var(--accent)", fontWeight: 600 }}>{r.telefono}</a>
+                  </p>
+                )}
+                <p className="fp-hint" style={{ marginTop: 7 }}>
+                  Ricordati di segnare la data come occupata nel calendario.
+                </p>
+              </div>
+            </>
+          )}
           {r.stato === "rifiutata" && <span className="fp-pill rifiutata">Chiusa senza accordo</span>}
 
           {r.stato === "controproposta" && r.turno === "cliente" && (

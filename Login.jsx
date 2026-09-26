@@ -38,6 +38,13 @@ const Style = () => (
     .lg-badge.attesa{background:#FBF2E2;color:#C77E1F}
     .lg-badge.ok{background:#E7F6EF;color:#1E9E6A}
     .lg-link{background:none;border:none;color:var(--grigio);font:600 13px 'Work Sans';cursor:pointer;text-decoration:underline;margin-top:10px}
+    .lg-nuovo{background:var(--accent-soft);border:1px solid #DDD3FB;border-radius:14px;padding:18px;margin-bottom:22px;text-align:center}
+    .lg-nuovo p{font-size:14.5px;color:var(--ink);font-weight:600;margin-bottom:12px}
+    .lg-nuovo a{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;border-radius:11px;padding:12px 24px;font:600 14.5px 'Work Sans',sans-serif}
+    .lg-nuovo a:hover{background:#7A5CE8}
+    .lg-nuovo small{display:block;margin-top:9px;font-size:12.5px;color:var(--grigio)}
+    .lg-sep{display:flex;align-items:center;gap:12px;margin:0 0 6px;color:var(--grigio);font-size:12.5px;font-weight:600}
+    .lg-sep::before,.lg-sep::after{content:"";flex:1;height:1px;background:var(--linea)}
     .lg-spin{animation:lg-rot 1s linear infinite}@keyframes lg-rot{to{transform:rotate(360deg)}}
   `}</style>
 );
@@ -161,7 +168,15 @@ export default function Login() {
           ) : (
             // ---- non loggato: form di accesso ----
             <div className="lg-card">
-              <div className="lg-eyebrow">Area professionisti</div>
+              <div className="lg-nuovo">
+                <p>È la prima volta che usi Click Eventi?</p>
+                <a href="/?iscrizione">Crea il tuo profilo</a>
+                <small>Registrazione gratuita, bastano pochi minuti</small>
+              </div>
+
+              <div className="lg-sep">oppure</div>
+
+              <div className="lg-eyebrow" style={{ marginTop: 14 }}>Hai già un account</div>
               <h1 className="lg-t lg-display">Accedi</h1>
               <p className="lg-sub">Entra per gestire il tuo profilo, le richieste e il calendario.</p>
 
@@ -182,9 +197,9 @@ export default function Login() {
                 <button className="lg-link" onClick={recuperaPassword}>Password dimenticata?</button>
               </div>
 
-              <div className="lg-foot">
-                Non hai ancora un account?<br />
-                <a href="/?iscrizione">Registrati come professionista <ArrowRight size={13} style={{ verticalAlign: "-1px" }} /></a>
+              <div className="lg-foot" style={{ fontSize: 13 }}>
+                Problemi con l'accesso? Scrivi a{" "}
+                <a href="mailto:info@clickeventi.it">info@clickeventi.it</a>
               </div>
             </div>
           )}
