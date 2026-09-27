@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Check, X, MapPin, Phone, Mail, Navigation, Search,
   ShieldCheck, Loader2, LogOut, Inbox, Users, Lightbulb,
-  Link as LinkIcon, ArrowLeft, ChevronRight, Calendar, Video, ImageOff, Pencil
+  Link as LinkIcon, ArrowLeft, ChevronRight, Calendar, Video, ImageOff, Pencil, Briefcase, Euro
 } from "lucide-react";
 import { supabase } from "./supabase";
 
@@ -290,6 +290,7 @@ export default function Admin() {
   const [tab, setTab] = useState("attesa");
   const [fornitori, setFornitori] = useState([]);
   const [modifiche, setModifiche] = useState([]);
+  const [annunci, setAnnunci] = useState([]);
   const [apertoId, setApertoId] = useState(null);
   const [cerca, setCerca] = useState("");
   const [busyId, setBusyId] = useState(null);
@@ -309,6 +310,10 @@ export default function Admin() {
       .eq("stato", "in_attesa")
       .order("created_at", { ascending: false });
     setModifiche(mod || []);
+    const { data: ann } = await supabase
+      .from("annunci").select("*").eq("stato", "in_attesa")
+      .order("created_at", { ascending: false });
+    setAnnunci(ann || []);
   };
 
   useEffect(() => {
@@ -333,6 +338,17 @@ export default function Admin() {
   const approva = (f) => { azione(f, { stato: "approvato", motivo_rifiuto: null }, `${f.nome} è ora online! 🎉`); setApertoId(null); };
   const rifiuta = (f, motivo) => { azione(f, { stato: "sospeso", motivo_rifiuto: motivo || null }, `${f.nome}: rifiuto inviato.`); setApertoId(null); };
   const verif = (f) => azione(f, { verificato: !f.verificato }, null);
+
+  const decidiAnnuncio = async (a, pubblica, motivo) => {
+    setBusyId("a" + a.id);
+    const { error } = await supabase.from("annunci")
+      .update(pubblica ? { stato: "pubblicato", motivo: null } : { stato: "rifiutato", motivo: motivo || null })
+      .eq("id", a.id);
+    setBusyId(null);
+    if (error) { mostra("Errore: " + error.message); return; }
+    mostra(pubblica ? "Annuncio pubblicato ✓" : "Annuncio rifiutato");
+    await carica();
+  };
 
   const approvaModifica = async (m) => {
     setBusyId("m" + m.id);
@@ -395,7 +411,42 @@ export default function Admin() {
               </div>
             </div>
 
-            {tab === "modifiche" ? (
+            {tab === "annunci" ? (
+              annunci.length === 0 ? (
+                <div className="ad-empty">Nessun annuncio in attesa di verifica.</div>
+              ) : (
+                annunci.map((a) => (
+                  <div key={a.id} className="ad-card">
+                    <div className="ad-fname ad-display" style={{ fontSize: 18, marginBottom: 4 }}>{a.titolo}</div>
+                    <p style={{ fontSize: 13.5, color: "var(--grigio)", marginBottom: 12 }}>
+                      {a.agenzia_nome} · <a href={`mailto:${a.agenzia_email}`} style={{ color: "var(--accent)" }}>{a.agenzia_email}</a>
+                      {a.agenzia_telefono ? ` · ${a.agenzia_telefono}` : ""}
+                    </p>
+
+                    <div className="ad-meta">
+                      {a.categoria && <span className="ad-cat">{CAT_LABEL[a.categoria] || a.categoria}</span>}
+                      {a.localita && <span><MapPin size={13} /> {a.localita}</span>}
+                      {a.data_evento && <span><Calendar size={13} /> {new Date(a.data_evento).toLocaleDateString("it-IT")}</span>}
+                      {a.compenso && <span><Euro size={13} /> {a.compenso}</span>}
+                    </div>
+
+                    <div style={{ background: "var(--bg2)", borderRadius: 11, padding: "12px 14px", fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-wrap", marginBottom: 14 }}>
+                      {a.descrizione}
+                    </div>
+
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <button className="ad-btn ok" disabled={busyId === "a" + a.id} onClick={() => decidiAnnuncio(a, true)}>
+                        <Check size={16} /> Pubblica
+                      </button>
+                      <button className="ad-btn no" disabled={busyId === "a" + a.id}
+                              onClick={() => { const m = prompt("Motivo del rifiuto (verrà inviato all'agenzia):"); if (m !== null) decidiAnnuncio(a, false, m); }}>
+                        <X size={16} /> Rifiuta
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )
+            ) : tab === "modifiche" ? (
               modifiche.length === 0 ? (
                 <div className="ad-empty">Nessuna modifica in attesa di verifica.</div>
               ) : (

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Inbox, CalendarDays, Package, User, Check, X, Euro, Clock, Users,
   MapPin, Plus, Trash2, Loader2, LogOut, Navigation, ImagePlus,
-  ChevronLeft, ChevronRight, Star, TrendingUp, AlertCircle, Video, Link as LinkIcon
+  ChevronLeft, ChevronRight, Star, TrendingUp, AlertCircle, Video, Link as LinkIcon, Briefcase
 } from "lucide-react";
 import { supabase } from "./supabase";
 import { ComuneInput, ComuniMultipli } from "./comuni.jsx";
@@ -827,6 +827,14 @@ export default function Pannello() {
           <div className="fp-stat"><Star size={17} /><b>{f.rating || "—"}</b><span>{f.recensioni || 0} recensioni</span></div>
           <div className="fp-stat"><Inbox size={17} /><b>{nuove}</b><span>richieste da gestire</span></div>
           <div className="fp-stat"><Euro size={17} /><b>{valore} €</b><span>valore richieste</span></div>
+        </div>
+
+        <div className="fp-banner" style={{ background: "var(--accent-soft)", color: "var(--ink)" }}>
+          <Briefcase size={17} style={{ color: "var(--accent)", flexShrink: 0 }} />
+          <span>
+            <b>Bacheca lavoro:</b> agenzie ed organizzatori cercano professionisti per singole date.{" "}
+            <a href="/?lavoro" style={{ color: "var(--accent)", fontWeight: 600 }}>Guarda gli annunci</a>
+          </span>
         </div>
 
         <div className="fp-tabs">
