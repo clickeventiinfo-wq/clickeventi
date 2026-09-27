@@ -405,6 +405,12 @@ export default function Admin() {
               <button className={"ad-tab" + (tab === "online" ? " on" : "")} onClick={() => setTab("online")}>
                 <Users size={15} /> Online ({online.length})
               </button>
+              <button className={"ad-tab" + (tab === "modifiche" ? " on" : "")} onClick={() => setTab("modifiche")}>
+                <Pencil size={15} /> Modifiche {modifiche.length > 0 && <span className="ad-badge">{modifiche.length}</span>}
+              </button>
+              <button className={"ad-tab" + (tab === "annunci" ? " on" : "")} onClick={() => setTab("annunci")}>
+                <Briefcase size={15} /> Annunci {annunci.length > 0 && <span className="ad-badge">{annunci.length}</span>}
+              </button>
               <div className="ad-search">
                 <Search size={15} />
                 <input value={cerca} onChange={(e) => setCerca(e.target.value)} placeholder="Cerca nome, città…" />
