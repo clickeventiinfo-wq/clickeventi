@@ -21,7 +21,7 @@ const isAdmin = params.includes("admin");
 const isPrivacy = params.includes("privacy");
 const tokenRec = new URLSearchParams(params).get("recensione");
 const tokenProp = new URLSearchParams(params).get("proposta");
-const isBacheca = params.includes("lavoro");
+const isBacheca = params.includes("bacheca") || params.includes("lavoro");
 const isPubblica = params.includes("pubblica");
 const isReimposta = params.includes("reimposta") || window.location.hash.includes("type=recovery");
 

@@ -835,7 +835,7 @@ export default function Pannello() {
           <Briefcase size={17} style={{ color: "var(--accent)", flexShrink: 0 }} />
           <span>
             <b>Annunci per eventi:</b> chi organizza un evento cerca professionisti per date precise.{" "}
-            <a href="/?lavoro" style={{ color: "var(--accent)", fontWeight: 600 }}>Guarda gli annunci</a>
+            <a href="/?bacheca" style={{ color: "var(--accent)", fontWeight: 600 }}>Guarda gli annunci</a>
           </span>
         </div>
 

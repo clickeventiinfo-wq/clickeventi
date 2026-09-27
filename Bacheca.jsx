@@ -8,7 +8,7 @@ import { ComuneInput } from "./comuni.jsx";
 
 /* ============================================================
    CLICK EVENTI — Bacheca lavoro
-   clickeventi.it/?lavoro      elenco degli annunci
+   clickeventi.it/?bacheca     elenco degli annunci
    clickeventi.it/?pubblica    modulo per le agenzie
    Le agenzie pubblicano (con verifica del team), i professionisti
    approvati si candidano.
@@ -201,7 +201,7 @@ export function Bacheca() {
                   Per candidarti serve un profilo pubblicato su Click Eventi.{" "}
                   <a href="/?iscrizione" style={{ color: "var(--accent)", fontWeight: 600 }}>Crea il tuo profilo</a>
                   {" "}oppure{" "}
-                  <a href={`/?accedi&ritorno=${encodeURIComponent("/?lavoro")}`}
+                  <a href={`/?accedi&ritorno=${encodeURIComponent("/?bacheca")}`}
                      style={{ color: "var(--accent)", fontWeight: 600 }}>accedi</a>.
                 </div>
               )}
@@ -252,7 +252,7 @@ export function PubblicaAnnuncio() {
   if (fatto) {
     return (
       <div className="bc-root"><Style />
-        <Testata azione={<a href="/?lavoro" className="bc-btn chiaro">Vedi la bacheca</a>} />
+        <Testata azione={<a href="/?bacheca" className="bc-btn chiaro">Vedi la bacheca</a>} />
         <div className="bc-wrap" style={{ maxWidth: 560 }}>
           <div className="bc-card bc-ok" style={{ marginTop: 34 }}>
             <Check size={42} />
@@ -261,7 +261,7 @@ export function PubblicaAnnuncio() {
               Lo verifichiamo e, se è tutto in ordine, lo pubblichiamo sulla bacheca.
               Ti avvisiamo a <b>{d.email}</b>, dove riceverai anche le candidature.
             </p>
-            <a href="/?lavoro" className="bc-btn" style={{ marginTop: 20 }}>Vai alla bacheca</a>
+            <a href="/?bacheca" className="bc-btn" style={{ marginTop: 20 }}>Vai alla bacheca</a>
           </div>
         </div>
       </div>
@@ -270,7 +270,7 @@ export function PubblicaAnnuncio() {
 
   return (
     <div className="bc-root"><Style />
-      <Testata azione={<a href="/?lavoro" className="bc-btn chiaro"><ArrowLeft size={15} /> Bacheca</a>} />
+      <Testata azione={<a href="/?bacheca" className="bc-btn chiaro"><ArrowLeft size={15} /> Bacheca</a>} />
       <div className="bc-wrap" style={{ maxWidth: 620 }}>
         <div className="bc-intro">
           <h1 className="bc-display">Pubblica il tuo annuncio</h1>
