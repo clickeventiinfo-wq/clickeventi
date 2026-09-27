@@ -531,6 +531,8 @@ export default function Iscrizione() {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { setStato("crea"); return; }
+      const { data: admin } = await supabase.rpc("is_admin");
+      if (admin) { window.location.replace("/?admin"); return; }
       setUser(session.user);
       // ha già un profilo completo? (nome valorizzato = già compilato)
       const { data: forn } = await supabase

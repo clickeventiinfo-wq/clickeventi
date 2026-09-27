@@ -690,6 +690,8 @@ export default function Pannello() {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { setStato("nonloggato"); return; }
+      const { data: admin } = await supabase.rpc("is_admin");
+      if (admin) { window.location.replace("/?admin"); return; }
       setUser(session.user);
       await carica(session.user.id);
       setStato("ok");
