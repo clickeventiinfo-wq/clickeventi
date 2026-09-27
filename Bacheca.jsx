@@ -200,7 +200,9 @@ export function Bacheca() {
                 <div className="bc-avviso">
                   Per candidarti serve un profilo pubblicato su Click Eventi.{" "}
                   <a href="/?iscrizione" style={{ color: "var(--accent)", fontWeight: 600 }}>Crea il tuo profilo</a>
-                  {" "}oppure <a href="/?accedi" style={{ color: "var(--accent)", fontWeight: 600 }}>accedi</a>.
+                  {" "}oppure{" "}
+                  <a href={`/?accedi&ritorno=${encodeURIComponent("/?lavoro")}`}
+                     style={{ color: "var(--accent)", fontWeight: 600 }}>accedi</a>.
                 </div>
               )}
             </div>

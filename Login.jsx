@@ -50,6 +50,10 @@ const Style = () => (
 );
 
 export default function Login() {
+  /* se arriviamo da un'altra pagina (es. la bacheca), ci torniamo dopo l'accesso */
+  const ritorno = new URLSearchParams(window.location.search).get("ritorno");
+  const dopoAccesso = (admin) => admin ? "/?admin" : (ritorno || "/?pannello");
+
   const [checking, setChecking] = useState(true);
   const [utente, setUtente] = useState(null);
   const [profilo, setProfilo] = useState(null);
