@@ -121,10 +121,10 @@ export function Bacheca() {
 
       <div className="bc-wrap">
         <div className="bc-intro">
-          <h1 className="bc-display">Bacheca lavoro</h1>
+          <h1 className="bc-display">Annunci per eventi</h1>
           <p>
-            Agenzie, wedding planner e società di eventi cercano professionisti per singole date.
-            Se hai un profilo pubblicato su Click Eventi puoi candidarti in un clic.
+            Cerchi un professionista per una data precisa? Pubblica il tuo annuncio
+            e ricevi le candidature.
           </p>
         </div>
 
@@ -149,7 +149,7 @@ export function Bacheca() {
               Al momento non ci sono annunci
             </p>
             <p style={{ fontSize: 14 }}>
-              Sei un'agenzia e cerchi professionisti?{" "}
+              Stai organizzando un evento e cerchi un professionista?{" "}
               <a href="/?pubblica" style={{ color: "var(--accent)", fontWeight: 600 }}>Pubblica un annuncio</a>.
             </p>
           </div>
@@ -271,16 +271,16 @@ export function PubblicaAnnuncio() {
       <Testata azione={<a href="/?lavoro" className="bc-btn chiaro"><ArrowLeft size={15} /> Bacheca</a>} />
       <div className="bc-wrap" style={{ maxWidth: 620 }}>
         <div className="bc-intro">
-          <h1 className="bc-display">Cerchi professionisti per un evento?</h1>
+          <h1 className="bc-display">Pubblica il tuo annuncio</h1>
           <p>
-            Pubblica la tua ricerca: la vedranno i professionisti iscritti a Click Eventi,
-            che potranno candidarsi direttamente. Le candidature arrivano alla tua email.
+            Descrivi che professionista ti serve e per quale data: i professionisti iscritti
+            a Click Eventi potranno candidarsi. Le candidature arrivano alla tua email.
           </p>
         </div>
 
         <div className="bc-card">
           <div className="bc-row">
-            <div><label>Nome dell'agenzia *</label><input value={d.agenzia} onChange={set("agenzia")} placeholder="Es. Eventi Roma Srl" /></div>
+            <div><label>Nome o ragione sociale *</label><input value={d.agenzia} onChange={set("agenzia")} placeholder="Come vuoi comparire nell&apos;annuncio" /></div>
             <div><label>Email *</label><input type="email" value={d.email} onChange={set("email")} placeholder="Dove ricevere le candidature" /></div>
           </div>
           <label>Telefono (facoltativo)</label>
