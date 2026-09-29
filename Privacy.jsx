@@ -10,7 +10,6 @@ import { Shield } from "lucide-react";
 
 const Style = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Work+Sans:wght@400;500;600;700&display=swap');
     :root{--bg2:#FAF9F7;--ink:#23203A;--accent:#8B6EF3;--grigio:#6E6A80;--linea:#ECE9E2}
     *{box-sizing:border-box;margin:0;padding:0}
     .pv-root{font-family:'Work Sans',system-ui,sans-serif;background:var(--bg2);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased}
@@ -54,7 +53,7 @@ export default function Privacy() {
         <div className="pv-card">
           <div className="pv-icon"><Shield size={24} /></div>
           <h1>Informativa sulla privacy</h1>
-          <p className="pv-agg">Ultima modifica: ottobre 2026</p>
+          <p className="pv-agg">Ultima modifica: settembre 2026</p>
 
           <div className="pv-indice">
             <b style={{ fontSize: 13.5, display: "block", marginBottom: 8 }}>Indice</b>
@@ -117,8 +116,11 @@ export default function Privacy() {
               Una volta che i dati di contatto sono comunicati fra cliente e professionista, ovvero
               fra professionista e organizzatore, <b>ciascuna parte tratta tali dati in qualità di
               autonomo titolare</b> per le proprie finalità e sotto la propria responsabilità. Il
-              Titolare non risponde dei trattamenti successivamente effettuati dalle parti e non
-              esercita alcun controllo sugli accordi conclusi direttamente fra le stesse.
+              Titolare non determina le finalità e le modalità dei trattamenti autonomamente
+              effettuati dalle parti successivamente alla comunicazione dei dati, né risponde dei
+              trattamenti posti in essere dalle stesse nell'ambito dei loro autonomi rapporti, fatti
+              salvi gli obblighi e le responsabilità che la normativa pone direttamente a carico del
+              Titolare.
             </p>
           </div>
 
@@ -215,7 +217,7 @@ export default function Privacy() {
                 <tr><td>Consenso alle comunicazioni informative</td><td>Facoltativo</td><td>Nessuna: non vengono inviate comunicazioni non necessarie al servizio</td></tr>
                 <tr><td>E-mail e password del professionista</td><td>Obbligatori</td><td>Non è possibile creare l'account</td></tr>
                 <tr><td>Nome, attività, categoria, comune del professionista</td><td>Obbligatori</td><td>Il profilo non può essere pubblicato</td></tr>
-                <tr><td>Almeno una fotografia</td><td>Obbligatoria</td><td>Il profilo non può essere sottoposto a verifica</td></tr>
+                <tr><td>Almeno una fotografia</td><td>Obbligatoria</td><td>Il profilo non può essere pubblicato</td></tr>
                 <tr><td>Presentazione, collegamenti social e video, ulteriori fotografie</td><td>Facoltativi</td><td>Nessuna: il profilo resta pubblicabile</td></tr>
                 <tr><td>Nome, e-mail e contenuto dell'annuncio</td><td>Obbligatori</td><td>L'annuncio non può essere pubblicato</td></tr>
               </tbody>
@@ -244,12 +246,11 @@ export default function Privacy() {
             <b>Base giuridica</b>: esecuzione del contratto (art. 6.1.b).
           </p>
           <p>
-            I contenuti ulteriori e facoltativi che il professionista sceglie di pubblicare
-            (presentazione, fotografie aggiuntive, collegamenti a siti, profili social e video) sono
-            trattati in quanto volontariamente resi pubblici dall'interessato e possono essere da
-            questi rimossi in qualsiasi momento dal proprio pannello.<br />
-            <b>Base giuridica</b>: esecuzione del contratto (art. 6.1.b) e, per i contenuti
-            facoltativi, manifestazione di volontà dell'interessato che li rende pubblici.
+            Anche i contenuti ulteriori e facoltativi (presentazione, fotografie aggiuntive,
+            collegamenti a siti, profili social e video) rientrano nel servizio di pubblicazione del
+            profilo: il professionista decide autonomamente se inserirli e può rimuoverli in qualsiasi
+            momento dal proprio pannello.<br />
+            <b>Base giuridica</b>: esecuzione del contratto (art. 6.1.b).
           </p>
 
           <h3>5.3 Recensioni</h3>
@@ -259,9 +260,9 @@ export default function Privacy() {
               interesse del Titolare a raccogliere riscontri sul servizio intermediato (art. 6.1.f).
             </li>
             <li>
-              <b>Raccolta della recensione</b>: la recensione è resa volontariamente
-              dall'interessato, che decide se e cosa scrivere (art. 6.1.b e manifestazione di volontà
-              dell'interessato).
+              <b>Raccolta e gestione della recensione</b>: esecuzione del rapporto con l'utente e
+              gestione della funzionalità di recensione (art. 6.1.b). L'interessato decide
+              liberamente se lasciare una recensione e quale contenuto inserire.
             </li>
             <li>
               <b>Pubblicazione della valutazione, del testo e del nome di battesimo</b>: legittimo
@@ -272,9 +273,10 @@ export default function Privacy() {
               la rimozione o l'anonimizzazione.
             </li>
             <li>
-              <b>Conservazione della recensione in forma anonimizzata</b> in caso di cancellazione
-              del profilo recensito o del recensore: legittimo interesse all'attendibilità delle
-              valutazioni complessive (art. 6.1.f).
+              <b>Conservazione successiva</b> alla cancellazione del profilo recensito o del
+              recensore: la recensione può essere mantenuta previa effettiva anonimizzazione, ossia
+              eliminando gli elementi che consentano di identificare il recensore, a tutela
+              dell'attendibilità delle valutazioni complessive (art. 6.1.f fino all'anonimizzazione).
             </li>
           </ul>
           <p>
@@ -284,8 +286,10 @@ export default function Privacy() {
 
           <h3>5.4 Comunicazioni di servizio</h3>
           <p>
-            Conferma della richiesta, notifiche di nuova proposta, solleciti al professionista che non
-            ha risposto, esito della verifica del profilo o dell'annuncio, invito a recensire.<br />
+            Conferma della richiesta, notifiche di nuova proposta e di variazione di stato, solleciti
+            al professionista che non ha risposto, comunicazione dell'accettazione o del rifiuto,
+            esito della verifica del profilo o dell'annuncio. L'invito a recensire è trattato al
+            punto 5.3.<br />
             <b>Base giuridica</b>: esecuzione del contratto (art. 6.1.b).
           </p>
 
@@ -371,14 +375,8 @@ export default function Privacy() {
                 <tr>
                   <td><b>Resend</b></td>
                   <td>Invio delle comunicazioni e-mail: indirizzo del destinatario, contenuto e registri di consegna</td>
-                  <td>Stati Uniti; possibile ricorso a sub-responsabili</td>
+                  <td>Stati Uniti; il fornitore può avvalersi di sub-responsabili. I trasferimenti dallo SEE sono disciplinati dalle garanzie indicate al punto 10</td>
                   <td>Responsabile del trattamento</td>
-                </tr>
-                <tr>
-                  <td><b>Google Fonts</b></td>
-                  <td>Fornitura dei caratteri tipografici. La visualizzazione delle pagine comporta una richiesta ai server del fornitore, che riceve l'indirizzo IP del visitatore</td>
-                  <td>Stati Uniti</td>
-                  <td>Titolare autonomo per i dati di connessione ricevuti</td>
                 </tr>
               </tbody>
             </table>
@@ -409,9 +407,10 @@ export default function Privacy() {
                 <tr><td>Identificativi e di contatto (clienti)</td><td>Gestione della richiesta, trattativa, esito, scambio dei recapiti</td><td>Art. 6.1.b</td></tr>
                 <tr><td>Dati dell'evento e della richiesta</td><td>Calcolo del preventivo, verifica di disponibilità e distanza</td><td>Art. 6.1.b</td></tr>
                 <tr><td>Dati indispensabili del profilo professionista</td><td>Pubblicazione del profilo e ricerca da parte dei clienti</td><td>Art. 6.1.b</td></tr>
-                <tr><td>Contenuti facoltativi del profilo (presentazione, foto ulteriori, link)</td><td>Arricchimento del profilo pubblico</td><td>Art. 6.1.b e volontà dell'interessato di renderli pubblici</td></tr>
+                <tr><td>Contenuti facoltativi del profilo (presentazione, foto ulteriori, link)</td><td>Arricchimento del profilo pubblico</td><td>Art. 6.1.b</td></tr>
                 <tr><td>Dati commerciali e di disponibilità</td><td>Determinazione del preventivo e delle date disponibili</td><td>Art. 6.1.b</td></tr>
-                <tr><td>Valutazioni e testi delle recensioni</td><td>Raccolta e pubblicazione di recensioni verificate</td><td>Art. 6.1.b e 6.1.f (punto 5.3)</td></tr>
+                <tr><td>Valutazioni e testi delle recensioni</td><td>Invito a recensire</td><td>Art. 6.1.f</td></tr>
+                <tr><td>Valutazioni e testi delle recensioni</td><td>Raccolta, gestione e pubblicazione della recensione</td><td>Art. 6.1.b (raccolta) e art. 6.1.f (pubblicazione)</td></tr>
                 <tr><td>Dati degli annunci e delle candidature</td><td>Pubblicazione e trasmissione al destinatario</td><td>Art. 6.1.b</td></tr>
                 <tr><td>Indirizzo e-mail e preferenze</td><td>Comunicazioni informative e promozionali</td><td>Art. 6.1.a</td></tr>
                 <tr><td>Contenuti pubblicati e dati del profilo</td><td>Verifica preventiva e prevenzione degli abusi</td><td>Art. 6.1.f</td></tr>
@@ -458,9 +457,8 @@ export default function Privacy() {
             di terze parti, pixel di tracciamento, social plugin, mappe o video incorporati.
           </p>
           <p>
-            Come indicato al punto 7.2, le pagine caricano i caratteri tipografici da un fornitore
-            esterno: tale richiesta comporta la trasmissione dell'indirizzo IP del visitatore, senza
-            installazione di cookie.
+            I caratteri tipografici utilizzati dal Sito sono ospitati sul nostro stesso dominio:
+            la visualizzazione delle pagine non comporta alcuna richiesta a server di terze parti.
           </p>
           <p>
             L'utente può eliminare in ogni momento i dati conservati dal browser tramite le relative
@@ -510,7 +508,7 @@ export default function Privacy() {
             <li>ottenere la rettifica dei dati inesatti o l'integrazione di quelli incompleti (art. 16);</li>
             <li>ottenere la cancellazione dei dati nei casi previsti (art. 17);</li>
             <li>ottenere la limitazione del trattamento (art. 18);</li>
-            <li>ricevere i dati in formato strutturato e trasmetterli ad altro titolare (art. 20);</li>
+            <li>ricevere i dati personali in un formato strutturato, di uso comune e leggibile da dispositivo automatico e trasmetterli a un altro titolare, nei casi e alle condizioni previsti dall'art. 20 GDPR;</li>
             <li>opporsi al trattamento fondato sul legittimo interesse, per motivi connessi alla propria situazione particolare (art. 21.1);</li>
             <li><b>opporsi in qualsiasi momento, senza necessità di motivazione, al trattamento per finalità di marketing diretto</b> (art. 21.2);</li>
             <li>revocare il consenso prestato, senza che ciò pregiudichi la liceità del trattamento effettuato prima della revoca (art. 7.3).</li>
@@ -528,9 +526,10 @@ export default function Privacy() {
           </div>
           <p>
             La cancellazione del profilo di un professionista comporta la rimozione dei relativi
-            contenuti pubblici. Le recensioni ricevute possono essere conservate in forma anonimizzata
-            ove necessario a garantire l'attendibilità delle valutazioni complessive; l'interessato può
-            opporsi a tale conservazione ai sensi dell'art. 21 GDPR.
+            contenuti pubblici. Le recensioni ricevute possono essere conservate, ove necessario, in
+            forma effettivamente anonimizzata, eliminando gli elementi che consentano di identificare
+            il recensore: i dati così trattati non costituiscono più dati personali. I dati personali
+            eventualmente ancora presenti restano soggetti ai diritti di cui agli artt. 15-22 GDPR.
           </p>
 
           {/* 13 */}

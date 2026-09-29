@@ -1,3 +1,12 @@
+/* Caratteri tipografici serviti dal nostro dominio: nessuna richiesta
+   a server esterni quando l'utente apre il sito. */
+import "@fontsource/sora/600.css";
+import "@fontsource/sora/700.css";
+import "@fontsource/work-sans/400.css";
+import "@fontsource/work-sans/500.css";
+import "@fontsource/work-sans/600.css";
+import "@fontsource/work-sans/700.css";
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";

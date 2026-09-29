@@ -27,7 +27,6 @@ const dataIt = (s) => s ? new Date(s).toLocaleDateString("it-IT", { day: "numeri
 
 const Style = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Work+Sans:wght@400;500;600;700&display=swap');
     :root{--bg:#fff;--bg2:#FAF9F7;--ink:#23203A;--accent:#8B6EF3;--accent-soft:#F3EFFE;--grigio:#6E6A80;--linea:#ECE9E2;--ok:#1E9E6A;--ok-soft:#E7F6EF}
     *{box-sizing:border-box;margin:0;padding:0}
     img{max-width:100%;height:auto}
