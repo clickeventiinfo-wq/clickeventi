@@ -355,15 +355,20 @@ export default function Admin() {
     const { data, error } = await supabase.rpc("approva_modifica", { p_id: m.id });
     setBusyId(null);
     if (error || !data?.ok) { mostra("Errore nell'approvazione"); return; }
-    mostra("Modifica pubblicata ✓");
+    mostra("Modifica pubblicata: il professionista è stato avvisato ✓");
     await carica();
   };
   const rifiutaModifica = async (m) => {
+    const motivo = prompt(
+      "Perché non pubblichi questa modifica?\n(il motivo viene inviato al professionista)"
+    );
+    if (motivo === null) return;                 // ha annullato
+    if (!motivo.trim()) { mostra("Serve un motivo: il professionista deve sapere cosa correggere"); return; }
     setBusyId("m" + m.id);
-    const { data, error } = await supabase.rpc("rifiuta_modifica", { p_id: m.id, p_motivo: null });
+    const { data, error } = await supabase.rpc("rifiuta_modifica", { p_id: m.id, p_motivo: motivo.trim() });
     setBusyId(null);
     if (error || !data?.ok) { mostra("Errore"); return; }
-    mostra("Modifica rifiutata");
+    mostra("Modifica rifiutata: il professionista è stato avvisato");
     await carica();
   };
 
