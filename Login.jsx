@@ -52,6 +52,7 @@ const Style = () => (
 export default function Login() {
   /* se arriviamo da un'altra pagina (es. la bacheca), ci torniamo dopo l'accesso */
   const ritorno = new URLSearchParams(window.location.search).get("ritorno");
+  const daConferma = ritorno && ritorno.includes("iscrizione");
   const dopoAccesso = (admin) => admin ? "/?admin" : (ritorno || "/?pannello");
 
   const [checking, setChecking] = useState(true);
@@ -172,15 +173,25 @@ export default function Login() {
           ) : (
             // ---- non loggato: form di accesso ----
             <div className="lg-card">
-              <div className="lg-nuovo">
-                <p>È la prima volta che usi Click Eventi?</p>
-                <a href="/?iscrizione">Crea il tuo profilo</a>
-                <small>Registrazione gratuita, bastano pochi minuti</small>
-              </div>
+              {daConferma ? (
+                <div className="lg-nuovo" style={{ background: "var(--ok-soft, #E7F6EF)", borderColor: "#BFE6D4" }}>
+                  <p style={{ color: "#1E9E6A" }}>Email confermata</p>
+                  <small style={{ marginTop: 0 }}>
+                    Accedi con la password che hai scelto per completare il tuo profilo.
+                  </small>
+                </div>
+              ) : (
+                <>
+                  <div className="lg-nuovo">
+                    <p>È la prima volta che usi Click Eventi?</p>
+                    <a href="/?iscrizione">Crea il tuo profilo</a>
+                    <small>Registrazione gratuita, bastano pochi minuti</small>
+                  </div>
+                  <div className="lg-sep">oppure</div>
+                </>
+              )}
 
-              <div className="lg-sep">oppure</div>
-
-              <div className="lg-eyebrow" style={{ marginTop: 14 }}>Hai già un account</div>
+              <div className="lg-eyebrow" style={{ marginTop: 14 }}>{daConferma ? "Ultimo passaggio" : "Hai già un account"}</div>
               <h1 className="lg-t lg-display">Accedi</h1>
               <p className="lg-sub">Entra per gestire il tuo profilo, le richieste e il calendario.</p>
 

@@ -116,7 +116,7 @@ function CreaAccount() {
     setErrore(""); setSaving(true);
     const { data, error } = await supabase.auth.signUp({
       email: mail, password,
-      options: { emailRedirectTo: "https://clickeventi.it/?iscrizione" },
+      options: { emailRedirectTo: "https://clickeventi.it/?accedi&ritorno=%2F%3Fiscrizione" },
     });
     setSaving(false);
 
@@ -170,8 +170,9 @@ function CreaAccount() {
         <div className="is-mailbox"><Mail size={30} /></div>
         <h1 className="is-t is-display">Controlla la tua email 📬</h1>
         <p className="is-sub" style={{ maxWidth: 440, margin: "8px auto 0" }}>
-          Ti abbiamo scritto a <b>{email}</b>. Clicca il link di conferma: tornerai qui
-          già connesso e potrai completare il tuo profilo (foto, pacchetti, link).
+          Ti abbiamo scritto a <b>{email}</b>. Clicca il link di conferma e accedi
+          con la password appena scelta: potrai completare il tuo profilo con
+          foto, pacchetti e tariffe.
         </p>
         <p className="is-hint" style={{ marginTop: 16 }}>Non trovi l'email? Controlla nello spam.</p>
       </div>

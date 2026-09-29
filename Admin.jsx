@@ -472,9 +472,32 @@ export default function Admin() {
                       <div className="ad-fname ad-display" style={{ fontSize: 18, marginBottom: 4 }}>
                         {vecchio.nome}
                       </div>
-                      <p style={{ fontSize: 13, color: "var(--grigio)", marginBottom: 14 }}>
+                      <p style={{ fontSize: 13, color: "var(--grigio)", marginBottom: 12 }}>
                         Modifica proposta il {new Date(m.created_at).toLocaleDateString("it-IT")} · il profilo online mostra ancora la versione attuale
                       </p>
+
+                      {(() => {
+                        /* riepilogo di cosa è cambiato, in una riga */
+                        const voci = [];
+                        if (nuovo.nome !== undefined && nuovo.nome !== vecchio.nome) voci.push("nome");
+                        if (nuovo.ruolo !== undefined && nuovo.ruolo !== vecchio.ruolo) voci.push("attività");
+                        if (nuovo.categoria !== undefined && nuovo.categoria !== vecchio.categoria) voci.push("categoria");
+                        if (nuovo.link !== undefined && nuovo.link !== vecchio.link) voci.push("link");
+                        if (nuovo.foto !== undefined) {
+                          const prima = (vecchio.foto || []).length;
+                          const dopo = nuovo.foto.length;
+                          voci.push(dopo > prima ? `foto (da ${prima} a ${dopo}: ne ha aggiunte ${dopo - prima})`
+                            : dopo < prima ? `foto (da ${prima} a ${dopo}: ne ha tolte ${prima - dopo})`
+                            : `foto (${dopo}, sostituite)`);
+                        }
+                        return (
+                          <div style={{ background: "var(--accent-soft)", borderRadius: 10, padding: "10px 13px", marginBottom: 16 }}>
+                            <span style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: 600 }}>
+                              Ha modificato: {voci.length ? voci.join(" · ") : "nessun campo rilevante"}
+                            </span>
+                          </div>
+                        );
+                      })()}
 
                       {campi.map(([etichetta, prima, dopo]) => (
                         <div key={etichetta} style={{ marginBottom: 12 }}>
@@ -490,16 +513,47 @@ export default function Admin() {
                         </div>
                       ))}
 
-                      {fotoNuove && (
-                        <div style={{ marginBottom: 12 }}>
-                          <h5 style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--grigio)", marginBottom: 6 }}>Nuove foto ({fotoNuove.length})</h5>
-                          <div className="ad-gal">
-                            {fotoNuove.map((u, i) => (
-                              <a key={i} href={u} target="_blank" rel="noreferrer"><img src={u} alt="" /></a>
-                            ))}
+                      {fotoNuove && (() => {
+                        const prima = vecchio.foto || [];
+                        const tolte = prima.filter((u) => !fotoNuove.includes(u));
+                        const aggiunte = fotoNuove.filter((u) => !prima.includes(u));
+                        return (
+                          <div style={{ marginBottom: 12 }}>
+                            {aggiunte.length > 0 && (
+                              <>
+                                <h5 style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--ok)", marginBottom: 6 }}>
+                                  Foto aggiunte ({aggiunte.length})
+                                </h5>
+                                <div className="ad-gal" style={{ marginBottom: 12 }}>
+                                  {aggiunte.map((u, i) => (
+                                    <a key={i} href={u} target="_blank" rel="noreferrer"><img src={u} alt="" /></a>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+                            {tolte.length > 0 && (
+                              <>
+                                <h5 style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "#C0392B", marginBottom: 6 }}>
+                                  Foto rimosse ({tolte.length})
+                                </h5>
+                                <div className="ad-gal" style={{ marginBottom: 12, opacity: .55 }}>
+                                  {tolte.map((u, i) => (
+                                    <a key={i} href={u} target="_blank" rel="noreferrer"><img src={u} alt="" /></a>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+                            <h5 style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--grigio)", marginBottom: 6 }}>
+                              Come sarà la galleria ({fotoNuove.length})
+                            </h5>
+                            <div className="ad-gal">
+                              {fotoNuove.map((u, i) => (
+                                <a key={i} href={u} target="_blank" rel="noreferrer"><img src={u} alt="" /></a>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
                         <button className="ad-btn ok" disabled={busyId === "m" + m.id} onClick={() => approvaModifica(m)}>

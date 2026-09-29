@@ -11,22 +11,49 @@ import Reimposta from "./Reimposta.jsx";
 import Proposta from "./Proposta.jsx";
 import { Bacheca, PubblicaAnnuncio } from "./Bacheca.jsx";
 
-/* clickeventi.it            -> sito cliente
-   clickeventi.it/?pannello  -> demo pannello fornitore */
-const params = window.location.search;
-const isPanel = params.includes("pannello");
-const isSignup = params.includes("iscrizione");
-const isLogin = params.includes("accedi");
-const isAdmin = params.includes("admin");
-const isPrivacy = params.includes("privacy");
-const tokenRec = new URLSearchParams(params).get("recensione");
-const tokenProp = new URLSearchParams(params).get("proposta");
-const isBacheca = params.includes("bacheca") || params.includes("lavoro");
-const isPubblica = params.includes("pubblica");
-const isReimposta = params.includes("reimposta") || window.location.hash.includes("type=recovery");
+/* ============================================================
+   Quale pagina mostrare, in base all'indirizzo:
+
+     clickeventi.it              sito per i clienti
+     ?bacheca                    annunci per eventi
+     ?pubblica                   modulo per pubblicare un annuncio
+     ?iscrizione                 registrazione professionisti
+     ?accedi                     accesso
+     ?pannello                   area del professionista
+     ?admin                      area amministratore
+     ?privacy                    informativa
+     ?reimposta                  nuova password
+     ?recensione=CODICE          recensione dopo l'evento
+     ?proposta=CODICE            risposta a una proposta
+
+   I parametri vengono letti uno per uno: così un valore che
+   contiene il nome di un'altra pagina (per esempio
+   "ritorno=/?bacheca") non manda il visitatore altrove.
+   ============================================================ */
+
+const q = new URLSearchParams(window.location.search);
+const c = (nome) => q.has(nome);
+
+const tokenRecensione = q.get("recensione");
+const tokenProposta = q.get("proposta");
+const reimposta = c("reimposta") || window.location.hash.includes("type=recovery");
+
+function Pagina() {
+  if (tokenProposta) return <Proposta token={tokenProposta} />;
+  if (tokenRecensione) return <Recensione token={tokenRecensione} />;
+  if (reimposta) return <Reimposta />;
+  if (c("pubblica")) return <PubblicaAnnuncio />;
+  if (c("bacheca") || c("lavoro")) return <Bacheca />;
+  if (c("privacy")) return <Privacy />;
+  if (c("admin")) return <Admin />;
+  if (c("accedi")) return <Login />;
+  if (c("iscrizione")) return <Iscrizione />;
+  if (c("pannello")) return <Pannello />;
+  return <App />;
+}
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    {isPubblica ? <PubblicaAnnuncio /> : isBacheca ? <Bacheca /> : tokenProp ? <Proposta token={tokenProp} /> : isReimposta ? <Reimposta /> : tokenRec ? <Recensione token={tokenRec} /> : isPrivacy ? <Privacy /> : isAdmin ? <Admin /> : isSignup ? <Iscrizione /> : isLogin ? <Login /> : isPanel ? <Pannello /> : <App />}
+    <Pagina />
   </React.StrictMode>
 );
