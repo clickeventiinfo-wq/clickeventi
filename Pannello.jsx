@@ -254,7 +254,12 @@ function Richieste({ richieste, onAggiorna, onProponi, onErrore, busy }) {
 }
 
 /* ---------------- CALENDARIO ---------------- */
-function Calendario({ occupati, onToggle }) {
+function Calendario({ occupati, onToggle, aggiornatoIl }) {
+  const giorniDa = aggiornatoIl
+    ? Math.floor((Date.now() - new Date(aggiornatoIl)) / 86400000)
+    : null;
+  const fresco = giorniDa !== null && giorniDa <= 30;
+
   const oggi = new Date();
   const [anno, setAnno] = useState(oggi.getFullYear());
   const [mese, setMese] = useState(oggi.getMonth());
@@ -271,8 +276,41 @@ function Calendario({ occupati, onToggle }) {
   };
 
   return (
-    <div className="fp-card">
-      <div className="fp-calnav">
+    <>
+      <div className="fp-card" style={{
+        borderColor: fresco ? "#BFE6D4" : "#F0D9A8",
+        background: fresco ? "#F3FBF7" : "#FEFAF2",
+      }}>
+        <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: 11, flexShrink: 0,
+            background: fresco ? "#DFF3E9" : "#FBF0DA",
+            color: fresco ? "var(--ok)" : "#A8761A",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <CalendarDays size={20} />
+          </div>
+          <div>
+            <b className="fp-display" style={{ fontSize: 15.5, display: "block", marginBottom: 4 }}>
+              {fresco
+                ? "Calendario aggiornato ✓"
+                : giorniDa === null
+                  ? "Non hai ancora aggiornato il calendario"
+                  : `Ultimo aggiornamento ${giorniDa} giorni fa`}
+            </b>
+            <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--grigio)", margin: 0 }}>
+              {fresco
+                ? <>Sul tuo profilo compare il badge <b>Calendario aggiornato</b>: i clienti vedono
+                    che le tue disponibilità sono recenti e ti contattano più volentieri.</>
+                : <>Segna i giorni in cui sei già impegnato: non riceverai richieste per quelle date
+                    e otterrai il badge <b>Calendario aggiornato</b>, visibile ai clienti sul tuo profilo.</>}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="fp-card">
+        <div className="fp-calnav">
         <button onClick={() => cambia(-1)} aria-label="Mese precedente"><ChevronLeft size={17} /></button>
         <b className="fp-display">{MESI[mese]} {anno}</b>
         <button onClick={() => cambia(1)} aria-label="Mese successivo"><ChevronRight size={17} /></button>
@@ -297,11 +335,15 @@ function Calendario({ occupati, onToggle }) {
         <span><i style={{ background: "#fff", border: "1px solid var(--linea)" }} /> Libero</span>
         <span><i style={{ background: "var(--ink)" }} /> Occupato (tocca per cambiare)</span>
       </div>
-      <div className="fp-banner" style={{ marginTop: 14 }}>
-        <AlertCircle size={16} />
-        <span>I giorni segnati come occupati non compaiono nelle ricerche dei clienti. In arrivo: sincronizzazione con Google Calendar.</span>
+        <div className="fp-banner" style={{ marginTop: 14 }}>
+          <AlertCircle size={16} />
+          <span>
+            I giorni segnati come occupati non compaiono nelle ricerche dei clienti.
+            Le date degli eventi che accetti vengono bloccate in automatico.
+          </span>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -890,7 +932,7 @@ export default function Pannello() {
         </div>
 
         {tab === "richieste" && <Richieste richieste={richieste} onAggiorna={aggiornaRichiesta} onProponi={proponi} onErrore={mostra} busy={busy} />}
-        {tab === "calendario" && <Calendario occupati={occupati} onToggle={toggleGiorno} />}
+        {tab === "calendario" && <Calendario occupati={occupati} onToggle={toggleGiorno} aggiornatoIl={f.calendario_il} />}
         {tab === "listino" && <Listino key={f.id + "-" + (f.pacchetti?.length || 0)} f={f} ricarica={ricarica} mostra={mostra} />}
         {tab === "profilo" && <Profilo key={f.id} f={f} user={user} ricarica={ricarica} mostra={mostra} modificaAttesa={modificaAttesa} />}
 

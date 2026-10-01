@@ -164,6 +164,7 @@ function fromDb(r) {
     zone: Array.isArray(r.zone) ? r.zone : [],
     raggioMax: r.raggio_max,
     variazGiorno: r.variazioni_giorno || {},
+    calendarioIl: r.calendario_il,
     bio: r.bio,
     rating: r.rating,
     reviews: r.recensioni,
@@ -200,6 +201,13 @@ function distanzaMinima(p, eventLoc) {
   if (!eventLoc || !p.lat) return null;
   const punti = [{ lat: p.lat, lng: p.lng }, ...(p.zone || []).filter((z) => z && z.lat)];
   return Math.min(...punti.map((z) => distanceKm(z, eventLoc)));
+}
+
+/* il calendario è stato aggiornato negli ultimi 30 giorni? */
+function calendarioFresco(p) {
+  if (!p.calendarioIl) return false;
+  const giorni = (Date.now() - new Date(p.calendarioIl)) / 86400000;
+  return giorni <= 30;
 }
 
 /* differenza di prezzo legata al giorno della settimana dell'evento */
@@ -307,6 +315,7 @@ const GlobalStyle = () => (
       --accent-soft: #F3EFFE;
       --grigio: #6E6A80;
       --linea: #ECE9E2;
+      --ok: #1E9E6A;
       --ombra: 0 10px 30px rgba(35,32,58,0.08);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -718,6 +727,12 @@ function ProviderCard({ p, onOpen, eventType, eventLoc, eventDate }) {
           <MapPin size={12} /> {p.city}
         </span>
         {p.verificato && <span style={{ color: "var(--accent)", fontWeight: 600 }}>✓ Verificato</span>}
+        {calendarioFresco(p) && (
+          <span style={{ color: "var(--ok)", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}
+                title="Disponibilità aggiornata negli ultimi 30 giorni">
+            <CalendarDays size={12} /> Calendario aggiornato
+          </span>
+        )}
       </div>
       {p.bookings > 0 && (
         <div className="cv-bookings"><Check size={13} /> {p.bookings} event{p.bookings === 1 ? "o" : "i"} su Click Eventi</div>
@@ -1380,6 +1395,11 @@ function ProfileView({ p, goBack, q }) {
               )}
               <span style={{ display: "flex", alignItems: "center", gap: 4 }}><MapPin size={12} /> {p.city}</span>
               {p.verificato && <span style={{ color: "var(--accent)", fontWeight: 600 }}>✓ Verificato</span>}
+              {calendarioFresco(p) && (
+                <span style={{ color: "var(--ok)", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                  <CalendarDays size={12} /> Calendario aggiornato
+                </span>
+              )}
               {p.bookings > 0 && (
                 <span className="cv-bookings" style={{ marginTop: 0 }}><Check size={13} /> {p.bookings} event{p.bookings === 1 ? "o" : "i"} su Click Eventi</span>
               )}
