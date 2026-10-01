@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import {
   Music, Camera, Martini, PartyPopper, Sparkles,
-  MapPin, Star, ArrowLeft, Search, Check, CalendarDays, Send, Users, Clock, Navigation, Loader2
+  MapPin, Star, ArrowLeft, Search, Check, CalendarDays, Send, Users, Clock, Navigation, Loader2, Share2
 } from "lucide-react";
 import { supabase } from "./supabase";
 
@@ -1363,6 +1363,21 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
 }
 
 function ProfileView({ p, goBack, q }) {
+  const [copiato, setCopiato] = useState(false);
+
+  const condividi = async () => {
+    const link = `${window.location.origin}/?p=${p.id}`;
+    const testo = `${p.name} — ${p.role} su Click Eventi`;
+    if (navigator.share) {
+      try { await navigator.share({ title: testo, url: link }); return; } catch { /* annullato */ }
+    }
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiato(true);
+      setTimeout(() => setCopiato(false), 2500);
+    } catch { /* niente */ }
+  };
+
   const [zoom, setZoom] = useState(null);
   const initials = p.name.split(" ").map((w) => w[0]).slice(0, 2).join("");
   const avail = q.date ? isAvailable(p, q.date) : null;
@@ -1371,7 +1386,16 @@ function ProfileView({ p, goBack, q }) {
   return (
     <section className="cv-section">
       <div className="cv-container">
-        <button className="cv-back" onClick={goBack}><ArrowLeft size={16} /> Torna ai risultati</button>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <button className="cv-back" onClick={goBack}><ArrowLeft size={16} /> Torna ai risultati</button>
+          <button onClick={condividi}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "var(--bg)",
+                           border: "1px solid var(--linea)", borderRadius: 999, padding: "8px 15px",
+                           cursor: "pointer", font: "600 13px 'Work Sans', sans-serif",
+                           color: copiato ? "var(--ok)" : "var(--ink)" }}>
+            {copiato ? <><Check size={14} /> Link copiato</> : <><Share2 size={14} /> Condividi</>}
+          </button>
+        </div>
 
         <div style={{ display: "flex", gap: 16, alignItems: "flex-start", margin: "14px 0 20px", flexWrap: "wrap" }}>
           {p.foto?.length > 0 ? (
@@ -1508,6 +1532,15 @@ export default function ClickEventiV2() {
 
   /* il tasto "indietro" del browser deve funzionare come ci si aspetta:
      dal profilo torna ai risultati, dai risultati torna alla home */
+  /* apertura diretta di un profilo da link condiviso */
+  useEffect(() => {
+    if (loading || !providers.length) return;
+    const id = new URLSearchParams(window.location.search).get("p");
+    if (!id) return;
+    const trovato = providers.find((x) => String(x.id) === String(id));
+    if (trovato) { setProvider(trovato); setView("profile"); }
+  }, [loading, providers]);
+
   useEffect(() => {
     const torna = (e) => {
       const st = e.state;
@@ -1527,9 +1560,14 @@ export default function ClickEventiV2() {
     return () => window.removeEventListener("popstate", torna);
   }, [providers]);
 
+  /* L'indirizzo della pagina rispecchia ciò che si sta guardando,
+     così il profilo di un professionista si può copiare e condividere. */
   const vaiA = (nuovaVista, dati = {}) => {
     const stato = { view: nuovaVista, q: dati.q ?? q, providerId: dati.providerId };
-    window.history.pushState(stato, "");
+    const indirizzo = nuovaVista === "profile" && dati.providerId
+      ? `/?p=${dati.providerId}`
+      : "/";
+    window.history.pushState(stato, "", indirizzo);
     window.scrollTo(0, 0);
   };
 
