@@ -1,11 +1,9 @@
 import { Shield } from "lucide-react";
 
 /* ============================================================
-   CLICK EVENTI — Informativa sulla privacy
-   Redatta ai sensi degli artt. 13-14 GDPR.
-   ⚠️ Testo predisposto per la revisione di un legale: alcune
-   dichiarazioni (ruoli e garanzie dei fornitori) vanno verificate
-   sui DPA effettivamente sottoscritti.
+   CLICK EVENTI — Informativa privacy
+   Testo fornito dal legale e riportato integralmente.
+   Non modificare il contenuto senza indicazione dell'avvocato.
    ============================================================ */
 
 const Style = () => (
@@ -18,29 +16,23 @@ const Style = () => (
     .pv-logo{font-family:'Sora',sans-serif;font-weight:700;font-size:20px;text-decoration:none;color:inherit}
     .pv-logo em{font-style:normal;color:var(--accent)}
     .pv-card{background:#fff;border:1px solid var(--linea);border-radius:16px;padding:34px;margin:24px 0 40px}
-    .pv-card h1{font-family:'Sora',sans-serif;font-size:27px;margin-bottom:6px}
-    .pv-agg{color:var(--grigio);font-size:13px;margin-bottom:24px}
-    .pv-card h2{font-family:'Sora',sans-serif;font-size:18px;margin:30px 0 10px;scroll-margin-top:70px}
-    .pv-card h3{font-size:15px;font-weight:700;margin:18px 0 7px}
-    .pv-card p{font-size:15px;line-height:1.7;color:#3A3552;margin-bottom:11px}
-    .pv-card ul{margin:0 0 12px 20px}
-    .pv-card li{font-size:15px;line-height:1.7;color:#3A3552;margin-bottom:5px}
+    .pv-card h1{font-family:'Sora',sans-serif;font-size:24px;line-height:1.35;margin-bottom:8px}
+    .pv-agg{color:var(--grigio);font-size:13.5px;font-style:italic;margin-bottom:26px}
+    .pv-card h2{font-family:'Sora',sans-serif;font-size:19px;margin:32px 0 10px}
+    .pv-card h3{font-size:15.5px;font-weight:700;margin:20px 0 8px}
+    .pv-card p{font-size:15px;line-height:1.75;color:#3A3552;margin-bottom:12px}
     .pv-card a{color:var(--accent);font-weight:600}
-    .pv-box{background:var(--bg2);border-radius:12px;padding:16px 18px;margin:16px 0}
-    .pv-box p{margin:0;font-size:14.5px}
-    .pv-icon{width:46px;height:46px;border-radius:13px;background:#F3EFFE;color:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
-    .pv-indice{background:var(--bg2);border-radius:12px;padding:18px 20px;margin-bottom:8px}
-    .pv-indice ol{margin:0 0 0 18px}
-    .pv-indice li{font-size:14.5px;margin-bottom:4px}
-    .pv-tab{width:100%;border-collapse:collapse;margin:14px 0 18px;font-size:13px}
-    .pv-tab th{text-align:left;background:var(--bg2);padding:10px 11px;font-weight:700;border-bottom:1px solid var(--linea);vertical-align:top}
-    .pv-tab td{padding:10px 11px;border-bottom:1px solid var(--linea);vertical-align:top;line-height:1.55;color:#3A3552}
+    .pv-el{list-style:none;margin:0 0 12px;padding:0}
+    .pv-el li{font-size:15px;line-height:1.75;color:#3A3552;margin-bottom:9px;padding-left:18px;position:relative}
+    .pv-el li::before{content:"–";position:absolute;left:0;color:var(--grigio)}
+    .pv-icon{width:46px;height:46px;border-radius:13px;background:#F3EFFE;color:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+    .pv-tab{width:100%;border-collapse:collapse;margin:14px 0 20px;font-size:13.5px}
+    .pv-tab th{text-align:left;background:var(--bg2);padding:11px 12px;font-weight:700;border:1px solid var(--linea);vertical-align:top}
+    .pv-tab td{padding:11px 12px;border:1px solid var(--linea);vertical-align:top;line-height:1.6;color:#3A3552}
     .pv-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-    @media(max-width:600px){.pv-card{padding:24px 20px}.pv-tab{font-size:12px;min-width:540px}}
+    @media(max-width:600px){.pv-card{padding:24px 20px}.pv-tab{font-size:12.5px;min-width:560px}}
   `}</style>
 );
-
-const S = ({ id, children }) => <h2 id={id}>{children}</h2>;
 
 export default function Privacy() {
   return (
@@ -52,557 +44,472 @@ export default function Privacy() {
       <div className="pv-wrap">
         <div className="pv-card">
           <div className="pv-icon"><Shield size={24} /></div>
-          <h1>Informativa sulla privacy</h1>
-          <p className="pv-agg">Ultima modifica: settembre 2026</p>
 
-          <div className="pv-indice">
-            <b style={{ fontSize: 13.5, display: "block", marginBottom: 8 }}>Indice</b>
-            <ol>
-              <li><a href="#c1">Titolare del trattamento e contatti</a></li>
-              <li><a href="#c2">Introduzione e ruoli</a></li>
-              <li><a href="#c3">Quali dati personali raccogliamo</a></li>
-              <li><a href="#c4">Dati obbligatori e facoltativi</a></li>
-              <li><a href="#c5">Come utilizziamo i dati personali</a></li>
-              <li><a href="#c6">Da quali fonti raccogliamo i dati</a></li>
-              <li><a href="#c7">A chi comunichiamo i dati</a></li>
-              <li><a href="#c8">Tabella riassuntiva dei trattamenti</a></li>
-              <li><a href="#c9">Cookie e strumenti di archiviazione</a></li>
-              <li><a href="#c10">Trasferimenti di dati fuori dallo SEE</a></li>
-              <li><a href="#c11">Processi decisionali automatizzati</a></li>
-              <li><a href="#c12">Diritti dell'interessato</a></li>
-              <li><a href="#c13">Per quanto tempo conserviamo i dati</a></li>
-              <li><a href="#c14">Come proteggiamo i dati</a></li>
-              <li><a href="#c15">Minori</a></li>
-              <li><a href="#c16">Modifiche all'informativa</a></li>
-            </ol>
-          </div>
+          <h1>
+            Informativa sul trattamento dei dati personali ai sensi degli artt. 13 e 14 del
+            Regolamento (UE) 2016/679 e del D.Lgs. 196/2003 come modificato dal D.Lgs. 101/2018
+          </h1>
+          <p className="pv-agg">Ultimo aggiornamento: 01/10/2026</p>
 
-          {/* 1 */}
-          <S id="c1">1. Titolare del trattamento e contatti</S>
+          <h2>1. Titolare del trattamento e contatti</h2>
+          <p>Il Titolare del trattamento dei dati personali è <b>Susanna Manca</b>.</p>
           <p>
-            Il Titolare del trattamento dei dati personali raccolti tramite il sito clickeventi.it
-            (di seguito, il "Sito") è <b>Susanna Manca</b>, contattabile all'indirizzo e-mail{" "}
-            <a href="mailto:info@clickeventi.it">info@clickeventi.it</a>, casella regolarmente
-            presidiata e utilizzata anche per l'esercizio dei diritti di cui al punto 12.
-          </p>
-          <p>
-            Il Titolare non ha nominato un Responsabile della protezione dei dati, non ricorrendo
-            i presupposti di cui all'art. 37 GDPR.
+            Per qualsiasi richiesta relativa al trattamento dei dati personali, l'interessato può
+            scrivere all'indirizzo e-mail: <a href="mailto:info@clickeventi.it">info@clickeventi.it</a>.
           </p>
 
-          {/* 2 */}
-          <S id="c2">2. Introduzione e ruoli</S>
+          <h2>2. Introduzione e ruoli</h2>
           <p>
-            La presente informativa descrive le modalità con cui il Titolare raccoglie e utilizza i
-            dati personali degli utenti del Sito, ai sensi degli artt. 13 e 14 del Regolamento (UE)
-            2016/679 ("GDPR").
-          </p>
-          <p>Il Sito si rivolge a tre categorie di utenti:</p>
-          <ul>
-            <li><b>Clienti</b>: persone che cercano professionisti per un evento e inviano richieste di preventivo;</li>
-            <li><b>Professionisti</b>: persone fisiche o imprese che pubblicano il proprio profilo e ricevono richieste;</li>
-            <li><b>Organizzatori</b>: soggetti che pubblicano annunci nella sezione "Annunci per eventi".</li>
-          </ul>
-
-          <h3>2.1 Ruolo del Titolare e autonomia delle parti</h3>
-          <p>
-            Click Eventi opera quale piattaforma di intermediazione. Il Titolare agisce in qualità di
-            titolare autonomo del trattamento per la gestione del Sito, degli account, della
-            pubblicazione dei profili e degli annunci, delle richieste, delle trattative, delle
-            recensioni, della sicurezza e delle comunicazioni proprie.
-          </p>
-          <div className="pv-box">
-            <p>
-              Una volta che i dati di contatto sono comunicati fra cliente e professionista, ovvero
-              fra professionista e organizzatore, <b>ciascuna parte tratta tali dati in qualità di
-              autonomo titolare</b> per le proprie finalità e sotto la propria responsabilità. Il
-              Titolare non determina le finalità e le modalità dei trattamenti autonomamente
-              effettuati dalle parti successivamente alla comunicazione dei dati, né risponde dei
-              trattamenti posti in essere dalle stesse nell'ambito dei loro autonomi rapporti, fatti
-              salvi gli obblighi e le responsabilità che la normativa pone direttamente a carico del
-              Titolare.
-            </p>
-          </div>
-
-          {/* 3 */}
-          <S id="c3">3. Quali dati personali raccogliamo</S>
-
-          <h3>3.1 Clienti che inviano una richiesta</h3>
-          <ul>
-            <li><b>Identificativi e di contatto</b>: nome e cognome, indirizzo e-mail, numero di telefono;</li>
-            <li><b>Relativi all'evento</b>: tipologia, data, orario indicativo, comune di svolgimento;</li>
-            <li><b>Relativi alla richiesta</b>: professionista selezionato, pacchetto e servizi aggiuntivi, numero di ore o di ospiti, importo calcolato, note in testo libero;</li>
-            <li><b>Trattativa</b>: importi proposti e messaggi in testo libero scambiati con il professionista;</li>
-            <li><b>Recensioni</b>: valutazione numerica, testo in forma libera e nome di battesimo, pubblicati sul profilo del professionista;</li>
-            <li><b>Preferenze</b>: eventuale consenso alle comunicazioni informative.</li>
-          </ul>
-
-          <h3>3.2 Professionisti registrati</h3>
-          <ul>
-            <li><b>Accesso</b>: indirizzo e-mail e password;</li>
-            <li><b>Profilo pubblico</b>: nome o nome d'arte, attività svolta, categoria, presentazione, comune e ulteriori zone di lavoro, recapito telefonico, collegamenti a siti e profili social, fotografie, collegamenti a video;</li>
-            <li><b>Commerciali</b>: pacchetti, servizi aggiuntivi, tariffe, fasce chilometriche, raggio massimo di spostamento;</li>
-            <li><b>Disponibilità</b>: giornate indicate come non disponibili;</li>
-            <li><b>Richieste ricevute</b> e candidature inviate agli annunci.</li>
-          </ul>
-          <p>
-            Le <b>coordinate geografiche</b> associate al profilo sono quelle convenzionali del comune
-            indicato, ricavate da un elenco pubblico dei comuni italiani: non si tratta di dati di
-            geolocalizzazione precisa e sono utilizzate esclusivamente per calcolare la distanza
-            approssimativa fra la zona del professionista e il comune dell'evento.
-          </p>
-          <div className="pv-box">
-            <p>
-              I dati indicati come "profilo pubblico" sono, per loro natura, <b>visibili a chiunque
-              acceda al Sito</b> e possono essere indicizzati dai motori di ricerca. Il recapito
-              telefonico e l'indirizzo e-mail del professionista <b>non sono pubblicati</b>: sono
-              comunicati al cliente unicamente nel momento indicato al punto 7.1.
-            </p>
-          </div>
-
-          <h3>3.3 Chi pubblica un annuncio</h3>
-          <ul>
-            <li>Nome o ragione sociale, indirizzo e-mail, numero di telefono;</li>
-            <li>Contenuto dell'annuncio: titolo, descrizione in testo libero, categoria, comune, date, eventuale compenso indicato.</li>
-          </ul>
-
-          <h3>3.4 Dati raccolti automaticamente</h3>
-          <ul>
-            <li><b>Dati tecnici</b>: indirizzo IP, tipo di browser e di dispositivo, data e ora di accesso, pagine richieste, registrati nei log di sistema dai fornitori di infrastruttura per finalità di sicurezza, diagnostica e continuità del servizio;</li>
-            <li><b>Dati di sessione</b>: informazioni conservate nella memoria locale del browser per mantenere attivo l'accesso all'area riservata (punto 9).</li>
-          </ul>
-
-          <h3>3.5 Categorie particolari di dati</h3>
-          <p>
-            Il Sito <b>non richiede né raccoglie intenzionalmente</b> categorie particolari di dati
-            personali ai sensi dell'art. 9 GDPR. Poiché diversi campi sono in forma libera (note della
-            richiesta, messaggi della trattativa, recensioni, presentazioni, descrizioni degli annunci,
-            immagini), gli utenti sono invitati a <b>non inserire</b> informazioni relative in
-            particolare a salute, convinzioni religiose o filosofiche, opinioni politiche, origine
-            razziale o etnica, appartenenza sindacale, vita o orientamento sessuale.
-          </p>
-          <p>
-            Qualora tali dati siano conferiti volontariamente, il Titolare li tratterà esclusivamente
-            nella misura necessaria a gestire la richiesta o il contenuto cui si riferiscono e, ove
-            non necessari, potrà procedere alla loro cancellazione o oscuramento.
-          </p>
-          <p>
-            Il Sito non richiede documenti di identità e non tratta dati relativi a pagamenti, non
-            essendo attiva alcuna funzionalità di pagamento online.
-          </p>
-          <p>
-            L'utente garantisce che i dati conferiti sono veritieri e aggiornati. Qualora inserisca
-            dati personali riferiti a terzi, dichiara di essere legittimato a comunicarli.
+            La presente informativa è resa ai sensi degli artt. 13 e 14 del Regolamento (UE) 2016/679
+            (di seguito "GDPR") e del D.Lgs. 196/2003 (Codice in materia di protezione dei dati
+            personali, come modificato dal D.Lgs. 101/2018), e descrive le modalità di trattamento dei
+            dati personali degli utenti che visitano il sito web clickeventi.it (di seguito il "Sito").
           </p>
 
-          {/* 4 */}
-          <S id="c4">4. Dati obbligatori e facoltativi</S>
+          <h3>2.1 Ruoli e responsabilità</h3>
           <p>
-            Il conferimento dei dati contrassegnati come obbligatori nei moduli del Sito è necessario
-            per utilizzare la funzionalità cui si riferiscono: il mancato conferimento impedisce, in
-            tutto o in parte, l'erogazione del relativo servizio. Il conferimento degli altri dati è
-            facoltativo e non pregiudica l'accesso alle funzionalità essenziali.
+            Il Titolare ha adottato misure tecniche e organizzative adeguate per garantire la sicurezza
+            dei dati personali trattati attraverso il Sito. L'utente è tuttavia responsabile della
+            custodia delle proprie credenziali di accesso e dei dati inseriti nel Sito.
+          </p>
+          <p>
+            Le informazioni relative ai dati che non sono raccolti presso l'interessato (art. 14 GDPR)
+            sono indicate ai punti 3 e 6.
+          </p>
+          <p>
+            Fatti salvi gli obblighi previsti dalla normativa vigente, il Titolare non potrà essere
+            ritenuto responsabile per eventuali danni derivanti dall'uso improprio del Sito da parte
+            dell'utente o di terzi.
+          </p>
+
+          <h2>3. Dati raccolti</h2>
+
+          <h3>3.1 Dati forniti volontariamente dall'utente</h3>
+          <p>
+            Il Titolare raccoglie i dati personali forniti volontariamente dall'utente al momento della
+            compilazione dei moduli presenti sul Sito (ad esempio, nome, cognome, indirizzo e-mail,
+            numero di telefono, messaggio o richiesta).
+          </p>
+
+          <h3>3.2 Dati di navigazione</h3>
+          <p>
+            I sistemi informatici e le procedure software preposte al funzionamento del Sito
+            acquisiscono, nel corso del loro normale esercizio, alcuni dati personali la cui
+            trasmissione è implicita nell'uso dei protocolli di comunicazione Internet. Si tratta di
+            informazioni che non sono raccolte per essere associate a interessati identificati, ma che
+            per loro stessa natura potrebbero, attraverso elaborazioni e associazioni con dati detenuti
+            da terzi, permettere di identificare gli utenti. In questa categoria di dati rientrano gli
+            indirizzi IP, i nomi a dominio dei computer utilizzati dagli utenti che si connettono al
+            Sito, gli indirizzi in notazione URI (Uniform Resource Identifier) delle risorse richieste,
+            l'orario della richiesta, il metodo utilizzato nel sottoporre la richiesta al server, la
+            dimensione del file ottenuto in risposta, il codice numerico indicante lo stato della
+            risposta data dal server e altri parametri relativi al sistema operativo e all'ambiente
+            informatico dell'utente.
+          </p>
+
+          <h3>3.3 Dati raccolti tramite cookie e tecnologie simili</h3>
+          <p>
+            Il Sito utilizza cookie e tecnologie analoghe. Per maggiori informazioni si rimanda al
+            punto 9 della presente informativa.
+          </p>
+
+          <h3>3.4 Dati relativi alle recensioni</h3>
+          <p>
+            L'utente che riceve un collegamento personale per lasciare una recensione può fornire un
+            testo, una valutazione e, se richiesto, il proprio nome o pseudonimo. Questi dati sono
+            trattati per la pubblicazione della recensione sul Sito.
+          </p>
+
+          <h3>3.5 Dati di categorie particolari</h3>
+          <p>
+            Il Titolare non richiede intenzionalmente dati di categorie particolari (art. 9 GDPR),
+            quali dati che rivelino l'origine razziale o etnica, le opinioni politiche, le convinzioni
+            religiose, l'appartenenza sindacale, dati genetici, dati biometrici, dati relativi alla
+            salute o alla vita sessuale o all'orientamento sessuale dell'interessato. Qualora l'utente
+            inserisca volontariamente tali dati nei campi a testo libero,
+          </p>
+          <p>
+            il Titolare non li utilizzerà per alcuna finalità ulteriore e procederà, non appena ne
+            abbia conoscenza, alla loro cancellazione o oscuramento, salvo che il trattamento sia
+            strettamente necessario per l'accertamento, l'esercizio o la difesa di un diritto
+            (art. 9.2.f GDPR).
+          </p>
+          <p>
+            L'utente garantisce che i dati personali di terzi eventualmente inseriti nel Sito siano
+            trattati nel rispetto della normativa vigente e che il conferimento avvenga con il consenso
+            del terzo interessato o su altra base giuridica che legittimi il trattamento. Il Titolare
+            informa i terzi interessati ai sensi dell'art. 14 GDPR rendendo disponibile la presente
+            informativa; l'utente che inserisce dati di terzi è invitato a portarla a loro conoscenza.
+          </p>
+
+          <h2>4. Dati obbligatori e facoltativi</h2>
+          <p>
+            Nella tabella seguente sono indicati i dati raccolti tramite i moduli del Sito, con
+            l'indicazione della loro natura obbligatoria o facoltativa.
           </p>
           <div className="pv-scroll">
             <table className="pv-tab">
               <thead>
-                <tr><th style={{ width: "34%" }}>Dato</th><th style={{ width: "22%" }}>Conferimento</th><th>Conseguenza del mancato conferimento</th></tr>
+                <tr>
+                  <th style={{ width: "28%" }}>Dato</th>
+                  <th style={{ width: "20%" }}>Natura</th>
+                  <th>Conseguenze del mancato conferimento</th>
+                </tr>
               </thead>
               <tbody>
-                <tr><td>Nome del cliente</td><td>Obbligatorio</td><td>Non è possibile inviare la richiesta</td></tr>
-                <tr><td>E-mail del cliente</td><td>Obbligatorio</td><td>Non è possibile inviare la richiesta né ricevere riscontri e proposte</td></tr>
-                <tr><td>Telefono del cliente</td><td>Facoltativo</td><td>Nessuna: consente al professionista di contattare anche telefonicamente</td></tr>
-                <tr><td>Dati dell'evento (tipo, data, comune)</td><td>Necessari</td><td>Non è possibile calcolare il preventivo né verificare la disponibilità</td></tr>
-                <tr><td>Note e messaggi della trattativa</td><td>Facoltativi</td><td>Nessuna</td></tr>
-                <tr><td>Consenso alle comunicazioni informative</td><td>Facoltativo</td><td>Nessuna: non vengono inviate comunicazioni non necessarie al servizio</td></tr>
-                <tr><td>E-mail e password del professionista</td><td>Obbligatori</td><td>Non è possibile creare l'account</td></tr>
-                <tr><td>Nome, attività, categoria, comune del professionista</td><td>Obbligatori</td><td>Il profilo non può essere pubblicato</td></tr>
-                <tr><td>Almeno una fotografia</td><td>Obbligatoria</td><td>Il profilo non può essere pubblicato</td></tr>
-                <tr><td>Presentazione, collegamenti social e video, ulteriori fotografie</td><td>Facoltativi</td><td>Nessuna: il profilo resta pubblicabile</td></tr>
-                <tr><td>Nome, e-mail e contenuto dell'annuncio</td><td>Obbligatori</td><td>L'annuncio non può essere pubblicato</td></tr>
+                <tr><td>Nome e cognome</td><td>Obbligatorio</td><td>Impossibilità di identificare l'utente e di dare seguito alla richiesta</td></tr>
+                <tr><td>Indirizzo e-mail</td><td>Obbligatorio</td><td>Impossibilità di contattare l'utente e di riscontrare la richiesta</td></tr>
+                <tr><td>Numero di telefono</td><td>Facoltativo</td><td>Nessuna conseguenza; il dato può essere utile per un contatto più rapido</td></tr>
+                <tr><td>Messaggio / richiesta</td><td>Obbligatorio</td><td>Impossibilità di comprendere l'oggetto della richiesta</td></tr>
+                <tr><td>Dati contenuti negli allegati</td><td>Facoltativo</td><td>Nessuna conseguenza; l'utente può scegliere se allegare documentazione</td></tr>
+                <tr><td>Testo e valutazione della recensione</td><td>Facoltativo</td><td>Impossibilità di pubblicare la recensione</td></tr>
               </tbody>
             </table>
           </div>
 
-          {/* 5 */}
-          <S id="c5">5. Come utilizziamo i dati personali</S>
+          <h2>5. Finalità e basi giuridiche del trattamento</h2>
 
-          <h3>5.1 Erogazione del servizio</h3>
+          <h3>5.1 Gestione delle richieste di preventivo e contatto</h3>
           <p>
-            Ricerca dei professionisti, calcolo del preventivo, verifica della disponibilità e della
-            distanza, invio della richiesta al professionista selezionato, svolgimento della
-            trattativa, comunicazione dell'esito, scambio dei recapiti ad accordo raggiunto;
-            creazione e gestione degli account; pubblicazione degli annunci e trasmissione delle
-            candidature.<br />
-            <b>Base giuridica</b>: esecuzione di un contratto o di misure precontrattuali adottate su
-            richiesta dell'interessato (art. 6.1.b).
+            I dati personali forniti tramite i moduli del Sito sono trattati per rispondere alle
+            richieste dell'utente, fornire preventivi e gestire i contatti. Base giuridica: esecuzione
+            di misure precontrattuali adottate su richiesta dell'interessato (art. 6.1.b GDPR).
           </p>
 
-          <h3>5.2 Pubblicazione del profilo del professionista</h3>
+          <h3>5.2 Esecuzione del contratto</h3>
           <p>
-            I dati indispensabili alla pubblicazione (nome, attività, categoria, zona, almeno una
-            fotografia, listino) sono trattati per l'esecuzione del servizio richiesto dal
-            professionista, che consiste nella pubblicazione del profilo.<br />
-            <b>Base giuridica</b>: esecuzione del contratto (art. 6.1.b).
-          </p>
-          <p>
-            Anche i contenuti ulteriori e facoltativi (presentazione, fotografie aggiuntive,
-            collegamenti a siti, profili social e video) rientrano nel servizio di pubblicazione del
-            profilo: il professionista decide autonomamente se inserirli e può rimuoverli in qualsiasi
-            momento dal proprio pannello.<br />
-            <b>Base giuridica</b>: esecuzione del contratto (art. 6.1.b).
+            In caso di conferimento dell'incarico, i dati sono trattati per l'esecuzione del contratto
+            e l'erogazione dei servizi richiesti. Base giuridica: esecuzione del contratto
+            (art. 6.1.b GDPR).
           </p>
 
-          <h3>5.3 Recensioni</h3>
-          <ul>
-            <li>
-              <b>Invito a recensire</b> inviato al cliente dopo la data dell'evento: legittimo
-              interesse del Titolare a raccogliere riscontri sul servizio intermediato (art. 6.1.f).
-            </li>
-            <li>
-              <b>Raccolta e gestione della recensione</b>: esecuzione del rapporto con l'utente e
-              gestione della funzionalità di recensione (art. 6.1.b). L'interessato decide
-              liberamente se lasciare una recensione e quale contenuto inserire.
-            </li>
-            <li>
-              <b>Pubblicazione della valutazione, del testo e del nome di battesimo</b>: legittimo
-              interesse del Titolare, dei professionisti e degli altri utenti a disporre di
-              valutazioni verificate e attribuibili (art. 6.1.f). Il Titolare ha valutato che tale
-              interesse non sia sovrastato dai diritti dell'interessato, considerato che viene
-              pubblicato il solo nome di battesimo e che l'interessato può chiederne in ogni momento
-              la rimozione o l'anonimizzazione.
-            </li>
-            <li>
-              <b>Conservazione successiva</b> alla cancellazione del profilo recensito o del
-              recensore: la recensione può essere mantenuta previa effettiva anonimizzazione, ossia
-              eliminando gli elementi che consentano di identificare il recensore, a tutela
-              dell'attendibilità delle valutazioni complessive (art. 6.1.f fino all'anonimizzazione).
-            </li>
-          </ul>
+          <h3>5.3 Gestione delle recensioni</h3>
+          <p>
+            I dati sono trattati per consentire la pubblicazione e la gestione delle recensioni sul Sito.
+          </p>
+          <p>
+            <b>Invito a recensire:</b> dopo la conclusione del servizio, il Titolare può inviare
+            all'utente un'e-mail con un collegamento personale per lasciare una recensione.
+          </p>
+          <p>
+            L'invito, inviato una sola volta tramite e-mail all'indirizzo fornito nell'ambito della
+            richiesta, è strettamente connesso al servizio fruito e non ha contenuto promozionale;
+            base giuridica: legittimo interesse del Titolare (art. 6.1.f). L'interessato può opporsi in
+            ogni momento, gratuitamente, anche tramite il collegamento presente in ciascun messaggio.
+          </p>
           <p>
             Possono recensire esclusivamente gli utenti che abbiano inviato una richiesta tramite il
             Sito e ricevuto il relativo collegamento personale.
           </p>
-
-          <h3>5.4 Comunicazioni di servizio</h3>
           <p>
-            Conferma della richiesta, notifiche di nuova proposta e di variazione di stato, solleciti
-            al professionista che non ha risposto, comunicazione dell'accettazione o del rifiuto,
-            esito della verifica del profilo o dell'annuncio. L'invito a recensire è trattato al
-            punto 5.3.<br />
-            <b>Base giuridica</b>: esecuzione del contratto (art. 6.1.b).
+            Il Titolare verifica che il collegamento sia inviato solo all'indirizzo e-mail associato a
+            una richiesta effettivamente inoltrata; le recensioni non sono modificate né selezionate in
+            base al loro esito positivo o negativo.
           </p>
 
-          <h3>5.5 Comunicazioni informative e promozionali</h3>
+          <h3>5.4 Gestione del sito web</h3>
           <p>
-            Previo consenso espresso, prestato mediante casella non preselezionata e distinta
-            dall'accettazione dell'informativa, inviamo comunicazioni su novità e funzionalità del
-            servizio. Il consenso è facoltativo, non condiziona l'invio della richiesta ed è
-            revocabile in qualsiasi momento.<br />
-            <b>Base giuridica</b>: consenso (art. 6.1.a).
+            I dati di navigazione sono trattati per il corretto funzionamento del Sito, per garantirne
+            la sicurezza e per ottenere informazioni statistiche aggregate sull'utilizzo del Sito.
+            Base giuridica: legittimo interesse del Titolare (art. 6.1.f GDPR).
           </p>
 
-          <h3>5.6 Verifica dei contenuti, sicurezza e prevenzione degli abusi</h3>
+          <h3>5.5 Comunicazioni commerciali e promozionali</h3>
           <p>
-            Esame dei profili e degli annunci prima della pubblicazione e delle successive modifiche
-            ai dati identificativi e alle immagini; trattamento dei dati tecnici per prevenire usi
-            impropri, tentativi di accesso non autorizzato e attività illecite.<br />
-            <b>Base giuridica</b>: legittimo interesse del Titolare e degli utenti all'attendibilità e
-            alla sicurezza della piattaforma (art. 6.1.f).
+            Con il consenso dell'utente, i dati potranno essere trattati per l'invio di comunicazioni
+            commerciali e promozionali relative ai servizi offerti dal Titolare tramite e-mail. Base
+            giuridica: consenso dell'interessato (art. 6.1.a GDPR e art. 130, comma 1 e 2,
+            D.Lgs. 196/2003).
+          </p>
+          <p>
+            Ogni comunicazione contiene un collegamento per revocare il consenso in modo semplice e
+            gratuito; la revoca può essere esercitata anche scrivendo a info@clickeventi.it. I dati non
+            sono utilizzati per finalità promozionali tramite SMS, telefono o messaggistica istantanea.
           </p>
 
-          <h3>5.7 Adempimenti di legge e tutela dei diritti</h3>
+          <h3>5.6 Miglioramento dei servizi</h3>
           <p>
-            <b>Base giuridica</b>: obbligo legale (art. 6.1.c) e legittimo interesse all'accertamento,
-            esercizio o difesa di un diritto (art. 6.1.f).
+            I dati potranno essere trattati in forma anonima o aggregata per analizzare e migliorare i
+            servizi offerti dal Titolare. Base giuridica: legittimo interesse del Titolare
+            (art. 6.1.f GDPR).
+          </p>
+          <p>
+            Il Titolare ha effettuato una valutazione di bilanciamento ritenendo che tale interesse non
+            prevalga sui diritti degli interessati in considerazione della limitatezza dei dati trattati
+            e delle ragionevoli aspettative degli utenti.
           </p>
 
-          {/* 6 */}
-          <S id="c6">6. Da quali fonti raccogliamo i dati</S>
-          <ul>
-            <li><b>Direttamente dall'interessato</b>: compilazione dei moduli, registrazione, completamento del profilo, pubblicazione di un annuncio, candidatura, risposta a una proposta, recensione;</li>
-            <li><b>Da altri utenti</b>: quando un cliente indica i dati necessari alla richiesta, o quando i dati di un professionista che si candida sono trasmessi a chi ha pubblicato l'annuncio;</li>
-            <li><b>Automaticamente</b>: tramite i sistemi tecnici descritti al punto 3.4.</li>
-          </ul>
+          <h3>5.7 Obblighi di legge e difesa dei diritti</h3>
+          <p>
+            Base giuridica: adempimento di un obbligo legale (art. 6.1.c GDPR) e legittimo interesse
+            (art. 6.1.f GDPR). Finalità: adempimento di obblighi previsti dalla legge, da regolamenti o
+            dalla normativa europea (ad es. obblighi fiscali e contabili ove applicabili, richieste
+            delle autorità) e, se necessario, accertamento, esercizio o difesa di un diritto in sede
+            giudiziale o stragiudiziale.
+          </p>
 
-          {/* 7 */}
-          <S id="c7">7. A chi comunichiamo i dati</S>
+          <h2>6. Fonti dei dati personali</h2>
+          <p>
+            I dati personali trattati dal Titolare sono raccolti direttamente presso l'interessato,
+            attraverso la compilazione dei moduli del Sito o la navigazione sullo stesso. I dati di
+            terzi eventualmente inseriti dall'utente nei campi a testo libero sono raccolti
+            indirettamente.
+          </p>
 
-          <h3>7.1 Fra utenti del Sito</h3>
-          <ul>
+          <h2>7. Destinatari dei dati personali</h2>
+
+          <h3>7.1 Categorie di destinatari</h3>
+          <p>I dati personali potranno essere comunicati a:</p>
+          <ul className="pv-el">
             <li>
-              <b>Al professionista destinatario</b>: i dati della richiesta e i messaggi della
-              trattativa. Nome, e-mail ed eventuale telefono del cliente sono comunicati al
-              professionista <b>nel momento in cui la richiesta assume lo stato "accettata"</b>, ossia
-              quando il professionista accetta la richiesta oppure il cliente accetta una proposta del
-              professionista. Contestualmente, e-mail e telefono del professionista sono comunicati al
-              cliente.
+              soggetti che forniscono servizi necessari al funzionamento del Sito e all'erogazione dei
+              servizi richiesti (ad esempio, fornitori di servizi di hosting, invio e-mail, assistenza
+              tecnica);
             </li>
             <li>
-              <b>A chi ha pubblicato un annuncio</b>: al momento dell'invio della candidatura, i dati
-              identificativi, professionali e di contatto del professionista candidato.
+              autorità competenti, ove ciò sia richiesto dalla legge o necessario per la tutela dei
+              diritti del Titolare;
             </li>
+            <li>professionisti e consulenti, nei limiti di quanto strettamente necessario.</li>
           </ul>
 
-          <h3>7.2 A fornitori di servizi tecnici</h3>
+          <h3>7.2 Elenco dei fornitori di servizi</h3>
           <p>
-            Il Titolare si avvale dei seguenti fornitori, con i quali sono in essere i rispettivi
-            accordi sul trattamento dei dati:
+            I principali fornitori di servizi esterni attualmente utilizzati dal Titolare sono indicati
+            nella tabella seguente.
           </p>
           <div className="pv-scroll">
             <table className="pv-tab">
               <thead>
                 <tr>
-                  <th style={{ width: "20%" }}>Fornitore</th>
-                  <th style={{ width: "32%" }}>Dati e servizio</th>
-                  <th style={{ width: "24%" }}>Localizzazione</th>
+                  <th style={{ width: "17%" }}>Fornitore</th>
+                  <th style={{ width: "20%" }}>Servizio</th>
                   <th>Ruolo</th>
+                  <th style={{ width: "17%" }}>Paese e garanzie</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td><b>Supabase</b></td>
-                  <td>Banca dati, autenticazione, archiviazione delle fotografie</td>
-                  <td>Archiviazione primaria nella regione dell'Unione Europea (Francoforte); possibile ricorso a sub-responsabili anche extra-SEE</td>
-                  <td>Responsabile del trattamento</td>
+                  <td>Supabase, Inc.</td>
+                  <td>Database e autenticazione</td>
+                  <td>Responsabile del trattamento (art. 28 GDPR)</td>
+                  <td>USA – SCC e/o DPF</td>
                 </tr>
                 <tr>
-                  <td><b>Vercel</b></td>
-                  <td>Hosting e distribuzione del Sito; dati tecnici di connessione</td>
-                  <td>Rete di distribuzione con nodi in più Paesi, Stati Uniti inclusi</td>
-                  <td>Responsabile del trattamento per i dati del cliente; titolare autonomo per determinati dati generati dal servizio</td>
+                  <td>Vercel, Inc.</td>
+                  <td>Hosting e distribuzione del Sito</td>
+                  <td>
+                    Responsabile del trattamento per i dati dell'utente elaborati per conto del
+                    Titolare;
+                    <br /><br />
+                    titolare autonomo per i dati di utilizzo e i log generati dal servizio a fini di
+                    sicurezza, fatturazione e miglioramento del servizio, come indicato
+                    nell'informativa del fornitore{" "}
+                    <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noreferrer">
+                      vercel.com/legal/privacy-policy
+                    </a>
+                  </td>
+                  <td>USA – SCC e/o DPF</td>
                 </tr>
                 <tr>
-                  <td><b>Resend</b></td>
-                  <td>Invio delle comunicazioni e-mail: indirizzo del destinatario, contenuto e registri di consegna</td>
-                  <td>Stati Uniti; il fornitore può avvalersi di sub-responsabili. I trasferimenti dallo SEE sono disciplinati dalle garanzie indicate al punto 10</td>
-                  <td>Responsabile del trattamento</td>
+                  <td>Resend, Inc.</td>
+                  <td>Invio di e-mail transazionali e promozionali</td>
+                  <td>Responsabile del trattamento (art. 28 GDPR)</td>
+                  <td>USA – SCC e/o DPF</td>
                 </tr>
               </tbody>
             </table>
           </div>
+          <p>L'elenco aggiornato dei sub-responsabili è disponibile su richiesta.</p>
 
-          <h3>7.3 Altri destinatari</h3>
+          <h3>7.3 Diffusione</h3>
           <p>
-            Autorità pubbliche, forze dell'ordine e organi giurisdizionali, ove necessario per
-            adempiere a obblighi di legge o per l'accertamento e la difesa di un diritto.
-          </p>
-          <p>
-            I dati personali <b>non sono ceduti né venduti a terzi</b> per finalità commerciali e non
-            sono comunicati a reti pubblicitarie.
+            I dati personali non sono oggetto di diffusione, salvo i dati relativi alle recensioni
+            (testo, valutazione, nome o pseudonimo) che l'utente ha scelto di rendere pubblici.
           </p>
 
-          {/* 8 */}
-          <S id="c8">8. Tabella riassuntiva dei trattamenti</S>
+          <h2>8. Tabella riassuntiva dei trattamenti</h2>
           <div className="pv-scroll">
             <table className="pv-tab">
               <thead>
                 <tr>
-                  <th style={{ width: "32%" }}>Categoria di dati</th>
-                  <th style={{ width: "34%" }}>Finalità</th>
-                  <th>Base giuridica</th>
+                  <th style={{ width: "26%" }}>Finalità</th>
+                  <th style={{ width: "28%" }}>Dati trattati</th>
+                  <th style={{ width: "24%" }}>Base giuridica</th>
+                  <th>Conservazione</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td>Identificativi e di contatto (clienti)</td><td>Gestione della richiesta, trattativa, esito, scambio dei recapiti</td><td>Art. 6.1.b</td></tr>
-                <tr><td>Dati dell'evento e della richiesta</td><td>Calcolo del preventivo, verifica di disponibilità e distanza</td><td>Art. 6.1.b</td></tr>
-                <tr><td>Dati indispensabili del profilo professionista</td><td>Pubblicazione del profilo e ricerca da parte dei clienti</td><td>Art. 6.1.b</td></tr>
-                <tr><td>Contenuti facoltativi del profilo (presentazione, foto ulteriori, link)</td><td>Arricchimento del profilo pubblico</td><td>Art. 6.1.b</td></tr>
-                <tr><td>Dati commerciali e di disponibilità</td><td>Determinazione del preventivo e delle date disponibili</td><td>Art. 6.1.b</td></tr>
-                <tr><td>Valutazioni e testi delle recensioni</td><td>Invito a recensire</td><td>Art. 6.1.f</td></tr>
-                <tr><td>Valutazioni e testi delle recensioni</td><td>Raccolta, gestione e pubblicazione della recensione</td><td>Art. 6.1.b (raccolta) e art. 6.1.f (pubblicazione)</td></tr>
-                <tr><td>Dati degli annunci e delle candidature</td><td>Pubblicazione e trasmissione al destinatario</td><td>Art. 6.1.b</td></tr>
-                <tr><td>Indirizzo e-mail e preferenze</td><td>Comunicazioni informative e promozionali</td><td>Art. 6.1.a</td></tr>
-                <tr><td>Contenuti pubblicati e dati del profilo</td><td>Verifica preventiva e prevenzione degli abusi</td><td>Art. 6.1.f</td></tr>
-                <tr><td>Dati tecnici e di sessione</td><td>Funzionamento del Sito, sicurezza, continuità del servizio</td><td>Art. 6.1.f</td></tr>
+                <tr><td>Gestione richieste di preventivo e contatto (5.1)</td><td>Nome, cognome, e-mail, telefono, messaggio, allegati</td><td>Art. 6.1.b GDPR</td><td>V. punto 13</td></tr>
+                <tr><td>Esecuzione del contratto (5.2)</td><td>Dati necessari all'esecuzione</td><td>Art. 6.1.b GDPR</td><td>V. punto 13</td></tr>
+                <tr><td>Gestione recensioni (5.3)</td><td>E-mail, testo, valutazione, nome/pseudonimo</td><td>Art. 6.1.f GDPR</td><td>V. punto 13</td></tr>
+                <tr><td>Gestione del sito web (5.4)</td><td>Dati di navigazione, log di sistema</td><td>Art. 6.1.f GDPR</td><td>V. punto 13</td></tr>
+                <tr><td>Comunicazioni commerciali (5.5)</td><td>E-mail</td><td>Art. 6.1.a GDPR</td><td>V. punto 13</td></tr>
+                <tr><td>Miglioramento dei servizi (5.6)</td><td>Dati in forma anonima/aggregata</td><td>Art. 6.1.f GDPR</td><td>V. punto 13</td></tr>
+                <tr><td>Obblighi di legge e difesa dei diritti (5.7)</td><td>Tutti i dati necessari</td><td>Art. 6.1.c e 6.1.f GDPR</td><td>V. punto 13</td></tr>
               </tbody>
             </table>
           </div>
 
-          {/* 9 */}
-          <S id="c9">9. Cookie e strumenti di archiviazione</S>
+          <h2>9. Cookie e tecnologie di tracciamento</h2>
           <p>
-            Il Sito utilizza esclusivamente strumenti <b>tecnici e strettamente necessari</b>. Per tali
-            strumenti, ai sensi dell'art. 122 del D.Lgs. 196/2003 e delle Linee guida del Garante per
-            la protezione dei dati personali, non è richiesto il consenso dell'utente.
+            Il Sito utilizza cookie tecnici necessari al suo corretto funzionamento. Il riferimento ai
+            "cookie" comprende anche la memoria locale del browser (local storage) e strumenti analoghi.
           </p>
+          <p>Di seguito sono indicati i cookie utilizzati dal Sito.</p>
           <div className="pv-scroll">
             <table className="pv-tab">
               <thead>
                 <tr>
-                  <th style={{ width: "26%" }}>Strumento</th>
-                  <th style={{ width: "20%" }}>Tipo</th>
-                  <th style={{ width: "28%" }}>Finalità</th>
-                  <th>Durata</th>
+                  <th style={{ width: "26%" }}>Nome del cookie</th>
+                  <th style={{ width: "14%" }}>Tipo</th>
+                  <th>Finalità</th>
+                  <th style={{ width: "17%" }}>Durata</th>
+                  <th style={{ width: "14%" }}>Fornitore</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>Token di sessione dell'area riservata (memoria locale del browser, gestita dal servizio di autenticazione)</td>
-                  <td>Tecnico, prima parte</td>
-                  <td>Mantenere l'utente autenticato fra una pagina e l'altra</td>
-                  <td>Fino alla disconnessione o alla scadenza della sessione</td>
+                  <td>sb-*-auth-token</td>
+                  <td>Tecnico</td>
+                  <td>Autenticazione e gestione della sessione utente (Supabase)</td>
+                  <td>Sessione / persistente</td>
+                  <td>Supabase</td>
                 </tr>
                 <tr>
-                  <td>Codice temporaneo di verifica dell'accesso</td>
-                  <td>Tecnico, prima parte</td>
-                  <td>Completare le procedure di accesso e di reimpostazione della password</td>
-                  <td>Durata della singola procedura</td>
+                  <td>__vercel_live_token</td>
+                  <td>Tecnico</td>
+                  <td>Funzionamento del servizio di hosting (Vercel)</td>
+                  <td>Sessione</td>
+                  <td>Vercel</td>
                 </tr>
               </tbody>
             </table>
           </div>
           <p>
-            Il Sito <b>non utilizza</b> cookie di profilazione o pubblicitari, strumenti di statistica
-            di terze parti, pixel di tracciamento, social plugin, mappe o video incorporati.
-          </p>
-          <p>
-            I caratteri tipografici utilizzati dal Sito sono ospitati sul nostro stesso dominio:
-            la visualizzazione delle pagine non comporta alcuna richiesta a server di terze parti.
-          </p>
-          <p>
-            L'utente può eliminare in ogni momento i dati conservati dal browser tramite le relative
-            impostazioni; ciò comporterà la necessità di effettuare nuovamente l'accesso. Qualora in
-            futuro siano introdotti strumenti che richiedono il consenso, la presente informativa sarà
-            aggiornata e il consenso raccolto preventivamente.
+            Il Sito non utilizza cookie di profilazione propri. L'utente può gestire le preferenze
+            relative ai cookie attraverso le impostazioni del proprio browser.
           </p>
 
-          {/* 10 */}
-          <S id="c10">10. Trasferimenti di dati fuori dallo Spazio economico europeo</S>
+          <h2>10. Trasferimenti di dati verso paesi terzi</h2>
           <p>
-            L'archiviazione primaria dei dati della piattaforma avviene su infrastruttura ubicata
-            nell'Unione Europea. Alcuni fornitori indicati al punto 7.2 hanno sede negli Stati Uniti
-            d'America o si avvalgono di sub-responsabili situati al di fuori dello SEE: per tali
-            trasferimenti il Titolare si avvale delle garanzie previste dal Capo V del GDPR, in
-            particolare le <b>clausole contrattuali tipo</b> adottate dalla Commissione europea e,
-            ove il fornitore vi aderisca, la <b>decisione di adeguatezza relativa al Data Privacy
-            Framework UE-USA</b>.
+            I fornitori di servizi indicati al punto 7.2 hanno sede negli Stati Uniti. I trasferimenti
+            di dati personali verso tali paesi avvengono sulla base di clausole contrattuali tipo
+            approvate dalla Commissione europea (Standard Contractual Clauses, SCC) ovvero, per i
+            fornitori certificati, la decisione di adeguatezza della Commissione del 10 luglio 2023
+            relativa al Data Privacy Framework UE-USA (art. 45 GDPR).
           </p>
           <p>
-            L'interessato può richiedere informazioni sulle garanzie in concreto applicate a ciascun
-            fornitore, e copia delle stesse, scrivendo a{" "}
-            <a href="mailto:info@clickeventi.it">info@clickeventi.it</a>.
+            L'interessato può richiedere copia delle garanzie adottate scrivendo all'indirizzo e-mail
+            indicato al punto 1.
           </p>
 
-          {/* 11 */}
-          <S id="c11">11. Processi decisionali automatizzati</S>
+          <h2>11. Processi decisionali automatizzati</h2>
           <p>
-            Il Sito ordina i risultati di ricerca secondo criteri oggettivi e uguali per tutti gli
-            utenti: corrispondenza con il tipo di evento e con i termini cercati, disponibilità nella
-            data indicata, distanza dal comune dell'evento, prezzo. Il preventivo è calcolato
-            applicando il listino pubblicato dal professionista e le sue fasce chilometriche.
-          </p>
-          <p>
-            Tali elaborazioni non comportano la costruzione di profili individuali degli utenti né la
-            personalizzazione dei risultati sulla base del comportamento di navigazione. Non vengono
-            effettuati processi decisionali basati unicamente su trattamenti automatizzati che
-            producano effetti giuridici o incidano in modo analogamente significativo
-            sull'interessato ai sensi dell'art. 22 GDPR.
+            Il Titolare non adotta processi decisionali interamente automatizzati, compresa la
+            profilazione, ai sensi dell'art. 22 GDPR.
           </p>
 
-          {/* 12 */}
-          <S id="c12">12. Diritti dell'interessato</S>
-          <p>Ai sensi degli artt. 15-22 GDPR, l'interessato ha diritto di:</p>
-          <ul>
-            <li>accedere ai propri dati e ottenerne copia (art. 15);</li>
-            <li>ottenere la rettifica dei dati inesatti o l'integrazione di quelli incompleti (art. 16);</li>
-            <li>ottenere la cancellazione dei dati nei casi previsti (art. 17);</li>
-            <li>ottenere la limitazione del trattamento (art. 18);</li>
-            <li>ricevere i dati personali in un formato strutturato, di uso comune e leggibile da dispositivo automatico e trasmetterli a un altro titolare, nei casi e alle condizioni previsti dall'art. 20 GDPR;</li>
-            <li>opporsi al trattamento fondato sul legittimo interesse, per motivi connessi alla propria situazione particolare (art. 21.1);</li>
-            <li><b>opporsi in qualsiasi momento, senza necessità di motivazione, al trattamento per finalità di marketing diretto</b> (art. 21.2);</li>
-            <li>revocare il consenso prestato, senza che ciò pregiudichi la liceità del trattamento effettuato prima della revoca (art. 7.3).</li>
-          </ul>
-          <div className="pv-box">
-            <p>
-              I diritti si esercitano scrivendo a{" "}
-              <a href="mailto:info@clickeventi.it">info@clickeventi.it</a>. Il Titolare risponde senza
-              ingiustificato ritardo e comunque entro un mese, prorogabile di due mesi in caso di
-              particolare complessità. L'interessato ha inoltre diritto di proporre reclamo al Garante
-              per la protezione dei dati personali
-              (<a href="https://www.garanteprivacy.it" target="_blank" rel="noreferrer">garanteprivacy.it</a>)
-              o all'autorità di controllo dello Stato di residenza.
-            </p>
-          </div>
-          <p>
-            La cancellazione del profilo di un professionista comporta la rimozione dei relativi
-            contenuti pubblici. Le recensioni ricevute possono essere conservate, ove necessario, in
-            forma effettivamente anonimizzata, eliminando gli elementi che consentano di identificare
-            il recensore: i dati così trattati non costituiscono più dati personali. I dati personali
-            eventualmente ancora presenti restano soggetti ai diritti di cui agli artt. 15-22 GDPR.
-          </p>
-
-          {/* 13 */}
-          <S id="c13">13. Per quanto tempo conserviamo i dati</S>
-          <div className="pv-scroll">
-            <table className="pv-tab">
-              <thead>
-                <tr><th style={{ width: "42%" }}>Dati</th><th>Periodo di conservazione</th></tr>
-              </thead>
-              <tbody>
-                <tr><td>Richieste di preventivo e trattative concluse</td><td>24 mesi dalla conclusione</td></tr>
-                <tr><td>Account e profili dei professionisti</td><td>Per la durata del rapporto; in caso di inattività dell'account protratta per 24 mesi, il Titolare informa l'interessato e procede alla cancellazione in assenza di riscontro</td></tr>
-                <tr><td>Recensioni pubblicate</td><td>Fino alla permanenza del profilo recensito sul Sito; successivamente, in forma anonimizzata</td></tr>
-                <tr><td>Annunci e candidature</td><td>24 mesi dalla pubblicazione</td></tr>
-                <tr><td>Dati trattati sulla base del consenso</td><td>Fino alla revoca del consenso, che determina la cessazione del trattamento fondato su tale base, salva la conservazione dei dati per i quali sussista un'altra base giuridica</td></tr>
-                <tr><td>Registri tecnici di sistema</td><td>Per il tempo necessario alle finalità di sicurezza, secondo le politiche dei fornitori</td></tr>
-                <tr><td>Copie di sicurezza</td><td>Le cancellazioni si riflettono sulle copie di sicurezza entro il relativo ciclo di rotazione, al termine del quale i dati sono definitivamente rimossi</td></tr>
-                <tr><td>Dati necessari all'esercizio o alla difesa di un diritto</td><td>Per il periodo di prescrizione applicabile, salvo ulteriori esigenze derivanti da procedimenti già instaurati</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <p>
-            Decorsi tali termini i dati sono cancellati o resi anonimi, fatti salvi gli obblighi di
-            conservazione previsti dalla legge. L'interessato può richiederne la cancellazione
-            anticipata ai sensi del punto 12.
-          </p>
-
-          {/* 14 */}
-          <S id="c14">14. Come proteggiamo i dati</S>
-          <p>
-            Il Titolare adotta misure tecniche e organizzative adeguate al rischio, fra cui:
-          </p>
-          <ul>
-            <li>trasmissione dei dati tramite protocollo cifrato HTTPS;</li>
-            <li>gestione delle credenziali affidata al servizio di autenticazione del fornitore, che memorizza le password mediante funzioni crittografiche di hashing: le password non sono conservate in chiaro e non sono accessibili al Titolare;</li>
-            <li>regole di accesso ai dati applicate a livello di banca dati, che limitano la visibilità dei dati di ciascuna richiesta al professionista destinatario e impediscono agli utenti di accedere ai dati di altri utenti;</li>
-            <li>controlli che impediscono ai professionisti di modificare autonomamente lo stato di approvazione del profilo, le valutazioni ricevute e i contatti altrui;</li>
-            <li>verifica preventiva dei contenuti pubblicati;</li>
-            <li>copie di sicurezza periodiche della banca dati.</li>
+          <h2>12. Diritti dell'interessato</h2>
+          <p>L'interessato può esercitare in qualsiasi momento i seguenti diritti:</p>
+          <ul className="pv-el">
+            <li>diritto di accesso (art. 15 GDPR): ottenere conferma dell'esistenza di un trattamento e accedere ai propri dati;</li>
+            <li>diritto di rettifica (art. 16 GDPR): ottenere la correzione dei dati inesatti o l'integrazione dei dati incompleti;</li>
+            <li>diritto alla cancellazione (art. 17 GDPR): ottenere la cancellazione dei propri dati, nei casi previsti dalla legge;</li>
+            <li>diritto di limitazione (art. 18 GDPR): ottenere la limitazione del trattamento nei casi previsti;</li>
+            <li>diritto alla portabilità (art. 20 GDPR): ricevere i propri dati in un formato strutturato, di uso comune e leggibile da dispositivo automatico;</li>
+            <li>diritto di opposizione (art. 21 GDPR): opporsi al trattamento dei dati per motivi connessi alla propria situazione particolare;</li>
+            <li>diritto di revocare il consenso (art. 7.3 GDPR): la revoca non pregiudica la liceità del trattamento basata sul consenso prima della revoca.</li>
           </ul>
           <p>
-            Il Titolare, in qualità di amministratore della piattaforma, può accedere ai dati
-            necessari alla gestione del servizio e all'assistenza agli utenti.
+            <b>Diritto di opposizione:</b> l'interessato può opporsi in qualsiasi momento ai trattamenti
+            fondati sul legittimo interesse (punti 5.3, 5.6 e 5.7) per motivi connessi alla propria
+            situazione particolare, e in ogni momento e senza motivazione ai trattamenti per finalità
+            promozionali.
+          </p>
+          <p>
+            Per esercitare i diritti sopra indicati, l'interessato può inviare una richiesta
+            all'indirizzo e-mail: <a href="mailto:info@clickeventi.it">info@clickeventi.it</a>.
+          </p>
+          <p>
+            Il Titolare può chiedere informazioni necessarie a verificare l'identità del richiedente
+            (art. 12.6 GDPR).
+          </p>
+          <p>
+            L'interessato ha inoltre il diritto di proporre reclamo all'Autorità Garante per la
+            protezione dei dati personali (Piazza Venezia 11, 00187 Roma) ai sensi dell'art. 77 GDPR,
+            o di ricorrere all'autorità giudiziaria (art. 79 GDPR).
           </p>
 
-          {/* 15 */}
-          <S id="c15">15. Minori</S>
+          <h2>13. Conservazione dei dati</h2>
           <p>
-            Il Sito e i relativi servizi sono destinati a <b>persone maggiorenni</b>: non è consentito
-            registrarsi, inviare richieste, pubblicare annunci o candidarsi a chi non abbia compiuto
-            18 anni.
+            I dati personali sono conservati per il tempo strettamente necessario al conseguimento
+            delle finalità per le quali sono stati raccolti, nel rispetto del principio di limitazione
+            della conservazione (art. 5.1.e GDPR). Di seguito i principali periodi di conservazione.
           </p>
+          <div className="pv-scroll">
+            <table className="pv-tab">
+              <thead>
+                <tr>
+                  <th style={{ width: "36%" }}>Categoria di dati</th>
+                  <th>Periodo di conservazione</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Richieste di preventivo e contatto</td><td>24 mesi dalla conclusione della richiesta o del rapporto contrattuale; per le richieste non concluse, 12 mesi dall'ultima attività</td></tr>
+                <tr><td>Dati relativi alle recensioni</td><td>Per il tempo di pubblicazione della recensione sul Sito; l'utente può richiederne la cancellazione in qualsiasi momento</td></tr>
+                <tr><td>Comunicazioni commerciali</td><td>Fino alla revoca del consenso</td></tr>
+                <tr><td>Registri tecnici di sistema</td><td>Di norma non oltre 90 giorni, salvo necessità di conservazione ulteriore per accertare incidenti di sicurezza</td></tr>
+                <tr><td>Dati necessari all'esercizio o alla difesa di un diritto</td><td>Per il periodo di prescrizione applicabile (di norma 10 anni, art. 2946 c.c., o il diverso termine previsto)</td></tr>
+                <tr><td>Copie di sicurezza (backup)</td><td>Per il tempo necessario a garantire la continuità del servizio e il ripristino dei dati, con ciclo di rotazione.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2>14. Misure di sicurezza</h2>
           <p>
-            Tale limitazione riguarda l'utilizzo del servizio in qualità di utente e non impedisce che
-            un evento riguardi minori o che un minore sia menzionato o rappresentato nei contenuti
-            conferiti: in tal caso l'utente che inserisce i dati dichiara di essere titolare della
-            responsabilità genitoriale o di disporre del consenso di chi la esercita.
-          </p>
-          <p>
-            Qualora il Titolare rilevi che un account sia stato creato da un minore, procede alla
-            sospensione e alla cancellazione dei relativi dati senza ingiustificato ritardo.
+            Il Titolare adotta misure tecniche e organizzative adeguate per proteggere i dati personali
+            contro la distruzione accidentale o illecita, la perdita, l'alterazione, la comunicazione
+            non autorizzata o l'accesso ai dati personali trasmessi, conservati o comunque trattati.
+            Tali misure comprendono, a titolo esemplificativo e non esaustivo: trasmissione dei dati
+            tramite protocollo HTTPS/TLS, accesso limitato ai dati da parte del personale autorizzato,
+            procedure di backup periodiche.
           </p>
 
-          {/* 16 */}
-          <S id="c16">16. Modifiche all'informativa</S>
+          <h2>15. Minori</h2>
           <p>
-            Il Titolare può aggiornare la presente informativa, in particolare a seguito di modifiche
-            normative o di variazioni nelle modalità di trattamento. La data indicata in apertura
-            individua sempre la versione vigente. In caso di modifiche sostanziali, gli utenti
-            registrati saranno informati via e-mail.
+            Il Sito e i servizi offerti non sono destinati a minori di 18 anni. Il Titolare non raccoglie
+            intenzionalmente dati personali di minori.
+          </p>
+          <p>
+            Il Titolare non è in grado di verificare l'età degli utenti; al momento della registrazione o
+            dell'invio della richiesta l'utente dichiara di essere maggiorenne.
+          </p>
+          <p>
+            Qualora il Titolare venga a conoscenza di aver raccolto dati personali di un minore senza il
+            consenso del genitore o del tutore, provvederà alla cancellazione dei dati nel più breve
+            tempo possibile. Il genitore o il tutore che ritenga che il proprio figlio o assistito abbia
+            fornito dati personali attraverso il Sito è invitato a contattare il Titolare all'indirizzo
+            e-mail indicato al punto 1. Il genitore o il tutore che inserisce dati del minore nel Sito
+            dichiara di essere titolare della responsabilità genitoriale o di disporre
+            dell'autorizzazione di chi la esercita, e si impegna a limitare tali dati allo stretto
+            necessario; la pubblicazione di immagini di minori è consentita solo nel rispetto della
+            normativa vigente (art. 96 L. 633/1941).
           </p>
 
-          <p style={{ marginTop: 30 }}>
+          <h2>16. Modifiche alla presente informativa</h2>
+          <p>
+            Il Titolare si riserva il diritto di modificare, integrare o aggiornare la presente
+            informativa in qualsiasi momento, in conformità alla normativa vigente. Le modifiche saranno
+            efficaci dalla data indicata in apertura del documento. Si invita l'utente a consultare
+            periodicamente la presente pagina.
+          </p>
+          <p>
+            Le modifiche che comportino nuove finalità o nuove basi giuridiche fondate sul consenso
+            saranno applicate solo previa raccolta del consenso, ove necessario.
+          </p>
+
+          <p style={{ marginTop: 32 }}>
             <a href="/">← Torna al sito</a>
           </p>
         </div>
