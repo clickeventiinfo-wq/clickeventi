@@ -163,6 +163,7 @@ function fromDb(r) {
     lng: r.lng,
     zone: Array.isArray(r.zone) ? r.zone : [],
     raggioMax: r.raggio_max,
+    variazGiorno: r.variazioni_giorno || {},
     bio: r.bio,
     rating: r.rating,
     reviews: r.recensioni,
@@ -201,6 +202,13 @@ function distanzaMinima(p, eventLoc) {
   return Math.min(...punti.map((z) => distanceKm(z, eventLoc)));
 }
 
+/* differenza di prezzo legata al giorno della settimana dell'evento */
+function variazioneGiorno(p, data) {
+  if (!data || !p.variazGiorno) return 0;
+  const g = new Date(data).getDay();          // 0 = domenica … 6 = sabato
+  return Number(p.variazGiorno[String(g)]) || 0;
+}
+
 function feeFor(p, eventLoc) {
   if (!eventLoc || !p.lat) return 0;
   const km = distanzaMinima(p, eventLoc);
@@ -208,8 +216,15 @@ function feeFor(p, eventLoc) {
   return f ? f.fee : 0;
 }
 
-const minPrice = (p, eventLoc) =>
-  p.packages.length ? Math.min(...p.packages.map((k) => k.base)) + feeFor(p, eventLoc) : 0;
+const minPrice = (p, eventLoc, dataEvento) =>
+  p.packages.length
+    ? Math.max(
+        Math.min(...p.packages.map((k) => k.base))
+          + feeFor(p, eventLoc)
+          + variazioneGiorno(p, dataEvento),
+        0
+      )
+    : 0;
 
 function defaultPackage(p, eventType) {
   return (
@@ -247,7 +262,7 @@ function controllaEmail(valore) {
   return "";
 }
 
-function computeQuote(p, pkg, ore, ospiti, selectedExtras, eventLoc) {
+function computeQuote(p, pkg, ore, ospiti, selectedExtras, eventLoc, dataEvento) {
   const rows = [{ label: pkg.label, value: pkg.base }];
   let tot = pkg.base;
 
@@ -269,10 +284,14 @@ function computeQuote(p, pkg, ore, ospiti, selectedExtras, eventLoc) {
     }
   });
 
+  /* la trasferta e la variazione per giorno si sommano al pacchetto:
+     il cliente vede un totale unico, senza voci separate */
   const fee = feeFor(p, eventLoc);
-  if (fee > 0) {
-    rows[0] = { label: rows[0].label, value: rows[0].value + fee };
-    tot += fee;
+  const varGiorno = variazioneGiorno(p, dataEvento);
+  const aggiunta = fee + varGiorno;
+  if (aggiunta !== 0) {
+    rows[0] = { label: rows[0].label, value: Math.max(rows[0].value + aggiunta, 0) };
+    tot = Math.max(tot + aggiunta, 0);
   }
   return { rows, tot };
 }
@@ -672,7 +691,7 @@ function Header({ goHome }) {
   );
 }
 
-function ProviderCard({ p, onOpen, eventType, eventLoc }) {
+function ProviderCard({ p, onOpen, eventType, eventLoc, eventDate }) {
   const initials = p.name.split(" ").map((w) => w[0]).slice(0, 2).join("");
   const fits = eventType && p.eventTypes.includes(eventType);
   return (
@@ -703,7 +722,7 @@ function ProviderCard({ p, onOpen, eventType, eventLoc }) {
       {p.bookings > 0 && (
         <div className="cv-bookings"><Check size={13} /> {p.bookings} event{p.bookings === 1 ? "o" : "i"} su Click Eventi</div>
       )}
-      <div className="cv-price">da {minPrice(p, eventLoc)} € <small>a pacchetto</small></div>
+      <div className="cv-price">da {minPrice(p, eventLoc, eventDate)} € <small>a pacchetto</small></div>
     </div>
   );
 }
@@ -869,7 +888,7 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
   /* prezzo massimo possibile, arrotondato, per calibrare il cursore */
   const maxPossibile = Math.max(
     600,
-    ...providers.map((p) => minPrice(p, zona)).filter((n) => Number.isFinite(n))
+    ...providers.map((p) => minPrice(p, zona, date)).filter((n) => Number.isFinite(n))
   );
   const tetto = Math.ceil(maxPossibile / 100) * 100;
   const budget = q.budget ?? tetto;          // undefined = nessun limite
@@ -888,7 +907,7 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
       somiglia(p.name, cerca) ||
       somiglia(catLabel(p.cat), cerca) ||
       (p.packages || []).some((k) => somiglia(k.label, cerca)))
-    .filter((p) => senzaLimite || minPrice(p, zona) <= budget)
+    .filter((p) => senzaLimite || minPrice(p, zona, date) <= budget)
     .sort((a, b) => {
       const fa = a.eventTypes.includes(etype) ? 1 : 0;
       const fb = b.eventTypes.includes(etype) ? 1 : 0;
@@ -995,7 +1014,7 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
             {loading ? <Caricamento /> : results.length > 0 ? (
               <div className="cv-grid">
                 {results.map((p) => (
-                  <ProviderCard key={p.id} p={p} onOpen={openProvider} eventType={etype} eventLoc={zona} />
+                  <ProviderCard key={p.id} p={p} onOpen={openProvider} eventType={etype} eventLoc={zona} eventDate={date} />
                 ))}
               </div>
             ) : (
@@ -1043,7 +1062,7 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
   const pkg = p.packages.find((k) => k.id === pkgId) || p.packages[0];
   if (!pkg) return <div className="cv-panel cv-card-base">Nessun pacchetto disponibile.</div>;
 
-  const quote = computeQuote(p, pkg, ore, pkg.scale.on === "persone" ? persone : ospiti, extras, eventLoc);
+  const quote = computeQuote(p, pkg, ore, pkg.scale.on === "persone" ? persone : ospiti, extras, eventLoc, prefillDate);
   const toggle = (id) => setExtras((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
   const selectPkg = (k) => { setPkgId(k.id); if (k.scale.on === "ore") setOre(k.scale.included); };
 
@@ -1201,7 +1220,7 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
           <input type="radio" name="pkg" checked={k.id === pkgId} onChange={() => selectPkg(k)}
                  style={{ display: "none" }} />
           <span className="cv-pkg-event">{k.event === "Tutti" ? "Ogni evento" : k.event}</span>
-          <b>{k.label} <span>{k.base + feeFor(p, eventLoc)} €</span></b>
+          <b>{k.label} <span>{Math.max(k.base + feeFor(p, eventLoc) + variazioneGiorno(p, prefillDate), 0)} €</span></b>
           <small>{k.includes.join(" · ")}</small>
           {k.descrizione && k.id === pkgId && (
             <small style={{ display: "block", marginTop: 6, color: "var(--ink)", lineHeight: 1.5 }}>{k.descrizione}</small>

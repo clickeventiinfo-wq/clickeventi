@@ -312,6 +312,10 @@ function Listino({ f, ricarica, mostra }) {
   const [fasce, setFasce] = useState([...(f.fasce || [])].sort((a, b) => a.fino_a_km - b.fino_a_km));
   const [nuovaFascia, setNuovaFascia] = useState({ fino: "", fee: "" });
   const [raggio, setRaggio] = useState(f.raggio_max ?? 150);
+  const [variaz, setVariaz] = useState(f.variazioni_giorno || {});
+  const [apriGiorni, setApriGiorni] = useState(
+    Object.values(f.variazioni_giorno || {}).some((v) => Number(v) !== 0)
+  );
   const [nuovo, setNuovo] = useState(null);
   const [nuovoExtra, setNuovoExtra] = useState({ label: "", prezzo: "", descrizione: "" });
   const [salvando, setSalvando] = useState(false);
@@ -338,7 +342,12 @@ function Listino({ f, ricarica, mostra }) {
     }
     for (const e of extra) await supabase.from("extra").update({ label: e.label, prezzo: Number(e.prezzo) || 0, descrizione: e.descrizione || null }).eq("id", e.id);
     for (const x of fasce) await supabase.from("fasce").update({ fino_a_km: Number(x.fino_a_km) || 0, fee: Number(x.fee) || 0 }).eq("id", x.id);
-    await supabase.from("fornitori").update({ raggio_max: Number(raggio) || 150 }).eq("id", f.id);
+    await supabase.from("fornitori").update({
+      raggio_max: Number(raggio) || 150,
+      variazioni_giorno: Object.fromEntries(
+        Object.entries(variaz).filter(([, v]) => Number(v)).map(([g, v]) => [g, Number(v)])
+      ),
+    }).eq("id", f.id);
     setSalvando(false);
     mostra("Listino aggiornato ✓");
     ricarica();
@@ -488,6 +497,35 @@ function Listino({ f, ricarica, mostra }) {
           <span style={{ color: "var(--grigio)" }}>km →</span>
           <input type="number" value={nuovaFascia.fee} onChange={(e) => setNuovaFascia({ ...nuovaFascia, fee: e.target.value })} placeholder="€" />
           <button className="fp-btn" onClick={addFascia}>Aggiungi</button>
+        </div>
+
+        <div style={{ borderTop: "1px solid var(--linea)", marginTop: 18, paddingTop: 16 }}>
+          {!apriGiorni ? (
+            <button className="fp-btn" onClick={() => setApriGiorni(true)}>
+              <Plus size={14} /> Il prezzo cambia in base al giorno?
+            </button>
+          ) : (
+            <>
+              <label style={{ marginTop: 0 }}>Variazione per giorno della settimana</label>
+              <p className="fp-hint" style={{ marginBottom: 10 }}>
+                Scrivi un importo solo nei giorni in cui il prezzo cambia. Puoi aumentare
+                (es. 80) o ridurre (es. -50). Il cliente vede solo il totale.
+              </p>
+              {[["1","Lunedì"],["2","Martedì"],["3","Mercoledì"],["4","Giovedì"],
+                ["5","Venerdì"],["6","Sabato"],["0","Domenica"]].map(([g, nome]) => (
+                <div key={g} className="fp-inline" style={{ marginTop: 7 }}>
+                  <span style={{ minWidth: 92, color: "var(--grigio)" }}>{nome}</span>
+                  <input type="number" value={variaz[g] ?? ""} placeholder="0"
+                         onChange={(e) => setVariaz({ ...variaz, [g]: e.target.value })} />
+                  <span style={{ color: "var(--grigio)" }}>€</span>
+                </div>
+              ))}
+              <button className="fp-btn" style={{ marginTop: 11 }}
+                      onClick={() => { setVariaz({}); setApriGiorni(false); }}>
+                Prezzo uguale tutti i giorni
+              </button>
+            </>
+          )}
         </div>
 
         <div style={{ borderTop: "1px solid var(--linea)", marginTop: 18, paddingTop: 16 }}>
