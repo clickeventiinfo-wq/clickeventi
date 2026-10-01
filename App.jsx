@@ -1513,7 +1513,13 @@ export default function ClickEventiV2() {
       <footer className="cv-footer">
         <div className="cv-container">
           <span><b className="cv-display" style={{ color: "var(--ink)" }}>Click<em style={{ color: "var(--accent)", fontStyle: "normal" }}>Eventi</em></b> — Il tuo evento, in un click.</span>
-          <span><a href="/?bacheca" style={{ color: "var(--grigio)", fontWeight: 600 }}>Annunci per eventi</a> · <a href="/?privacy" style={{ color: "var(--grigio)", fontWeight: 600 }}>Privacy e cookie</a></span>
+          <span>
+            <a href="/?bacheca" style={{ color: "var(--grigio)", fontWeight: 600 }}>Annunci per eventi</a>
+            {" · "}
+            <a href="mailto:info@clickeventi.it" style={{ color: "var(--grigio)", fontWeight: 600 }}>Contatti</a>
+            {" · "}
+            <a href="/?privacy" style={{ color: "var(--grigio)", fontWeight: 600 }}>Privacy e cookie</a>
+          </span>
         </div>
       </footer>
     </div>
