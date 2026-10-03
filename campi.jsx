@@ -289,3 +289,67 @@ export function CalendarioInput({
     </div>
   );
 }
+
+/* ============================================================
+   Anteprima del listino: mostra quanto costerebbe il pacchetto
+   al crescere di ore, ospiti o persone. Serve a far vedere
+   subito se il prezzo che si sta impostando è credibile,
+   perché il costo reale non cresce in modo proporzionale.
+   ============================================================ */
+const SCAGLIONI = {
+  ore:     { valori: [1, 2, 3, 5, 8], unita: (n) => `${n} or${n === 1 ? "a" : "e"}` },
+  ospiti:  { valori: [30, 50, 100, 200, 500], unita: (n) => `${n} ospiti` },
+  persone: { valori: [1, 2, 4, 6, 10], unita: (n) => `${n} person${n === 1 ? "a" : "e"}` },
+};
+
+export function AnteprimaListino({ tipo, base, inclusi, costoUnita }) {
+  if (!tipo || tipo === "fisso") return null;
+  const s = SCAGLIONI[tipo];
+  if (!s) return null;
+
+  const b = Number(base) || 0;
+  const incl = Number(inclusi) || 0;
+  const unita = Number(costoUnita) || 0;
+  if (!b) return null;
+
+  const righe = s.valori
+    .filter((n) => n >= incl)
+    .slice(0, 5)
+    .map((n) => ({ n, prezzo: b + Math.max(n - incl, 0) * unita }));
+
+  if (!righe.length) return null;
+
+  const massimo = righe[righe.length - 1];
+  const esagerato = unita > 0 && massimo.prezzo > b * 3;
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <p style={{ font: "700 10.5px 'Work Sans', sans-serif", letterSpacing: ".06em",
+                  textTransform: "uppercase", color: "#6E6A80", marginBottom: 7 }}>
+        Quanto costerebbe
+      </p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {righe.map(({ n, prezzo }) => (
+          <span key={n} style={{
+            background: "#FAF9F7", border: "1px solid #ECE9E2", borderRadius: 9,
+            padding: "6px 11px", font: "500 12.5px 'Work Sans', sans-serif", color: "#3A3552",
+          }}>
+            {s.unita(n)} · <b style={{ color: "#23203A" }}>{prezzo} €</b>
+          </span>
+        ))}
+      </div>
+
+      {esagerato && (
+        <div style={{
+          background: "#FBF2E2", borderRadius: 10, padding: "11px 13px", marginTop: 9,
+          font: "500 12.8px 'Work Sans', sans-serif", color: "#8A5A12", lineHeight: 1.55,
+        }}>
+          Con questo listino {s.unita(massimo.n)} costerebbero <b>{massimo.prezzo} €</b>.
+          Di solito il prezzo non cresce in modo proporzionale: se per gli impegni più
+          lunghi applichi tariffe diverse, conviene creare un pacchetto dedicato
+          (es. “Mezza giornata”, “Serata intera”) invece di aumentare il costo unitario.
+        </div>
+      )}
+    </div>
+  );
+}

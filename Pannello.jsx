@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { supabase } from "./supabase";
 import { ComuneInput, ComuniMultipli } from "./comuni.jsx";
+import { AnteprimaListino } from "./campi.jsx";
 
 /* ============================================================
    CLICK EVENTI — Pannello del professionista (collegato al DB)
@@ -443,10 +444,13 @@ function Listino({ f, ricarica, mostra }) {
               {SCALE_OPTS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
             </select>
             {p.scale_on !== "fisso" && (
-              <div className="fp-row">
-                <div><label>{s.inclLabel}</label><input type="number" value={p.inclusi} onChange={(e) => upPkg(p.id, "inclusi", e.target.value)} /></div>
-                <div><label>{s.extraLabel}</label><input type="number" value={p.extra_unita} onChange={(e) => upPkg(p.id, "extra_unita", e.target.value)} /></div>
-              </div>
+              <>
+                <div className="fp-row">
+                  <div><label>{s.inclLabel}</label><input type="number" value={p.inclusi} onChange={(e) => upPkg(p.id, "inclusi", e.target.value)} /></div>
+                  <div><label>{s.extraLabel}</label><input type="number" value={p.extra_unita} onChange={(e) => upPkg(p.id, "extra_unita", e.target.value)} /></div>
+                </div>
+                <AnteprimaListino tipo={p.scale_on} base={p.base} inclusi={p.inclusi} costoUnita={p.extra_unita} />
+              </>
             )}
           </div>
         );
@@ -474,10 +478,13 @@ function Listino({ f, ricarica, mostra }) {
             {SCALE_OPTS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
           </select>
           {nuovo.scale_on !== "fisso" && (
-            <div className="fp-row">
-              <div><label>{scaleOpt(nuovo.scale_on).inclLabel}</label><input type="number" value={nuovo.inclusi} onChange={(e) => setNuovo({ ...nuovo, inclusi: e.target.value })} /></div>
-              <div><label>{scaleOpt(nuovo.scale_on).extraLabel}</label><input type="number" value={nuovo.extra_unita} onChange={(e) => setNuovo({ ...nuovo, extra_unita: e.target.value })} /></div>
-            </div>
+            <>
+              <div className="fp-row">
+                <div><label>{scaleOpt(nuovo.scale_on).inclLabel}</label><input type="number" value={nuovo.inclusi} onChange={(e) => setNuovo({ ...nuovo, inclusi: e.target.value })} /></div>
+                <div><label>{scaleOpt(nuovo.scale_on).extraLabel}</label><input type="number" value={nuovo.extra_unita} onChange={(e) => setNuovo({ ...nuovo, extra_unita: e.target.value })} /></div>
+              </div>
+              <AnteprimaListino tipo={nuovo.scale_on} base={nuovo.base} inclusi={nuovo.inclusi} costoUnita={nuovo.extra_unita} />
+            </>
           )}
           <div className="fp-acts" style={{ marginTop: 12 }}>
             <button className="fp-btn ok" onClick={creaPkg}><Check size={15} /> Salva pacchetto</button>

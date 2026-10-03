@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { supabase } from "./supabase";
 import { ComuneInput, ComuniMultipli } from "./comuni.jsx";
-import { PasswordInput } from "./campi.jsx";
+import { PasswordInput, AnteprimaListino } from "./campi.jsx";
 
 /* ============================================================
    CLICK EVENTI — Iscrizione professionista (2 fasi)
@@ -405,10 +405,13 @@ function CompletaProfilo({ user }) {
               <label>Come scala il prezzo</label>
               <select value={p.scaleOn} onChange={(e) => upPkg(i, "scaleOn", e.target.value)}>{SCALE_OPTS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select>
               {p.scaleOn !== "fisso" && (
-                <div className="is-row">
-                  <div><label>{so(p.scaleOn).inclLabel}</label><input type="number" value={p.included} onChange={(e) => upPkg(i, "included", e.target.value)} /></div>
-                  <div><label>{so(p.scaleOn).extraLabel}</label><input type="number" value={p.extra} onChange={(e) => upPkg(i, "extra", e.target.value)} /></div>
-                </div>
+                <>
+                  <div className="is-row">
+                    <div><label>{so(p.scaleOn).inclLabel}</label><input type="number" value={p.included} onChange={(e) => upPkg(i, "included", e.target.value)} /></div>
+                    <div><label>{so(p.scaleOn).extraLabel}</label><input type="number" value={p.extra} onChange={(e) => upPkg(i, "extra", e.target.value)} /></div>
+                  </div>
+                  <AnteprimaListino tipo={p.scaleOn} base={p.base} inclusi={p.included} costoUnita={p.extra} />
+                </>
               )}
             </div>
           ))}
