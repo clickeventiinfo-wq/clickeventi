@@ -515,6 +515,20 @@ const GlobalStyle = () => (
       font: 600 14px 'Work Sans', sans-serif; cursor: pointer; padding: 6px 0;
     }
     .cv-back:hover { color: var(--ink); }
+    .cv-invito {
+      background: var(--accent-soft); border: 1px solid #DDD3FB; border-radius: 14px;
+      padding: 16px 20px; margin-bottom: 18px;
+      display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+    }
+    .cv-invito p { font-size: 14.5px; line-height: 1.55; color: var(--ink); }
+    .cv-invito b { font-family: 'Sora', sans-serif; }
+    .cv-invito a {
+      background: var(--accent); color: #fff; border-radius: 11px; text-decoration: none;
+      font: 700 14px 'Work Sans', sans-serif; padding: 11px 20px; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    .cv-invito a:hover { background: #7A5CE8; }
+    @media (max-width: 640px) { .cv-invito a { width: 100%; justify-content: center; } }
     .cv-empty { padding: 44px 24px; text-align: center; color: var(--grigio); border-style: dashed; }
 
     /* profilo */
@@ -1029,12 +1043,22 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
               {results.length} professionist{results.length === 1 ? "a disponibile" : "i disponibili"}
             </p>
 
+            <div className="cv-invito">
+              <p>
+                <b>Non trovi quello che cerchi?</b> Pubblica un annuncio
+                e sfoglia le candidature dei migliori professionisti.
+              </p>
+              <a href="/?pubblica"><Send size={16} /> Pubblica un annuncio</a>
+            </div>
+
             {loading ? <Caricamento /> : results.length > 0 ? (
-              <div className="cv-grid">
-                {results.map((p) => (
-                  <ProviderCard key={p.id} p={p} onOpen={openProvider} eventType={etype} eventLoc={zona} eventDate={date} />
-                ))}
-              </div>
+              <>
+                <div className="cv-grid">
+                  {results.map((p) => (
+                    <ProviderCard key={p.id} p={p} onOpen={openProvider} eventType={etype} eventLoc={zona} eventDate={date} />
+                  ))}
+                </div>
+              </>
             ) : (
               <div className="cv-empty cv-card-base">
                 <b style={{ color: "var(--ink)", display: "block", marginBottom: 6 }}>
@@ -1042,11 +1066,16 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
                     : !senzaLimite ? "Nessun professionista entro questo budget"
                     : "Stiamo aggiungendo professionisti in questa zona"}
                 </b>
-                Prova ad allargare i filtri — oppure scrivici a{" "}
-                <a href="mailto:info@clickeventi.it" style={{ color: "var(--accent)", fontWeight: 600 }}>
-                  info@clickeventi.it
-                </a>{" "}
-                e cerchiamo noi la persona giusta per il tuo evento.
+                Prova ad allargare i filtri, oppure lascia che siano i professionisti a farsi avanti:
+                pubblica un annuncio con quello che ti serve e ricevi le candidature.
+                <span style={{ display: "block", marginTop: 16 }}>
+                  <a href="/?pubblica"
+                     style={{ background: "var(--accent)", color: "#fff", textDecoration: "none",
+                              borderRadius: 11, padding: "12px 22px", fontWeight: 700,
+                              display: "inline-block", fontSize: 14.5 }}>
+                    Pubblica un annuncio
+                  </a>
+                </span>
               </div>
             )}
           </div>
