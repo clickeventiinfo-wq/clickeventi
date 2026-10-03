@@ -4,6 +4,7 @@ import {
   MapPin, Star, ArrowLeft, Search, Check, CalendarDays, Send, Users, Clock, Navigation, Loader2, Share2
 } from "lucide-react";
 import { supabase } from "./supabase";
+import { Tendina } from "./campi.jsx";
 
 /* ============================================================
    CLICK EVENTI — v2 (collegato al database)
@@ -366,7 +367,7 @@ const GlobalStyle = () => (
       display: block; font: 600 11px 'Work Sans', sans-serif;
       letter-spacing: 0.06em; text-transform: uppercase; color: var(--grigio);
     }
-    .cv-field select, .cv-field input {
+    .cv-field select, .cv-field button, .cv-field input {
       width: 100%; border: none; background: transparent;
       font: 600 14.5px 'Work Sans', sans-serif; color: var(--ink);
       padding: 5px 0 2px; outline: none; cursor: pointer;
@@ -801,16 +802,13 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
           </div>
           <div className="cv-field">
             <span className="cv-flabel">Tipo di evento</span>
-            <select value={etype} onChange={(e) => setEtype(e.target.value)} aria-label="Tipo di evento">
-              {EVENT_TYPES.map((t) => <option key={t}>{t}</option>)}
-            </select>
+            <Tendina valore={etype} onChange={setEtype} etichetta="Tipo di evento"
+                     opzioni={EVENT_TYPES.map((t) => ({ id: t, label: t }))} />
           </div>
           <div className="cv-field">
             <span className="cv-flabel">Categoria</span>
-            <select value={cat} onChange={(e) => setCat(e.target.value)} aria-label="Categoria">
-              <option value="">Tutte</option>
-              {cats.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-            </select>
+            <Tendina valore={cat} onChange={setCat} etichetta="Categoria"
+                     opzioni={[{ id: "", label: "Tutte" }, ...cats.map((c) => ({ id: c.id, label: c.label }))]} />
           </div>
           <div className="cv-field">
             <span className="cv-flabel">Chi cerchi</span>
@@ -989,9 +987,9 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
 
             <div className="cv-fgroup">
               <span className="cv-flabel2">Tipo di evento</span>
-              <select value={etype} onChange={(e) => setQ({ ...q, etype: e.target.value })} aria-label="Tipo di evento">
-                {EVENT_TYPES.map((t) => <option key={t}>{t}</option>)}
-              </select>
+              <Tendina valore={etype} onChange={(v) => setQ({ ...q, etype: v })} etichetta="Tipo di evento"
+                       className="cv-select"
+                       opzioni={EVENT_TYPES.map((t) => ({ id: t, label: t }))} />
             </div>
 
             <div className="cv-fgroup">
@@ -1278,11 +1276,9 @@ function QuoteBuilder({ p, eventType, eventLoc, prefillDate }) {
       {pkg.scale.on === "ore" && (
         <>
           <label htmlFor="q-ore"><Clock size={13} style={{ verticalAlign: "-2px" }} /> Durata (incluse {pkg.scale.included} {pkg.scale.included === 1 ? "ora" : "ore"})</label>
-          <select id="q-ore" value={ore} onChange={(e) => setOre(Number(e.target.value))}>
-            {[1, 2, 3, 4, 5, 6, 8].filter((n) => n >= pkg.scale.included).map((n) => (
-              <option key={n} value={n}>{n} {n === 1 ? "ora" : "ore"}</option>
-            ))}
-          </select>
+          <Tendina valore={ore} onChange={setOre} etichetta="Durata"
+                   opzioni={[1, 2, 3, 4, 5, 6, 8].filter((n) => n >= pkg.scale.included)
+                     .map((n) => ({ id: n, label: `${n} ${n === 1 ? "ora" : "ore"}` }))} />
         </>
       )}
       {pkg.scale.on === "ospiti" && (
