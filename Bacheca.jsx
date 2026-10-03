@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { supabase } from "./supabase";
 import { ComuneInput } from "./comuni.jsx";
+import { CalendarioInput } from "./campi.jsx";
 
 /* ============================================================
    CLICK EVENTI — Bacheca lavoro
@@ -54,7 +55,7 @@ const Style = () => (
     .bc-vuoto{background:#fff;border:1px dashed var(--linea);border-radius:16px;padding:44px 24px;text-align:center;color:var(--grigio)}
     .bc-center{text-align:center;padding:70px 20px;color:var(--grigio)}
     label{display:block;font-size:13px;font-weight:600;margin:14px 0 6px}
-    input,select,textarea{width:100%;border:1px solid var(--linea);border-radius:10px;font:500 14px 'Work Sans',sans-serif;padding:11px 12px;background:#fff;color:var(--ink);outline-color:var(--accent)}
+    input,select,textarea,.bc-card button[aria-expanded]{width:100%;border:1px solid var(--linea);border-radius:10px;font:500 14px 'Work Sans',sans-serif;padding:11px 12px;background:#fff;color:var(--ink);outline-color:var(--accent)}
     .bc-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .bc-err{color:#C0392B;font-size:13px;margin-top:12px;font-weight:600}
     .bc-hint{font-size:12.5px;color:var(--grigio);margin-top:6px;line-height:1.5}
@@ -305,8 +306,16 @@ export function PubblicaAnnuncio() {
           <ComuneInput valore={comune?.name} onChange={setComune} />
 
           <div className="bc-row">
-            <div><label>Data dell'evento</label><input type="date" value={d.data_evento} onChange={set("data_evento")} /></div>
-            <div><label>Candidature entro il</label><input type="date" value={d.scadenza} onChange={set("scadenza")} /></div>
+            <div>
+              <label>Data dell'evento</label>
+              <CalendarioInput valore={d.data_evento} onChange={(v) => setD({ ...d, data_evento: v })}
+                               etichetta="Data dell'evento" placeholder="Scegli la data" />
+            </div>
+            <div>
+              <label>Candidature entro il</label>
+              <CalendarioInput valore={d.scadenza} onChange={(v) => setD({ ...d, scadenza: v })}
+                               etichetta="Scadenza candidature" placeholder="Nessuna scadenza" />
+            </div>
           </div>
 
           <label>Compenso (facoltativo)</label>

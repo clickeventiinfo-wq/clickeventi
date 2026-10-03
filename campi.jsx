@@ -137,3 +137,155 @@ export function Tendina({ valore, onChange, opzioni, etichetta, className, style
     </div>
   );
 }
+
+/* ============================================================
+   Calendario con lo stile del sito.
+   Sostituisce il selettore di data del browser, che ogni
+   sistema disegna a modo suo.
+   Il valore scambiato è una stringa "AAAA-MM-GG".
+   ============================================================ */
+const MESI = ["gennaio","febbraio","marzo","aprile","maggio","giugno",
+  "luglio","agosto","settembre","ottobre","novembre","dicembre"];
+const GIORNI_SIGLA = ["L","M","M","G","V","S","D"];
+
+const aStringa = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+export function CalendarioInput({
+  valore, onChange, placeholder = "Scegli una data",
+  etichetta = "Data", className, soloFuturo = true, style,
+}) {
+  const scelta = valore ? new Date(valore + "T12:00:00") : null;
+  const oggi = new Date(); oggi.setHours(12, 0, 0, 0);
+
+  const [aperto, setAperto] = useState(false);
+  const [mese, setMese] = useState(scelta ? scelta.getMonth() : oggi.getMonth());
+  const [anno, setAnno] = useState(scelta ? scelta.getFullYear() : oggi.getFullYear());
+  const box = useRef(null);
+
+  useEffect(() => {
+    if (!aperto) return;
+    const fuori = (e) => { if (box.current && !box.current.contains(e.target)) setAperto(false); };
+    const esc = (e) => { if (e.key === "Escape") setAperto(false); };
+    document.addEventListener("mousedown", fuori);
+    document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", fuori); document.removeEventListener("keydown", esc); };
+  }, [aperto]);
+
+  /* griglia del mese: la settimana inizia di lunedì */
+  const primo = new Date(anno, mese, 1);
+  const spostamento = (primo.getDay() + 6) % 7;
+  const quanti = new Date(anno, mese + 1, 0).getDate();
+  const celle = [...Array(spostamento).fill(null), ...Array.from({ length: quanti }, (_, i) => i + 1)];
+
+  const cambiaMese = (d) => {
+    const m = mese + d;
+    if (m < 0) { setMese(11); setAnno(anno - 1); }
+    else if (m > 11) { setMese(0); setAnno(anno + 1); }
+    else setMese(m);
+  };
+
+  const testo = scelta
+    ? scelta.toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })
+    : placeholder;
+
+  return (
+    <div ref={box} style={{ position: "relative", ...style }}>
+      <button type="button" className={className} aria-label={etichetta} aria-expanded={aperto}
+              onClick={() => setAperto(!aperto)}
+              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+                       gap: 8, cursor: "pointer", textAlign: "left" }}>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                       color: scelta ? "inherit" : "#B9B5C6", fontWeight: scelta ? "inherit" : 500 }}>
+          {testo}
+        </span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: .5 }}>
+          <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+      </button>
+
+      {aperto && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 90, width: 282,
+          background: "#fff", border: "1px solid #ECE9E2", borderRadius: 15,
+          boxShadow: "0 14px 38px rgba(35,32,58,.15)", padding: 14,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <button type="button" onClick={() => cambiaMese(-1)} aria-label="Mese precedente"
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 6,
+                             borderRadius: 8, color: "#6E6A80", lineHeight: 0 }}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <b style={{ font: "700 14.5px 'Sora', sans-serif", color: "#23203A" }}>
+              {MESI[mese]} {anno}
+            </b>
+            <button type="button" onClick={() => cambiaMese(1)} aria-label="Mese successivo"
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 6,
+                             borderRadius: 8, color: "#6E6A80", lineHeight: 0 }}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2, marginBottom: 6 }}>
+            {GIORNI_SIGLA.map((g, i) => (
+              <div key={i} style={{ textAlign: "center", font: "700 10.5px 'Work Sans', sans-serif",
+                                    color: "#9A96A8", letterSpacing: ".04em", padding: "2px 0" }}>{g}</div>
+            ))}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
+            {celle.map((n, i) => {
+              if (!n) return <div key={"v" + i} />;
+              const data = new Date(anno, mese, n, 12);
+              const str = aStringa(data);
+              const passata = soloFuturo && data < oggi;
+              const attiva = valore === str;
+              const eOggi = aStringa(oggi) === str;
+              return (
+                <button key={n} type="button" disabled={passata}
+                        onClick={() => { onChange(str); setAperto(false); }}
+                        style={{
+                          aspectRatio: "1", border: "none", borderRadius: 9,
+                          cursor: passata ? "default" : "pointer",
+                          font: (attiva ? 700 : 500) + " 13.5px 'Work Sans', sans-serif",
+                          background: attiva ? "#8B6EF3" : "transparent",
+                          color: attiva ? "#fff" : passata ? "#D4D1DC" : "#23203A",
+                          outline: eOggi && !attiva ? "1.5px solid #DDD3FB" : "none",
+                          outlineOffset: -2,
+                        }}
+                        onMouseEnter={(e) => { if (!passata && !attiva) e.currentTarget.style.background = "#FAF9F7"; }}
+                        onMouseLeave={(e) => { if (!attiva) e.currentTarget.style.background = "transparent"; }}>
+                  {n}
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ display: "flex", gap: 8, marginTop: 12, borderTop: "1px solid #ECE9E2", paddingTop: 11 }}>
+            <button type="button" onClick={() => { onChange(aStringa(oggi)); setAperto(false); }}
+                    style={{ flex: 1, background: "#FAF9F7", border: "none", borderRadius: 9, padding: "9px",
+                             cursor: "pointer", font: "600 13px 'Work Sans', sans-serif", color: "#23203A" }}>
+              Oggi
+            </button>
+            {valore && (
+              <button type="button" onClick={() => { onChange(""); setAperto(false); }}
+                      style={{ flex: 1, background: "#fff", border: "1px solid #ECE9E2", borderRadius: 9,
+                               padding: "9px", cursor: "pointer", font: "600 13px 'Work Sans', sans-serif",
+                               color: "#6E6A80" }}>
+                Togli data
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

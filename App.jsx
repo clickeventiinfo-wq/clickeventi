@@ -4,7 +4,7 @@ import {
   MapPin, Star, ArrowLeft, Search, Check, CalendarDays, Send, Users, Clock, Navigation, Loader2, Share2
 } from "lucide-react";
 import { supabase } from "./supabase";
-import { Tendina } from "./campi.jsx";
+import { Tendina, CalendarioInput } from "./campi.jsx";
 
 /* ============================================================
    CLICK EVENTI — v2 (collegato al database)
@@ -460,7 +460,7 @@ const GlobalStyle = () => (
       display: block; font: 700 11.5px 'Work Sans', sans-serif; letter-spacing: .07em;
       text-transform: uppercase; color: var(--accent); margin-bottom: 9px;
     }
-    .cv-side input[type="text"], .cv-side input[type="date"], .cv-side select, .cv-side input:not([type]) {
+    .cv-side input[type="text"], .cv-side select, .cv-side input:not([type]), .cv-side button[aria-expanded] {
       width: 100%; border: 1px solid var(--linea); border-radius: 10px; background: var(--bg2);
       font: 500 14px 'Work Sans', sans-serif; padding: 9px 11px; color: var(--ink); outline-color: var(--accent);
     }
@@ -798,7 +798,8 @@ function HomeView({ onSearch, openProvider, providers, loading }) {
           </div>
           <div className="cv-field">
             <span className="cv-flabel">Quando</span>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="Data dell'evento" />
+            <CalendarioInput valore={date} onChange={setDate} etichetta="Data dell'evento"
+                             placeholder="Scegli la data" />
           </div>
           <div className="cv-field">
             <span className="cv-flabel">Tipo di evento</span>
@@ -982,7 +983,8 @@ function ResultsView({ q, setQ, openProvider, goHome, providers, loading }) {
 
             <div className="cv-fgroup">
               <span className="cv-flabel2">Quando</span>
-              <input type="date" value={date} onChange={(e) => setQ({ ...q, date: e.target.value })} aria-label="Data" />
+              <CalendarioInput valore={date} onChange={(v) => setQ({ ...q, date: v })} etichetta="Data"
+                               className="cv-select" placeholder="Qualsiasi data" />
             </div>
 
             <div className="cv-fgroup">
