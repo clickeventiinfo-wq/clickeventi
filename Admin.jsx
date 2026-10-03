@@ -14,7 +14,7 @@ import { supabase } from "./supabase";
 
 const CAT_LABEL = {
   musica: "Musica", foto: "Foto & Video", barman: "Beverage",
-  animazione: "Animazione", beauty: "Hair & Beauty",
+  animazione: "Animazione & Spettacolo", beauty: "Hair & Beauty",
 };
 
 const Style = () => (

@@ -18,7 +18,7 @@ const CATEGORIES = [
   { id: "musica", label: "Musica", icon: Music },
   { id: "foto", label: "Foto & Video", icon: Camera },
   { id: "barman", label: "Beverage", icon: Martini },
-  { id: "animazione", label: "Animazione", icon: PartyPopper },
+  { id: "animazione", label: "Animazione & Spettacolo", icon: PartyPopper },
   { id: "beauty", label: "Hair & Beauty", icon: Sparkles },
 ];
 const EVENT_OPTS = ["Ogni evento", "Compleanno", "18esimo", "Festa privata", "Laurea", "Evento aziendale", "Evento pubblico", "Matrimonio"];

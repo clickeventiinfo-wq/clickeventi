@@ -18,7 +18,7 @@ const CATEGORIE = [
   { id: "musica", label: "Musica" },
   { id: "foto", label: "Foto & Video" },
   { id: "barman", label: "Beverage" },
-  { id: "animazione", label: "Animazione" },
+  { id: "animazione", label: "Animazione & Spettacolo" },
   { id: "beauty", label: "Hair & Beauty" },
   { id: "altro", label: "Altro" },
 ];
